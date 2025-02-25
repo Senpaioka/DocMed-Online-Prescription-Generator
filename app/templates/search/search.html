@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %} Search Result {% endblock %}
+
+{% block content %}
+
+
+<div class="container mt-4 mb-4">
+    <div class="block">
+      <div class="row justify-content-center">
+        <h1>Search</h1>
+
+        <div class="mt-4 mb-4">
+        <h5>Search Results</h5>
+
+        {% if search_result %}
+        
+            {% for data in search_result %}
+            <div class="card mb-2">
+                <div class="card-body">
+                  <h5 class="card-title">Patient ID: #{{ data.patient_id }}</h5>
+                  <h6 class="card-subtitle mb-2 text-body-secondary">Patient Name: {{ data.patient_name }}</h6>
+                  <p class="card-text">Prescribed at: {{ data.created_at.strftime('%d-%m-%Y')}}</p>
+                  <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="card-link">Prescription</a>
+                </div>
+              </div>
+            {% endfor %}
+
+        </div>
+
+        {% else %}
+
+        <h3> No Search Result Found</h3>
+        <p>Hint: (Don't search patient id with '#')</p>
+   
+        {% endif %}
+        
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}

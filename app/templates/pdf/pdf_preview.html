@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %} PDF Preview {% endblock %}
+
+{% block content %}
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .prescription-card {
+            background-image: url("{{ url_for('static', filename='img/bg.png') }}");
+            background-repeat: no-repeat;
+            background-position: center center;
+            background-size: 500px 500px;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .doctor-info {
+            text-align: right;
+            font-size: 14px;
+        }
+        .prescription-header {
+            border-bottom: 2px solid #D3D3D3;
+            padding-bottom: 10px;
+        }
+        .print-btn {
+            text-align: center;
+            margin-top: 20px;
+        }
+        td {
+            width: 50%;
+        }
+
+        @media print {
+            .print-btn {
+                display: none;
+            }
+
+    
+
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mt-5">
+
+                        <!-- flash message -->
+                        <div class="mb-3" id="flash-messages">
+                            {% with messages = get_flashed_messages(with_categories=True) %}
+                                {% if messages %}
+                                    <ul class="flashes">
+                                        {% for category, message in messages %}
+                                            <li class="flash {{ category}}">{{ message }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        
+        <div class="prescription-card">
+            
+            <!-- Doctor & Clinic Info -->
+            <div class="row prescription-header">
+                <div class="col-md-6">
+                    <p>Patient ID : #{{ patient.patient_id }}</p>
+                </div>
+                <div class="col-md-6 doctor-info">
+                    <h3>{{ current_user.profile_info.full_name |upper }}</h3>
+                    <p>{{ current_user.profile_info.achievement |upper }}</p>
+                    <span>({{ current_user.profile_info.college |title  }}, {{ current_user.profile_info.higher_degree |title }})</span>
+                    <p>{{ current_user.profile_info.course |title  }}, {{ current_user.profile_info.extra |title }}</p>
+                    <span>{{ current_user.profile_info.current_position |title }}</span>
+                    <p><strong>Reg. No:</strong>{{ current_user.profile_info.govt_reg }}</p>
+                </div>
+            </div>
+
+            <!-- Patient Information -->
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Name:</strong> {{ patient.patient_name |title}}</p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong>Age:</strong> <span>{{ patient.patient_age }}</span></p>
+                </div>
+                <div class="col-md-3">
+                    <p><strong>Sex:</strong> <span>{{ patient.patient_sex |capitalize}}</span></p>
+                </div>
+            </div>
+
+            <div class='row'>
+                <div class="col-md-3"></div>
+                <div class="col-md-3"></div>
+                <div class="col-md-3"></div>
+                <div class="col-md-3"><strong>Date:</strong> <span>{{ patient.created_at.strftime('%d-%m-%Y') }}</span></div>
+            </div>
+
+            <hr>
+
+            <!-- Symptoms & Diagnosis -->
+
+            <div class='row'>
+                <div class="col-md-5">
+                    <div>
+                        <h6>C/C</h6>
+                        <hr>
+                        <p>{{ patient.cc |capitalize }}</p>
+                    </div>
+                    <div>
+                        <h6>O/E</h6>
+                        <hr>
+                        <p>BP:  {{ patient.bp }}</p>
+                        <p>Pulse: {{ patient.pulse }}</p>
+                        <p>Temp: {{ patient.temp }}</p>
+                        <p>SpO: {{ patient.spo }}</p>
+                    </div>
+                    <div>
+                        <h6>Inv</h6>
+                        <hr>
+                        <p>{{ patient.inv |capitalize }}</p>
+                    </div>
+                    
+                </div>
+
+                <div class="col-md-7">
+
+                    <h5><i class="fa-solid fa-prescription"></i></h5>
+                    
+                    {{ patient.rx|replace("\n", "<br>")|safe }}
+
+                </div>
+            </div>
+
+            
+
+            <!-- Prescription Table -->
+            
+
+            <!-- Advice -->
+            <div class='row'>
+                <div class="col-md-5"></div>
+                <div class="col-md-7">
+                    <strong>Advice</strong>
+                    <p>{{ patient.advice |capitalize}}</p>
+                </div>
+            </div>
+
+
+            <!-- Doctor's Signature -->
+            <div class="text-end">
+                <img src="{{ url_for('static', filename='uploads/' + current_user.profile_info.signature) }}" alt="sign" style="width: 200px; height: 100px;">
+                <p>{{ patient.created_at.strftime('%d-%m-%Y') }}</p>
+                <p><strong>Doctor's Signature</strong></p>
+            </div>
+
+
+            <div>
+                <span><strong>Chamber/Office Address:</strong> {{ current_user.profile_info.office }} </span>
+                <p><strong>Phone:</strong> {{ current_user.profile_info.phone }} </p>
+                <p><strong>Email:</strong> {{ current_user.email }} </p>
+            </div>
+
+            <!-- Print Button -->
+            <div class="print-btn mb-4">
+                <a href="{{ url_for('pdf_generator.pdf_generator_page',uid=current_user.uid, patient_id=patient.patient_id) }}" class="btn btn-primary">Download Prescription</a>
+            </div>
+
+        </div>
+    </div>
+
+
+{% endblock %}

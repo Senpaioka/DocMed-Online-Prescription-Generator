@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+		<!-- Bootstrap CSS -->
+		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/tiny-slider.css') }}" rel="stylesheet">
+		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+	</head>
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .register-container {
+            width: 500px;
+            background: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 50px;
+            margin-bottom: 100px;
+        }
+
+		.flash.error {
+			color: red;
+		}
+
+		.flash.success {
+			color: green;
+		}
+
+    </style>
+
+	<body>
+
+    <!-- Start Header/Navigation -->
+	<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
+
+		<div class="container">
+			<a class="navbar-brand" href="{{ url_for('home.home_page') }}">DocMed<span>.</span></a>
+
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni" aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+
+			<div class="collapse navbar-collapse" id="navbarsFurni">
+				<ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
+					<li class="nav-item">
+						{% if current_user.is_authenticated %}
+						<a class="nav-link" href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}">Dashboard</a>
+						{% endif %}
+					</li>
+				</ul>
+
+				<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
+					{% if current_user.is_authenticated %}
+					<li><a class="nav-link" href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}"><img src="{{ url_for('static', filename='img/user.svg') }}"> {{ current_user.username }} </a></li>
+					<li><a class="nav-link" href="{{ url_for('accounts.logout_view') }}">Logout</a></li>
+					{% else %}
+					<li><a class="nav-link" href="#"><img src="{{ url_for('static', filename='img/user.svg') }}"></a></li>
+					{% endif %}
+				</ul>
+			</div>
+		</div>
+			
+	</nav>
+		<!-- End Header/Navigation -->

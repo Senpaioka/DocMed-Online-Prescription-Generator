@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %} Update{% endblock %}
+
+{% block content %}
+
+        <div class="container d-flex justify-content-center">
+            <div class="register-container">
+                <h3 class="text-center mb-4">Edit Login Credentials</h3>
+                <!-- flash message -->
+                <div class="mb-3" id="flash-messages">
+                    {% with messages = get_flashed_messages(with_categories=True) %}
+                        {% if messages %}
+                            <ul class="flashes">
+                                {% for category, message in messages %}
+                                    <li class="flash {{ category}}">{{ message }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    {% endwith %}
+                </div>
+
+                <form method="POST" action="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}">
+                    {{ form.hidden_tag() }}
+                     <!-- Username -->
+                     <div class="mb-3">
+                        <label for="name" class="form-label">Username</label>
+                        {{ form.username (class="form-control",placeholder='Unique Username' ,required=True) }}
+
+                        <!-- error handling -->
+                        {% for error in form.username.errors %}
+                            <span style="color: red;">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+        
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        {{ form.email (class="form-control",placeholder='Enter Your Email' ,required=True) }}
+
+                        <!-- error handling -->
+                        {% for error in form.email.errors %}
+                            <span style="color: red;">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+        
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label">New Password</label>
+                        <div class="input-group">
+                            {{ form.new_password (class="form-control", placeholder='Set a new password') }}
+                            <button class="btn btn-primary" type="button" id="togglePassword">
+                            <i class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            {{ form.confirm_password (class="form-control",placeholder='Confirm Password') }}
+                            <button class="btn btn-primary" type="button" id="togglePassword_extra">
+                            <i class="fa-regular fa-eye-slash"></i>
+                            </button>
+                        </div>
+                        <!-- error handling -->
+                        {% for error in form.confirm_password.errors %}
+                            <span style="color: red;">{{ error }}</span>
+                        {% endfor %}
+                    </div>
+        
+                    <!-- Gender -->
+                    <div class="mb-3">
+                        <label for="gender" class="form-label">Gender</label>
+                            {{ form.gender (class="form-control",placeholder='Your Gender' ,required=True) }}
+                    </div>
+        
+                    <!-- Submit Button -->
+                     {{ form.update (class="btn btn-primary w-100") }}
+                </form> 
+            </div>
+        </div>
+{% endblock %}

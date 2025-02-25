@@ -1,0 +1,261 @@
+{% extends 'base.html' %}
+
+{% block title %} Home {% endblock %}
+
+{% block content %}
+
+<style>
+@import url('https://fonts.googleapis.com/css?family=Lato:300,900');
+
+$transition-ease-in-out: all .25s ease-in-out 0s;
+$transition-cubic-bezier : all 0.75s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+$animation-offset: 80px;
+
+*, :after, :before {
+    box-sizing: border-box;
+}
+html, body {
+	height: 100%;
+}
+body {
+	font-family: "Lato", sans-serif;
+	animation: fade-in 3s ease-in-out forwards;
+}
+.row {
+    padding-top: 100px;
+    padding-bottom: 100px;
+}
+strong {
+	font-weight: 900;
+    padding: 15px;
+}
+.canvas-wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	
+	.canvas + .canvas {
+		margin-left: 40px;
+	}
+}
+.canvas {
+	position: relative;
+	display: block;
+	width: 500px;
+	height: 600px;
+	padding: 20px;
+	color: inherit;
+	text-decoration: none;
+}
+.canvas_border {
+	position: absolute;
+	top: 40px;
+	left: -40px;
+	height: 100%;
+	width: 100%;
+	z-index: 0;
+
+	svg {
+		height: 100%;
+		width: 100%;
+	}
+}
+.rect-gradient {
+	stroke-dasharray: 2000;
+	stroke-dashoffset: 2000;
+	animation: erase-line 1s ease-in-out forwards;
+}
+.canvas_img-wrapper {
+	position: absolute;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	top: 0;
+	left: 0;
+	transform: rotate(-10deg) skew(-10deg);
+	overflow: hidden;
+	background: white;
+}
+.canvas_img {
+	transform: scale3d(.9,.9,.9);
+	opacity: .7;
+	max-width: 400px;
+	max-height: 500px;
+}
+.canvas_copy {
+	position: absolute;
+	bottom: 0;
+	left: 85%;
+	text-transform: uppercase;
+	color: #dac527;
+	z-index: 100;
+}
+.canvas_copy--left {
+	left: -25%;
+}
+.canvas_copy_title {
+	font-size: 62px;
+	display: block;
+	transform: translateX(-#{$animation-offset});
+		transition: $transition-cubic-bezier 0s;
+		color: black;
+
+		&:nth-child(1) {
+			transition-delay: 0.1s;
+			}
+		&:nth-child(2) {
+			transition-delay: 0.2s;
+			}
+}
+.canvas_copy_subtitle {
+	display: block;
+	transform: rotate(270deg) translateY(-100%) translateX(calc(-100% - #{$animation-offset}));
+	transform-origin: top left;
+	position: absolute;
+	left: 0;
+	top: 8px; //This needs to change with font size. It's an offset for the line-height of the "hellow world"
+	font-size: 24px;
+	font-weight: 900;
+	transition: all 0.75s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.35s;
+}
+.canvas_copy_details {
+	display: block;
+	transition: $transition-cubic-bezier 0.14s;
+	transform: translateX(-#{$animation-offset});
+		}
+.canvas_border, .canvas_img-wrapper, .canvas_img  {
+	transition: $transition-ease-in-out;	
+}
+.canvas_border, .canvas_img-wrapper {
+	transform: rotate(-10deg) skew(-10deg);	
+}
+.canvas_copy_title, .canvas_copy_subtitle, .canvas_copy_details {
+	opacity: 0;
+}
+.canvas:hover {
+	.canvas_copy_title, .canvas_copy_subtitle, .canvas_copy_details, .canvas_img {
+		opacity: 1;
+	}
+	.canvas_border, .canvas_img-wrapper {
+		transform: rotate(-14deg) skew(-14deg) scale(0.96);
+	}
+	.canvas_img {
+		transform: scale3d(1,1,1);
+	}
+	.canvas_copy_title, .canvas_copy_details {
+		transform: translateX(0);
+	}
+	.canvas_copy_subtitle {
+		transform: rotate(270deg) translateY(-100%) translateX(-100%);
+	}
+	.rect-gradient {
+		animation: draw-line 3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+	}
+}
+
+@keyframes draw-line {
+	from {
+		stroke-dashoffset: 2000;		
+	}
+	to {
+		stroke-dashoffset: 0;
+	}
+}
+@keyframes erase-line {
+	from {
+		stroke-dashoffset: 0;
+	}
+	to {
+		stroke-dashoffset: 2000;		
+	}
+}
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+.div_one {
+    padding-top:100px;
+}
+</style>
+
+    <!-- Features Section -->
+    <section class="container features text-center">
+        <div class="row mt-5 mb-5">
+            <div class="col-md-6 pb-5">
+                <div class="canvas-wrapper">
+
+                    <a href="#" class="canvas">
+                        <div class="canvas_border">
+                            <svg>
+                                <defs><linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(253,137,68);stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(153,75,23);stop-opacity:1"></stop></linearGradient><linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#D34F48"></stop><stop offset="100%" stop-color="#772522"></stop></linearGradient></defs>
+                                <rect id="rect-grad" class="rect-gradient" fill="none" stroke="url(#grad-orange)" stroke-linecap="square" stroke-width="4" stroke-miterlimit="30" width="100%" height="100%"></rect>
+                            </svg>
+                        </div>
+                        <div class="canvas_img-wrapper">
+                            <img class="canvas_img" src="{{ url_for('static', filename='img/doc.png') }}">
+                        </div>
+                        <div class="canvas_copy canvas_copy--left">
+                            <strong class="canvas_copy_title">Online</strong>
+                            <strong class="canvas_copy_title">Prescription</strong>
+                            <strong class="canvas_copy_title">Generator</strong>
+                        </div>
+                    </a>
+    
+                  <!--  <a href="#" class="canvas">
+                        <div class="canvas_border">
+                            <svg>
+                                <defs><linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(253,137,68);stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(153,75,23);stop-opacity:1"></stop></linearGradient><linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#D34F48"></stop><stop offset="100%" stop-color="#772522"></stop></linearGradient></defs>
+                                <rect id="rect-grad" class="rect-gradient" fill="none" stroke="url(#grad-orange)" stroke-linecap="square" stroke-width="4" stroke-miterlimit="30" width="100%" height="100%"></rect>
+                            </svg>
+                        </div>
+                        <div class="canvas_img-wrapper">
+                            <img class="canvas_img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/249772/Twitter_Logo_Blue.png" alt="">
+                        </div>
+                        <div class="canvas_copy">
+                            <span class="canvas_copy_subtitle">Heading</span>
+                            <strong class="canvas_copy_title">Hello</strong>
+                            <strong class="canvas_copy_title">World</strong>
+                            <span class="canvas_copy_details">Details and stuff</span>
+                        </div>
+                    </a>-->
+    
+                </div>
+            </div>
+            <div class="col-md-6 pt-5">
+                <h1><strong>DocMed.</strong></h1>
+                <h3>Generate Online Prescription</h3>
+                <p>(PDF Format)</p>
+
+
+				{% if current_user.is_authenticated %}
+
+				<div>
+					<h5>Welcome {{ current_user.profile_info.full_name }}. </h5>
+					<h6>You are currently LoggedIn. go to <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}">Dashboard</a></h6>
+				</div>
+
+				{% else %}
+
+                <div class="div_one">
+                    <p>Interested? You can register <a href="{{ url_for('accounts.registration_page') }}"> Here</a></p>
+                </div>
+
+                <div>
+                    <p>Already have an account? <a href="{{ url_for('accounts.login_page') }}">Login</a></p>
+                </div>
+
+				{% endif %}
+
+            </div>
+        </div>
+    </section>
+
+{% endblock %}

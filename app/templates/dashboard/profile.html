@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %} Profile Info {% endblock %}
+
+{% block content %}
+
+
+<div class="container mt-4 mb-4">
+    <div class="block">
+      <div class="row justify-content-center">
+        <h1>Profile Information</h1>
+
+        <div class="mt-4 mb-4">
+        <h5>Personal Information</h5>
+
+        <!-- flash message -->
+        <div class="mb-3" id="flash-messages">
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    <ul class="flashes">
+                        {% for category, message in messages %}
+                            <li class="flash {{ category}}">{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            {% endwith %}
+        </div>
+        
+        <table class="table table-bordered mt-3 mb-3">
+            <tbody>
+                <tr>
+                    <th>Full Name</th>
+                    <td>{{ info.full_name }}</td>
+                </tr>
+                <tr>
+                    <th>Date of Birth</th>
+                    <td>{{ info.birth_date.strftime('%d-%m-%Y') }}</td>
+                </tr>
+                <tr>
+                    <th>Phone</th>
+                    <td>{{ info.phone }}</td>
+                </tr>
+                <tr>
+                    <th>Gender</th>
+                    <td>{{ info.sex }}</td>
+                </tr>
+                <tr>
+                    <th>Achievements</th>
+                    <td>{{ info.achievement }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+        <div class="mt-4 mb-4">
+            <h5>Educational Information</h5>
+            <table class="table table-bordered mt-3 mb-3">
+                <tbody>
+                    <tr>
+                        <th>College</th>
+                        <td>{{ info.college }}</td>
+                    </tr>
+                    <tr>
+                        <th>University</th>
+                        <td>{{ info.higher_degree }}</td>
+                    </tr>
+                    <tr>
+                        <th>Courses</th>
+                        <td>{{ info.course }}</td>
+                    </tr>
+                    <tr>
+                        <th>Extra Info</th>
+                        <td>{{ info.extra }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="mt-4 mb-4">
+            <h5>Professional Information</h5>
+            <table class="table table-bordered mt-3 mb-3">
+                <tbody>
+                    <tr>
+                        <th>Current Position</th>
+                        <td>{{ info.current_position }}</td>
+                    </tr>
+                    <tr>
+                        <th>Govt. Registration ID</th>
+                        <td>{{ info.govt_reg }}</td>
+                    </tr>
+                    <tr>
+                        <th>Chamber/Office Address</th>
+                        <td>{{ info.office }}</td>
+                    </tr>
+                    <tr>
+                        <th>Signature</th>
+                        <!--<td><img src="{{ info.signature }}" alt="sign" style="width: 200px; height: 100px;"></td>-->
+                        <td><img src="{{ url_for('static', filename='uploads/' + info.signature) }}" alt="sign" style="width: 200px; height: 100px;"></td>
+                        
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+
+        <div class="text-center mt-3">
+            <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn btn-primary"><i class="fa-regular fa-pen-to-square"></i> Edit Data</a>
+        </div>    
+
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}

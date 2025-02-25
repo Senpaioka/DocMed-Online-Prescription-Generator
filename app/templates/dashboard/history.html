@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+{% block title %} History {% endblock %}
+
+{% block content %}
+
+
+<div class="container mt-4 mb-4">
+    <div class="block">
+      <div class="row justify-content-center">
+        <h1>History</h1>
+
+        <div class="mt-4 mb-4">
+        <h5>Previously Prescribed</h5>
+
+        {% if history_exists %}
+        
+            {% for data in info %}
+            <div class="card mb-2">
+                <div class="card-body">
+                  <h5 class="card-title">Patient ID: #{{ data.patient_id }}</h5>
+                  <h6 class="card-subtitle mb-2 text-body-secondary">Patient Name: {{ data.patient_name }}</h6>
+                  <p class="card-text">Prescribed at: {{ data.created_at.strftime('%d-%m-%Y')}}</p>
+                  <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="card-link">Prescription</a>
+                </div>
+              </div>
+            {% endfor %}
+
+    </div>
+
+        <div class="text-center mt-3">
+            {% if info.has_prev %}
+                <a href="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.prev_num) }}">Previous</a>
+            {% endif %}
+        
+            Page {{ info.page }} of {{ info.pages }}
+        
+            {% if info.has_next %}
+                <a href="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.next_num) }}">Next</a>
+            {% endif %}
+        </div>    
+
+
+        {% else %}
+
+        <h3> No History Found</h3>
+   
+        {% endif %}
+
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}

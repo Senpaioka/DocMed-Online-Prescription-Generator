@@ -1,0 +1,6 @@
+### want to checkout the website? ###
+
+-> avoid the long process of authentication:
+
+username : naruto
+password : 123456

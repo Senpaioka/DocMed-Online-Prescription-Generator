@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %} Update {% endblock %}
+
+{% block content %}
+
+
+<div class="container mt-4 mb-4">
+    <div class="block">
+      <div class="row justify-content-center">
+        <h1>Update Profile Info</h1>
+
+
+        <!-- flash message -->
+        <div class="mb-3" id="flash-messages">
+          {% with messages = get_flashed_messages(with_categories=True) %}
+              {% if messages %}
+                  <ul class="flashes">
+                      {% for category, message in messages %}
+                          <li class="flash {{ category}}">{{ message }}</li>
+                      {% endfor %}
+                  </ul>
+              {% endif %}
+          {% endwith %}
+      </div>
+      
+
+        {% if data %}
+        <form action="{{ url_for('dashboard.update_profile_info', uid=current_user.uid ) }}" method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+          <!-- Personal Information Info -->
+          <div class="row mt-4 mb-4">
+            <h3>Personal Information</h3>
+            <div class="col-12 col-sm-6">
+              <div class="form-group">
+                <label class="text-black" for="fname">Full Name</label><span>*</span>
+                   {{ form.full_name (class="form-control", placeholder='Example: Dr. Strange', required=True) }}
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="form-group">
+                <label class="text-black" for="age">Birth Date</label><span>*</span>
+                {{ form.birth_date (class="form-control", required=True) }}
+              </div>
+            </div>
+            <div class="col-6 col-sm-3">
+              <div class="form-group">
+                <label class="text-black" for="gender">Sex</label><span>*</span>
+                {{ form.sex (class="form-control", required=True) }}
+              </div>
+            </div>
+
+            <div class="row mt-4 mb-4">
+              <div class="col-6 col-sm-6">
+                <div class="form-group">
+                  <label class="text-black" for="college">Achievements</label><span>*</span>
+                {{ form.achievement (class="form-control", placeholder='Example: MBBS, FCPS', required=True) }}
+                </div>
+              </div>
+              <div class="col-6 col-sm-6">
+                <div class="form-group">
+                  <label class="text-black" for="phone">Phone (Optional)</label>
+                  {{ form.phone (class="form-control", placeholder="Phone Number") }}
+                </div>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Spacer -->
+          <hr class="my-4">
+  
+          <!-- educational Inputs -->
+          <h3>Educational Information</h3>
+          <div class="form-group mb-4">
+            <label class="text-black" for="college">College</label><span>*</span>
+            {{ form.college (class="form-control", placeholder='Example: Dhaka Medical College', required=True) }}
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="text-black" for="college">University (Optional)</label>
+            {{ form.higher_degree (class="form-control", placeholder='If any', required=False) }}
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="text-black" for="college">Courses (Optional)</label>
+            {{ form.course (class="form-control", placeholder='If any', required=False) }}
+          </div>
+
+          <div class="form-group mb-4">
+            <label class="text-black" for="college">Extra (Optional)</label>
+            {{ form.extra (class="form-control", placeholder='If any', required=False) }}
+          </div>
+
+          <!-- position and reg. no -->
+           <h3>Professional Info</h3>
+          <div class="row mb-4 mt-4">
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="form-group">
+                <label class="text-black" for="cc">Current Position</label><span>*</span>
+                {{ form.current_position (class="form-control", placeholder='Example: General Practitioner', required=True) }}
+              </div>
+            </div>
+  
+            <div class="col-12 col-sm-6 col-md-4">
+              <div class="form-group">
+                <label class="text-black" for="inv">Govt. Registration Number </label><span>*</span>
+                {{ form.govt_reg (class="form-control", placeholder='Govt Provided ID', required=True) }}
+              </div>
+            </div>
+
+            <div class="col-12 col-sm-6 col-md-4">
+                <div class="form-group">
+                  <label class="text-black" for="inv">Upload Signature</label><span>*</span>
+                  {{ form.signature (class="form-control", placeholder='Upload Image') }}
+                </div>
+              </div>
+          </div>
+
+          <!-- chamber or address -->
+  
+          <div class="form-group mb-4">
+            <label class="text-black" for="advice">Chamber/Office Address (Optional)</label>
+            {{ form.office (class="form-control", placeholder='If any', required=False) }}
+          </div>
+          
+          <!-- Submit Button -->
+          {{ form.submit (class="btn btn-primary btn-block") }}
+        </form>
+        {% else %}
+
+        <div class="mt-4 mb-4">
+            <br>
+            <h3>Attention:</h3>
+            <p>No profile data  found. Setup your profile first.</p>
+            <p>Setup your profile <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}">Here</a></p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+
+{% endblock %}

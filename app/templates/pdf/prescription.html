@@ -1,0 +1,196 @@
+{% extends 'base.html' %}
+
+{% block title %} Prescription {% endblock %}
+
+{% block content %}
+
+<style>
+	
+	#search-box {
+		width: 300px;
+		padding: 10px;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+	}
+	
+	.tt-menu {
+		width: 300px;
+		background-color: white;
+		border: 1px solid #ccc;
+		border-radius: 4px;
+		margin-top: 2px;
+		max-height: 200px;
+		overflow-y: auto;
+	}
+	
+	.tt-suggestion {
+		padding: 10px;
+		cursor: pointer;
+	}
+	
+	.tt-suggestion:hover {
+		background-color: #f0f0f0;
+	}
+	
+	.tt-highlight {
+		font-weight: bold;
+	}
+</style>
+
+<div class="container mt-4 mb-4">
+
+			<!-- flash message -->
+			<div class="mb-3" id="flash-messages">
+				{% with messages = get_flashed_messages(with_categories=True) %}
+					{% if messages %}
+						<ul class="flashes">
+							{% for category, message in messages %}
+								<li class="flash {{ category}}">{{ message }}</li>
+							{% endfor %}
+						</ul>
+					{% endif %}
+				{% endwith %}
+			</div>
+
+	<div class="block">
+	  <div class="row justify-content-center">
+
+		<!-- medicine search -->
+		<div class="search mt-5 pb-5">
+			<h3>Search Medicine</h3>
+			<input class="form-control" type="text" id="search-box" placeholder="Type to search...">
+			<span> (You can search by generic, brand or company)</span>
+		</div>
+
+		<hr>
+
+			<form action="{{ url_for('pdf_generator.document_page') }}" method="POST">
+				{{ form.hidden_tag() }}
+			  <!-- Patient Info -->
+			  <div class="row mt-4 mb-4">
+				<div class="col-12 col-sm-6">
+				  <div class="form-group">
+					<label class="text-black" for="fname">Name</label><span>*</span>
+					{{ form.patient_name (class="form-control", placeholder="Patient Name", required=True) }}
+				  </div>
+				</div>
+				<div class="col-6 col-sm-3">
+				  <div class="form-group">
+					<label class="text-black" for="age">Age</label><span>*</span>
+					{{ form.patient_age (class="form-control", placeholder="Patient Age", required=True) }}
+				  </div>
+				</div>
+				<div class="col-6 col-sm-3">
+				  <div class="form-group">
+					<label class="text-black" for="gender">Sex</label><span>*</span>
+					{{ form.patient_sex (class="form-control") }}
+				  </div>
+				</div>
+			  </div>
+	  
+			  <!-- Spacer -->
+			  <hr class="my-4">
+	  
+			  <!-- Additional Inputs -->
+			  <div class="row mb-4 mt-4">
+				<div class="col-12 col-sm-6 col-md-4">
+				  <div class="form-group">
+					<label class="text-black" for="cc">C/C</label>
+					{{ form.cc (class="form-control", placeholder="C/C", required=False) }}
+				  </div>
+				</div>
+	  
+				<div class="col-12 col-md-4">
+				  <label class="text-black" for="oe">O/E</label>
+				  <div class="row">
+					<div class="col-6 col-sm-3">
+						{{ form.bp (class="form-control", placeholder="BP", required=False) }}
+					</div>
+					<div class="col-6 col-sm-3">
+						{{ form.pulse (class="form-control", placeholder="Pulse", required=False) }}
+					</div>
+					<div class="col-6 col-sm-3">
+						{{ form.temp (class="form-control", placeholder="Temp", required=False) }}
+					</div>
+					<div class="col-6 col-sm-3">
+						{{ form.spo (class="form-control", placeholder="SpO", required=False) }}
+					</div>
+				  </div>
+				</div>
+	  
+				<div class="col-12 col-sm-6 col-md-4">
+				  <div class="form-group">
+					<label class="text-black" for="inv">Inv</label>
+					{{ form.inv (class="form-control", placeholder="Inv", required=False) }}
+				  </div>
+				</div>
+			  </div>
+	
+			  <!-- Rx & Advice -->
+			  <div class="form-group mb-4">
+				<label class="text-black" for="rx">RX</label><span>*</span>
+				{{ form.rx (class="form-control", placeholder="Medicine & Advice", rows="10", required=True) }}
+			  </div>
+	  
+			  <div class="form-group mb-4">
+				<label class="text-black" for="advice">Advice</label>
+				{{ form.advice (class="form-control", placeholder="If Any", required=False) }}
+			  </div>
+			  
+			  <br>
+			  <br>
+			  <!-- Submit Button -->
+			   {{ form.submit ( class="btn btn-primary btn-block")}}
+			</form>
+
+	  </div>
+	</div>
+  </div>
+
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/typeahead.js/0.11.1/typeahead.bundle.min.js"></script>
+  <script>
+
+	$(document).ready(function () {
+
+		// Initialize the Bloodhound suggestion engine
+		var med_database = new Bloodhound({
+			datumTokenizer: function (datum) {
+				//return Bloodhound.tokenizers.whitespace(datum.name + ' ' + datum.generic);
+				return Bloodhound.tokenizers.whitespace(datum.name, datum.generic);
+			},
+			// Prefetch the local JSON file
+			queryTokenizer: Bloodhound.tokenizers.whitespace,
+			prefetch: '{{ url_for('static', filename='data/data.json') }}',  
+		});
+	
+		// Initialize Typeahead on the input box
+		$('#search-box').typeahead(
+			{
+				hint: true,
+				highlight: true,
+				minLength: 1
+			},
+			{
+				name: 'med_database',
+				display: function (data) {
+					// Display only the name in the input after selection
+					return `${data.name}`;
+				},
+				source: med_database,
+				templates: {
+					suggestion: function (data) {
+						// Multi-line in dropdown
+						return `<div><strong>${data.name}</strong><br><small>Generic: ${data.generic}</small>
+						<br><small>Strength : ${data.dose}</small><br><small>Brand: ${data.brand}</small></div>`;
+					}
+				}
+			}
+		);
+	});
+	
+	
+  </script>
+
+{% endblock %}

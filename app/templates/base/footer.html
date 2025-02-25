@@ -1,0 +1,58 @@
+
+		<!-- Start Footer Section -->
+		<footer class="footer-section">
+			<div class="container relative">
+			<div class="border-top copyright">
+				<div class="row pt-4">
+					<div class="col-lg-6">
+						<p class="mb-2 text-center text-lg-start">Copyright &copy;
+						<script>document.write(new Date().getFullYear());</script>. 
+						All Rights Reserved. &mdash; Designed with love by <a href="https://untree.co">Untree.co</a> Distributed By <a hreff="https://themewagon.com">ThemeWagon</a></p>
+					</div>
+				</div>
+			</div>
+
+			</div>
+		</footer>
+		<!-- End Footer Section -->	
+
+        <script>
+            // Password Visibility Toggle
+            document.getElementById("togglePassword").addEventListener("click", function () {
+                let passwordInput = document.getElementById("password");
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                } else {
+                    passwordInput.type = "password";
+                }
+            });
+
+
+			 // Confirm Password Visibility Toggle
+			 document.getElementById("togglePassword_extra").addEventListener("click", function () {
+                let passwordInput = document.getElementById("confirm_password");
+                if (passwordInput.type === "password") {
+                    passwordInput.type = "text";
+                } else {
+                    passwordInput.type = "password";
+                }
+            });
+        </script>
+
+		<script>
+			// Wait 10 seconds (10,000 milliseconds) then hide the flash message container
+			setTimeout(function() {
+				var flashContainer = document.getElementById('flash-messages');
+				if (flashContainer) {
+					// Option 1: Hide the element
+					flashContainer.style.display = 'none';
+				}
+			}, 10000);
+		</script>
+
+		<script src="js/bootstrap.bundle.min.js"></script>
+		<script src="js/tiny-slider.js"></script>
+		<script src="js/custom.js"></script>
+	</body>
+
+</html>

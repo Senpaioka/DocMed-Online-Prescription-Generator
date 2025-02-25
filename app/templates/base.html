@@ -1,0 +1,14 @@
+<!-- getting header file -->
+{% include 'base/header.html' %}
+
+<!-- dynamic title -->
+<title>{% block title %} DocMed {% endblock %}</title>
+{% block content %}
+
+<!-- main content goes here  -->
+
+{% endblock %}
+
+
+<!-- getting footer file -->
+{% include 'base/footer.html' %}
