@@ -1,166 +1,125 @@
+<!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <title>Prescription</title>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-    <meta name="description" content="Invoice demo sample">
-  </head>
+    <style>
+        @page {
+            margin: 1cm;
+        }
+        body {
+          background-image: url("static/img/bg.png");
+          background-repeat: no-repeat;
+          background-position: center center;
+          background-size: 500px 500px;
+          margin: 0;
+      }
+        h3 {
+            margin: 0;
+            text-transform: uppercase;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+        }
+        .header, .footer {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .column {
+            width: 48%;
+            vertical-align: top;
+        }
+        .med-list {
+            margin-top: 15px;
+        }
+    </style>
+</head>
 
-  <style>
-
-    body {
-        background-image: url("{{ url_for('static', filename='img/bg.png') }}");
-        background-repeat: no-repeat;
-        background-position: center center;
-        background-size: 500px 500px;
-        margin: 0;
-    }
-      
-      @page {
-        margin: 1cm;
-      }
-      
-      html {
-        color: #14213d;
-        font-family: Source Sans Pro;
-        font-size: 11pt;
-        line-height: 1.6;
-      }
-      aside {
-        display: flex;
-        margin: 1em 0 1em;
-      }
-      aside address {
-        font-style: normal;
-      }
-      aside address#from {
-        flex: 1;
-      }
-      aside address#to {
-        text-align: right;
-      }
-      
-      table {
-        border-collapse: collapse;
-        width: 100%;
-      }
-      th {
-        border-bottom: .2mm solid #a9a;
-        text-align: left;
-        font-weight: 400;
-        padding-bottom: .25cm;
-        text-transform: capitalize;
-      }
-
-      .rx-logo {
-        font-size: 25px;
-      }
-
-      footer {
-        text-align : center;
-      }
-
-    .container {
-        margin: auto;
-    }
-
-    .row {
-        display: flex;
-    }
-
-    .column {
-        flex: 0 0 50%; 
-        max-width: 50%;
-        text-align: left;
-    }
-  </style>
-
-  <body>
+<body>
     <p>Patient ID : #{{ patient.patient_id }}</p>
 
-    <aside>
-      <address id="from"></address>
+    <table>
+      <tr>
+          <td></td>
 
-      <address id="to">
-        <h3>{{ doctor.profile_info.full_name |upper }}</h3>
-        <dl>
+          <td style="text-align: right;">
+            <h3>{{ doctor.profile_info.full_name |upper }}</h3>
+          <dl>
             <dt>{{ doctor.profile_info.achievement |upper }}</dt>
             <dt>({{ doctor.profile_info.college |title  }}, {{ doctor.profile_info.higher_degree |title }})</dt>
             <dt>{{ doctor.profile_info.course |title  }}, {{ doctor.profile_info.extra |title }}</dt>
             <dt>{{ doctor.profile_info.current_position |title }}</dt>
             <dt><strong>Reg. No:</strong>{{ doctor.profile_info.govt_reg }}</dt>
           </dl> 
-      </address>
-    </aside>
-    <hr>
+      </tr>
+  </table>
+
+  <table>
+    <thead>
+      <tr>
+        <td><strong>Name:</strong> {{ patient.patient_name }}</td>
+        <td><strong>Age:</strong> <span>{{ patient.patient_age }}</span></td>
+        <td><strong>Sex:</strong> <span>{{ patient.patient_sex }}</th>
+      </tr>
+    </thead>
+  </table>
+  <hr>
 
     <table>
-      <thead>
         <tr>
-          <th><strong>Name:</strong> {{ patient.patient_name }}</th>
-          <th><strong>Age:</strong> <span>{{ patient.patient_age }}</span></th>
-          <th><strong>Sex:</strong> <span>{{ patient.patient_sex }}</th>
-        </tr>
-      </thead>
-    </table>
+            <td class="column">
+                <p><strong>C/C:</strong> {{ patient.cc }}</p>
+                <br>
+                <p><strong>O/E:</strong></p>
+                <ul style="list-style-type: none;">
+                    <li><p><strong>BP:</strong> {{ patient.bp }}</p></li>
+                    <li><p><strong>Pulse:</strong> {{ patient.pulse }}</p></li>
+                    <li><p><strong>Temp:</strong> {{ patient.temp }}</p></li>
+                    <li><p><strong>SpO2:</strong> {{ patient.spo }}</p></li>
+                </ul>
+                <br>
+                <p><strong>Inv:</strong> {{ patient.inv }}</p>
+            </td>
 
-
-    <div class="container">
-        <div class="row">
-
-            <div class="column">
-                <p><b>C/C</b></p>
-                <p>{{ patient.cc }}</p>
-                <b>O/E</b>
-                <dl>
-                    <dt><strong>BP: </strong>{{ patient.bp }}</dt>
-                    <dt><strong>Pulse: </strong>{{ patient.pulse }}</dt>
-                    <dt><strong>Temp: </strong>{{ patient.temp }}</dt>
-                    <dt><strong>SpO: </strong>{{ patient.spo }}</dt>
-                </dl> 
-
-                <b>Inv</b>
-                <p>{{ patient.inv }}</p>
-            </div>
-            
-
-                <div class="column">
-                    <div class="rx-logo">
-                        <h5><i class="fa-solid fa-prescription"></i></h5>
-                    </div>
-                
-                    <div class="med-list">
-                        {{ patient.rx|replace("\n", "<br>")|safe }}
-                    </div>
-        
-                    <div>
-                        <p><strong>Advice: </strong>{{ patient.advice }}</p>
-                    </div>
+            <td class="column">
+              <img src="{{ url_for('static', filename='img/prescription-solid.jpg') }}" alt="sign" style="width: 18px; height: 22px;">
+                <div class="med-list">
+                    {{ patient.rx | replace("\n", "<br>") | safe }}
                 </div>
 
-        </div>
-    </div>
+                <br>
+                <br>
+                <br>
+                <p><strong>Advice:</strong> {{ patient.advice }}</p>
+            </td>
+        </tr>
+    </table>
 
-
-    <aside>
-        <address id="from">
-            <dl>
+    <table>
+        <tr>
+            <td>
+              <dl>
                 <dt><strong>Chamber/Office: </strong>{{ doctor.profile_info.office }}</dt>
                 <dt><strong>Phone: </strong>{{ doctor.profile_info.phone }}</dt>
                 <dt><strong>Email: </strong>{{ doctor.email }}</dt>
-            </dl>
-        </address>
-  
-        <address id="to">
-            <img src="{{ url_for('static', filename='uploads/' + doctor.profile_info.signature) }}" alt="sign" style="width: 200px; height: 100px;">
-            <p>{{ patient.created_at.strftime('%d-%m-%Y') }}</p>
-            <b>Signature</b>
-        </address>
-      </aside>
+              </dl>
+            </td>
 
+            <td style="text-align: right;">
+              <img src="{{ url_for('static', filename='uploads/' + doctor.profile_info.signature) }}" alt="sign" style="width: 200px; height: 100px;">
+                <p>{{ patient.created_at.strftime('%d-%m-%Y') }}</p>
+                <b>Signature</b>
+            </td>
+        </tr>
+    </table>
 
-    <footer>
-      <span>Powered by DocMed @{{ patient.created_at.strftime('%Y') }}</span>
-    </footer>
-  </body>
+    <div class="footer">
+        <p>Powered by DocMed © {{ patient.created_at.strftime('%Y') }}</p>
+    </div>
+
+</body>
 </html>
