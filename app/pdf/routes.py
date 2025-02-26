@@ -165,31 +165,5 @@ def pdf_generator_page(uid, patient_id):
 
 
 
-    # # getting patient prescription
-    # get_patient = PrescriptionModel.query.filter_by(patient_id=patient_id).first()
-
-    # # getting doctor info
-    # get_doctor = RegistrationModel.query.get(uid)
-
-    # context = {
-    #     'patient': get_patient,
-    #     'doctor': get_doctor,
-    # }
-
-    # html_content = render_template('pdf/pdf.html', **context)
-
-    # print(html_content)
-    # pdf = HTML(string=html_content, base_url=request.host_url).write_pdf()
-
-
-    # # Return PDF as a response
-    # return Response(pdf, mimetype='application/pdf', headers={
-    #     "Content-Disposition": "inline; filename=prescription.pdf"
-    # })
-
-
-
-
-
 
     

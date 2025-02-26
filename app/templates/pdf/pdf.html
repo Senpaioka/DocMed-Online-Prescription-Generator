@@ -6,17 +6,12 @@
     <style>
         @page {
             margin: 2cm;
+            background-image: url("{{ url_for('static', filename='img/bg.png') }}");
         }
-        body {
-          background-image: url("static/img/bg.png");
-          background-repeat: no-repeat;
-          background-position: center center;
-          background-size: 500px 500px;
-          margin: 0;
-      }
-        h3 {
+        h2 {
             margin: 0;
             text-transform: uppercase;
+            color: #2F71B3;
         }
         table {
             width: 100%;
@@ -47,7 +42,7 @@
           <td></td>
 
           <td style="text-align: right;">
-            <h3>{{ doctor.profile_info.full_name |upper }}</h3>
+            <h2>{{ doctor.profile_info.full_name |upper }}</h3>
           <dl>
             <dt>{{ doctor.profile_info.achievement |upper }}</dt>
             <dt>({{ doctor.profile_info.college |title  }}, {{ doctor.profile_info.higher_degree |title }})</dt>
@@ -86,7 +81,7 @@
             </td>
 
             <td class="column">
-              <img src="{{ url_for('static', filename='img/prescription-solid.jpg') }}" alt="sign" style="width: 18px; height: 22px;">
+              <img src="{{ url_for('static', filename='img/prescription-solid.jpg') }}" alt="sign" style="width: 15px; height: 18px;">
                 <div class="med-list">
                     {{ patient.rx | replace("\n", "<br>") | safe }}
                 </div>
