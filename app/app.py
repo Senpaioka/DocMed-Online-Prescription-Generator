@@ -18,6 +18,8 @@ def create_app():
     app.config['DEBUG'] = config('DEBUG', default=False, cast=bool)
     db.init_app(app)
 
+    
+
     # csrf secret key settings
     WTF_CSRF_SECRET_KEY = config('WTF_CSRF_SECRET_KEY')
     app.config['SECRET_KEY'] = WTF_CSRF_SECRET_KEY
