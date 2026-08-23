@@ -1,10 +1,10 @@
-from flask import request, render_template, redirect, url_for, flash, Response, Blueprint, current_app, make_response
-from app.app import db
+from flask import request, render_template, redirect, url_for, flash, Blueprint, Response, current_app
+from app.extensions import db
 from sqlalchemy.exc import IntegrityError
 from flask_login import login_required, current_user
-from app.pdf.models import PrescriptionModel
-from app.account.models import RegistrationModel
-from app.pdf.forms import PrescriptionForm
+from app.modules.pdf.models import PrescriptionModel
+from app.modules.account.models import RegistrationModel
+from app.modules.pdf.forms import PrescriptionForm
 import uuid
 from xhtml2pdf import pisa
 import io

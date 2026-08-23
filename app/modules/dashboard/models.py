@@ -1,4 +1,5 @@
-from app.app import db
+from app.extensions import db
+from datetime import datetime
 
 
 class ProfileSetupModel(db.Model):

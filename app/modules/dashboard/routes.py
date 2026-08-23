@@ -1,12 +1,12 @@
-from flask import request, render_template, redirect, url_for, flash, current_app, Blueprint
-from app.app import db
-from sqlalchemy.exc import IntegrityError
-from flask_login import login_required
-from app.dashboard.forms import ProfileSetUpForm, UpdateProfileSetUpForm
-from app.dashboard.models import ProfileSetupModel
-from app.account.models import RegistrationModel
-from app.pdf.models import PrescriptionModel
-from app.search.search import SearchForm
+from flask import request, render_template, redirect, url_for, flash, Blueprint, current_app
+from app.extensions import db
+from werkzeug.utils import secure_filename
+import os
+from app.modules.dashboard.forms import ProfileSetUpForm, UpdateProfileSetUpForm
+from app.modules.dashboard.models import ProfileSetupModel
+from app.modules.account.models import RegistrationModel
+from app.modules.pdf.models import PrescriptionModel
+from app.modules.search.forms import SearchForm
 from werkzeug.utils import secure_filename
 import os
 from flask_login import login_required, current_user

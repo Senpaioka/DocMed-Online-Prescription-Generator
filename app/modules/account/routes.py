@@ -1,7 +1,7 @@
 from flask import request, render_template, redirect, url_for, flash, Blueprint
-from app.app import db
-from app.account.forms import RegistrationForm, LoginForm, UpdateRegistrationForm 
-from app.account.models import RegistrationModel
+from app.extensions import db
+from app.modules.account.forms import RegistrationForm, LoginForm, UpdateRegistrationForm 
+from app.modules.account.models import RegistrationModel
 from werkzeug.security import generate_password_hash, check_password_hash
 from email_validator import validate_email
 from sqlalchemy.exc import IntegrityError

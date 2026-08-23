@@ -1,8 +1,8 @@
-from app.app import db
+from app.extensions import db
 from datetime import datetime
 from flask_login import UserMixin
-from app.dashboard.models import ProfileSetupModel
-from app.pdf.models import PrescriptionModel
+from app.modules.dashboard.models import ProfileSetupModel
+from app.modules.pdf.models import PrescriptionModel
 
 
 
