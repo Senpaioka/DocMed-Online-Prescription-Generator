@@ -325,9 +325,18 @@
 
 						<div class="row g-3">
 							<div class="col-12 col-md-5">
-								<label class="form-label text-dark fw-semibold small mb-1" for="cc">
-									Chief Complaints (C/C)
-								</label>
+								<div class="d-flex justify-content-between align-items-center mb-1">
+									<label class="form-label text-dark fw-semibold small mb-0" for="cc">
+										Chief Complaints (C/C)
+									</label>
+									<div class="d-flex flex-wrap gap-1">
+										<button type="button" class="badge-pill-btn" @click="appendSymptom('Fever')">+ Fever</button>
+										<button type="button" class="badge-pill-btn" @click="appendSymptom('Cough')">+ Cough</button>
+										<button type="button" class="badge-pill-btn" @click="appendSymptom('Headache')">+ Headache</button>
+										<button type="button" class="badge-pill-btn" @click="appendSymptom('Chest pain')">+ Chest pain</button>
+										<button type="button" class="badge-pill-btn" @click="addCustomSymptom()" title="Add Custom Symptom"><i class="fa-solid fa-plus"></i></button>
+									</div>
+								</div>
 								{{ form.cc(class="form-control clinical-input", placeholder="e.g. High fever for 3 days, dry cough", id="cc", rows="3") }}
 							</div>
 
@@ -498,6 +507,20 @@
 					const current = (invArea.value || '').trim();
 					invArea.value = current ? current + ', ' + invStr : invStr;
 					invArea.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			},
+			appendSymptom(symptomStr) {
+				const ccArea = document.getElementById('cc');
+				if (ccArea) {
+					const current = (ccArea.value || '').trim();
+					ccArea.value = current ? current + ', ' + symptomStr : symptomStr;
+					ccArea.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			},
+			addCustomSymptom() {
+				const symptom = prompt('Enter symptom / chief complaint:');
+				if (symptom && symptom.trim().length > 0) {
+					this.appendSymptom(symptom.trim());
 				}
 			}
 		}
