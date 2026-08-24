@@ -1,0 +1,266 @@
+{% extends 'base.html' %}
+
+{% block title %} Patient Dashboard | DocMed {% endblock %}
+
+{% block content %}
+
+<style>
+    .dashboard-container {
+        padding: 30px 0 60px;
+    }
+
+    .role-badge-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        border-radius: 9999px;
+    }
+
+    .role-patient {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .sidebar-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        background: linear-gradient(135deg, #092e3b 0%, #0d5257 100%);
+        color: #ffffff;
+        padding: 22px 20px;
+    }
+
+    .sidebar-nav {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.92rem;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .sidebar-link:hover {
+        background: #f1f5f9;
+        color: #0d9488;
+        transform: translateX(3px);
+    }
+
+    .sidebar-link.active {
+        background: #f0fdfa;
+        color: #0d9488;
+        font-weight: 700;
+    }
+
+    .sidebar-link i {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .sidebar-link:hover i, .sidebar-link.active i {
+        color: #0d9488;
+    }
+
+    .dash-action-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .dash-stat-box {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+        text-align: center;
+        height: 100%;
+    }
+
+    .dash-stat-box h6 {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .dash-stat-box .stat-val {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #092e3b;
+        margin: 0;
+    }
+</style>
+
+<div class="container dashboard-container">
+    <!-- Top Greeting Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #092e3b;">
+                Welcome back, {{ current_user.username }}!
+            </h2>
+            <p class="text-muted mb-0 small">
+                Manage your prescriptions, view clinical records, and find verified doctors.
+            </p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <span class="role-badge-chip role-patient"><i class="fa-solid fa-user"></i> Patient Account</span>
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)" x-transition:leave.duration.400ms>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-4 col-md-5">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white text-dark rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="fa-solid fa-user text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ current_user.username }}</h6>
+                            <small class="text-white-50">{{ current_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="sidebar-link active">
+                        <i class="fa-solid fa-gauge"></i> Overview
+                    </a>
+
+                    <a href="{{ url_for('dashboard.verified_doctors_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-user-doctor"></i> Find Verified Doctors
+                    </a>
+
+                    <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-clock-rotate-left"></i> My Prescriptions
+                    </a>
+
+                    <a href="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-key"></i> Account Credentials
+                    </a>
+
+                    <hr class="my-2 border-slate-200">
+
+                    <a href="{{ url_for('accounts.logout_view') }}" class="sidebar-link text-danger">
+                        <i class="fa-solid fa-right-from-bracket text-danger"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Dashboard Actions Area -->
+        <div class="col-lg-8 col-md-7">
+            
+            <!-- Patient Portal Overview Card -->
+            <div class="dash-action-card mb-4">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="p-3 rounded-circle" style="background: #e0e7ff; color: #3730a3; width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fa-solid fa-notes-medical fs-3"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Patient Portal Overview</h5>
+                        <p class="text-muted small mb-0">Access your digital medical prescriptions, health records, and connect with certified doctors.</p>
+                    </div>
+                </div>
+                <hr class="border-slate-100">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 d-flex flex-column justify-content-between h-100 border">
+                            <div>
+                                <h6 class="fw-bold mb-1"><i class="fa-solid fa-file-lines text-primary me-2"></i>My Prescriptions</h6>
+                                <p class="text-muted small mb-3">View or download all prescriptions created by your attending doctors.</p>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="btn btn-outline-primary btn-sm px-3 fw-bold rounded-3">
+                                    View Prescriptions <i class="fa-solid fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 bg-light rounded-3 d-flex flex-column justify-content-between h-100 border">
+                            <div>
+                                <h6 class="fw-bold mb-1" style="color: #0f766e;"><i class="fa-solid fa-user-doctor me-2" style="color: #0d9488;"></i>Verified Doctors</h6>
+                                <p class="text-muted small mb-3">Explore registered practitioners and verified medical specialists on DocMed.</p>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('dashboard.verified_doctors_page', uid=current_user.uid) }}" class="btn btn-sm px-3 fw-bold rounded-3 text-white" style="background: #0d9488;">
+                                    Browse Doctors <i class="fa-solid fa-arrow-right ms-1"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats / Metrics Grid -->
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="dash-stat-box">
+                        <h6>Member Since</h6>
+                        <p class="stat-val fs-5">{{ current_user.created_at.strftime('%b %Y') if current_user.created_at else 'N/A' }}</p>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="dash-stat-box">
+                        <h6>Prescriptions</h6>
+                        <p class="stat-val">{{ current_user.prescription | length if current_user.prescription else 0 }}</p>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="dash-stat-box">
+                        <h6>Status</h6>
+                        <p class="stat-val fs-5 text-success"><i class="fa-solid fa-circle-check fs-6"></i> Active</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

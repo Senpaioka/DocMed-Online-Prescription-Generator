@@ -354,12 +354,18 @@
         </div>
 
         <div class="d-flex align-items-center gap-2">
-          <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn-edit-doctor">
-            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
-          </a>
-          <a href="{{ url_for('pdf_generator.document_page') }}" class="btn-rx-studio">
-            <i class="fa-solid fa-file-prescription text-teal" style="color: #5eead4;"></i> Rx Studio
-          </a>
+          {% if current_user.uid == user.uid or current_user.is_admin %}
+            <a href="{{ url_for('dashboard.update_profile_info', uid=user.uid) }}" class="btn-edit-doctor">
+              <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+            </a>
+            <a href="{{ url_for('pdf_generator.document_page') }}" class="btn-rx-studio">
+              <i class="fa-solid fa-file-prescription text-teal" style="color: #5eead4;"></i> Rx Studio
+            </a>
+          {% else %}
+            <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn-edit-doctor">
+              <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            </a>
+          {% endif %}
         </div>
       </div>
     </div>
@@ -494,16 +500,18 @@
           </div>
         </div>
 
+        {% if current_user.uid == user.uid or current_user.is_admin %}
         <!-- Quick Quick Action Strip -->
         <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light border">
           <div>
             <h6 class="fw-bold mb-0 text-dark">Need to make adjustments?</h6>
             <small class="text-muted">Update contact details, chamber timings, or qualifications.</small>
           </div>
-          <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn-edit-adjustments">
+          <a href="{{ url_for('dashboard.update_profile_info', uid=user.uid) }}" class="btn-edit-adjustments">
             <i class="fa-solid fa-pen-to-square"></i> Edit Info
           </a>
         </div>
+        {% endif %}
 
       </div>
     </div>

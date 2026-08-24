@@ -17,7 +17,7 @@ dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
 
 
-# dashboard main page
+# dashboard main page (Overview)
 @dashboard.route('/user_home_page/<int:uid>')
 @login_required
 def dashboard_main_page(uid):
@@ -36,7 +36,38 @@ def dashboard_main_page(uid):
         'form': form,
     }
 
-    return render_template('dashboard/dashboard.html', **context)
+    # Separate patient and doctor dashboard templates
+    if getattr(user, 'role', 'patient') == 'doctor' or user.is_admin:
+        return render_template('dashboard/dashboard.html', **context)
+    else:
+        return render_template('patient-dashboard/dashboard.html', **context)
+
+
+# patient verified doctors directory page
+@dashboard.route('/verified-doctors/<int:uid>')
+@login_required
+def verified_doctors_page(uid):
+    user = RegistrationModel.query.get(uid)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for('home.home_page'))
+
+    # Query all verified and active doctors
+    verified_doctors = RegistrationModel.query.filter(
+        RegistrationModel.role == 'doctor',
+        RegistrationModel.verified_doctor == True,
+        RegistrationModel.is_active == True
+    ).all()
+
+    context = {
+        'user': user,
+        'verified_doctors': verified_doctors,
+    }
+
+    return render_template('patient-dashboard/verified_doctors.html', **context)
+
+
+
 
 
 
@@ -232,7 +263,8 @@ def history_page(uid):
         return redirect(url_for('home.home_page'))
 
     # If doctor/admin, filter by doc_id. If patient, filter by patient_name or patient prescriptions
-    if getattr(user, 'role', 'patient') == 'doctor' or user.is_admin:
+    is_doctor_user = getattr(user, 'role', 'patient') == 'doctor' or user.is_admin
+    if is_doctor_user:
         paged_history = PrescriptionModel.query.filter_by(doc_id=uid).order_by(PrescriptionModel.created_at.desc()).paginate(page=get_page, per_page=per_page, error_out=False)
         is_history = user.prescription
     else:
@@ -248,8 +280,14 @@ def history_page(uid):
         'history_exists': is_history,
     }
     if request.headers.get('HX-Request'):
-        return render_template('dashboard/_history_list.html', **context)
-    return render_template('dashboard/history.html', **context)
+        if is_doctor_user:
+            return render_template('dashboard/_history_list.html', **context)
+        return render_template('patient-dashboard/_history_list.html', **context)
+
+    if is_doctor_user:
+        return render_template('dashboard/history.html', **context)
+    return render_template('patient-dashboard/history.html', **context)
+
 
 
 

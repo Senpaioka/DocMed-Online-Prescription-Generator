@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %} Prescription History | DocMed {% endblock %}
+{% block title %} My Prescriptions | DocMed {% endblock %}
 
 {% block content %}
 
@@ -21,14 +21,9 @@
         border-radius: 9999px;
     }
 
-    .role-doctor {
-        background: #ccfbf1;
-        color: #0f766e;
-    }
-
-    .role-admin {
-        background: #fef3c7;
-        color: #92400e;
+    .role-patient {
+        background: #e0e7ff;
+        color: #3730a3;
     }
 
     .sidebar-card {
@@ -103,18 +98,14 @@
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
             <h2 class="fw-bold mb-1" style="color: #092e3b;">
-                Prescription History
+                My Prescriptions
             </h2>
             <p class="text-muted mb-0 small">
-                Manage, search, and view all patient prescriptions issued under your signature.
+                View, download, and track all medical prescriptions issued to you.
             </p>
         </div>
         <div class="mt-2 mt-md-0">
-            {% if current_user.role == 'admin' or current_user.is_admin %}
-                <span class="role-badge-chip role-admin"><i class="fa-solid fa-shield-halved"></i> Super Admin</span>
-            {% else %}
-                <span class="role-badge-chip role-doctor"><i class="fa-solid fa-stethoscope"></i> Doctor Account</span>
-            {% endif %}
+            <span class="role-badge-chip role-patient"><i class="fa-solid fa-user"></i> Patient Account</span>
         </div>
     </div>
 
@@ -140,7 +131,7 @@
                 <div class="sidebar-header">
                     <div class="d-flex align-items-center gap-3">
                         <div class="bg-white text-dark rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
-                            <i class="fa-solid fa-user-doctor text-primary fs-5"></i>
+                            <i class="fa-solid fa-user text-info fs-5"></i>
                         </div>
                         <div>
                             <h6 class="mb-0 fw-bold">{{ current_user.username }}</h6>
@@ -151,41 +142,15 @@
 
                 <div class="sidebar-nav">
                     <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="sidebar-link">
-                        <i class="fa-solid fa-gauge"></i> Doctor Overview
+                        <i class="fa-solid fa-gauge"></i> Overview
                     </a>
 
-                    <!-- Admin Links -->
-                    {% if current_user.role == 'admin' or current_user.is_admin %}
-                    <a href="{{ url_for('admin.index') }}" class="sidebar-link text-warning fw-bold">
-                        <i class="fa-solid fa-shield-halved text-warning"></i> Admin Panel
+                    <a href="{{ url_for('dashboard.verified_doctors_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-user-doctor"></i> Find Verified Doctors
                     </a>
-                    {% endif %}
-
-                    <!-- Doctor Links -->
-                    {% if current_user.verified_doctor or current_user.is_admin %}
-                        {% if current_user.profile_info %}
-                        <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="sidebar-link">
-                            <i class="fa-solid fa-id-card"></i> Doctor Profile
-                        </a>
-                        <a href="{{ url_for('dashboard.pdf_template_preview', uid=current_user.uid) }}" class="sidebar-link">
-                            <i class="fa-solid fa-file-invoice"></i> Prescription Template
-                        </a>
-                        <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="sidebar-link">
-                            <i class="fa-solid fa-user-pen"></i> Update Doctor Info
-                        </a>
-                        {% else %}
-                        <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="sidebar-link text-primary fw-bold">
-                            <i class="fa-solid fa-plus-circle text-primary"></i> Setup Doctor Profile
-                        </a>
-                        {% endif %}
-                        
-                        <a href="{{ url_for('pdf_generator.document_page') }}" class="sidebar-link">
-                            <i class="fa-solid fa-file-prescription"></i> Generate Prescription
-                        </a>
-                    {% endif %}
 
                     <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="sidebar-link active">
-                        <i class="fa-solid fa-clock-rotate-left"></i> Prescription History
+                        <i class="fa-solid fa-clock-rotate-left"></i> My Prescriptions
                     </a>
 
                     <a href="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}" class="sidebar-link">
@@ -206,7 +171,7 @@
             <div class="dash-action-card">
                 <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
                     <h5 class="fw-bold mb-0" style="color: #092e3b;">
-                        <i class="fa-solid fa-clock-rotate-left text-teal me-2" style="color: #0d9488;"></i>Issued Prescriptions
+                        <i class="fa-solid fa-file-waveform text-teal me-2" style="color: #0d9488;"></i>Digital Prescriptions
                     </h5>
                     <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
                         {{ info.total }} Record{% if info.total != 1 %}s{% endif %}
@@ -214,7 +179,7 @@
                 </div>
 
                 <div id="history-container">
-                    {% include 'dashboard/_history_list.html' %}
+                    {% include 'patient-dashboard/_history_list.html' %}
                 </div>
             </div>
         </div>

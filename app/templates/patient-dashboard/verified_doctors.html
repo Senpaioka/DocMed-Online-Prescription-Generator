@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block title %} Verified Doctors | DocMed {% endblock %}
+
+{% block content %}
+
+<style>
+    .dashboard-container {
+        padding: 30px 0 60px;
+    }
+
+    .role-badge-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        border-radius: 9999px;
+    }
+
+    .role-patient {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .sidebar-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        background: linear-gradient(135deg, #092e3b 0%, #0d5257 100%);
+        color: #ffffff;
+        padding: 22px 20px;
+    }
+
+    .sidebar-nav {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.92rem;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .sidebar-link:hover {
+        background: #f1f5f9;
+        color: #0d9488;
+        transform: translateX(3px);
+    }
+
+    .sidebar-link.active {
+        background: #f0fdfa;
+        color: #0d9488;
+        font-weight: 700;
+    }
+
+    .sidebar-link i {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .sidebar-link:hover i, .sidebar-link.active i {
+        color: #0d9488;
+    }
+
+    .dash-action-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .doctor-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        transition: all 0.2s ease;
+        background: #ffffff;
+    }
+
+    .doctor-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(15, 23, 42, 0.08);
+        border-color: #cbd5e1;
+    }
+</style>
+
+<div class="container dashboard-container">
+    <!-- Top Greeting Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #092e3b;">
+                Verified Medical Practitioners
+            </h2>
+            <p class="text-muted mb-0 small">
+                Explore registered and verified doctors practicing on the DocMed platform.
+            </p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <span class="role-badge-chip role-patient"><i class="fa-solid fa-user"></i> Patient Account</span>
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)" x-transition:leave.duration.400ms>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-4 col-md-5">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white text-dark rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="fa-solid fa-user text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ current_user.username }}</h6>
+                            <small class="text-white-50">{{ current_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-gauge"></i> Overview
+                    </a>
+
+                    <a href="{{ url_for('dashboard.verified_doctors_page', uid=current_user.uid) }}" class="sidebar-link active">
+                        <i class="fa-solid fa-user-doctor"></i> Find Verified Doctors
+                    </a>
+
+                    <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-clock-rotate-left"></i> My Prescriptions
+                    </a>
+
+                    <a href="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-key"></i> Account Credentials
+                    </a>
+
+                    <hr class="my-2 border-slate-200">
+
+                    <a href="{{ url_for('accounts.logout_view') }}" class="sidebar-link text-danger">
+                        <i class="fa-solid fa-right-from-bracket text-danger"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Directory Area -->
+        <div class="col-lg-8 col-md-7">
+            <div class="dash-action-card" x-data="{
+                searchQuery: '',
+                get filteredDoctors() {
+                    let q = this.searchQuery.toLowerCase().trim();
+                    let cards = Array.from(document.querySelectorAll('.doctor-card-item'));
+                    let visibleCount = 0;
+                    cards.forEach(card => {
+                        let text = (card.getAttribute('data-doctor-name') + ' ' + card.getAttribute('data-doctor-specialty') + ' ' + card.getAttribute('data-doctor-office')).toLowerCase();
+                        let matchesSearch = q === '' || text.includes(q);
+                        card.style.display = matchesSearch ? '' : 'none';
+                        if (matchesSearch) visibleCount++;
+                    });
+                    let noResultsMsg = document.getElementById('no-search-results');
+                    if (noResultsMsg) {
+                        noResultsMsg.style.display = (visibleCount === 0 && cards.length > 0) ? 'block' : 'none';
+                    }
+                }
+            }">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-2 border-bottom gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-3" style="background:#ccfbf1; color:#0f766e;">
+                            <i class="fa-solid fa-user-doctor fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color: #092e3b;">Doctor Directory</h5>
+                            <small class="text-muted">Verified medical professionals authorized on DocMed</small>
+                        </div>
+                    </div>
+                    <span class="badge rounded-pill bg-success-subtle text-success border border-success-subtle px-3 py-2 fw-bold">
+                        <i class="fa-solid fa-shield-check me-1"></i> {{ verified_doctors|length }} Verified Practitioner{% if verified_doctors|length != 1 %}s{% endif %}
+                    </span>
+                </div>
+
+                <!-- Live Search Box -->
+                <div class="mb-4">
+                    <div class="input-group shadow-sm rounded-3">
+                        <span class="input-group-text bg-white border-end-0 rounded-start-3 text-muted ps-3">
+                            <i class="fa-solid fa-magnifying-glass text-teal" style="color: #0d9488;"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            class="form-control border-start-0 py-2 ps-2 rounded-end-3" 
+                            placeholder="Search by doctor name, specialty, degree, college, or chamber..."
+                            x-model="searchQuery"
+                            @input="filteredDoctors"
+                        >
+                    </div>
+                </div>
+
+                <!-- Doctors Cards List -->
+                {% if verified_doctors %}
+                    <div class="row g-3" id="verified-doctors-grid">
+                        {% for doc in verified_doctors %}
+                            {% set p_info = doc.profile_info %}
+                            <div class="col-md-6 doctor-card-item" 
+                                 data-doctor-name="{{ (p_info.full_name if p_info else doc.username)|lower }}"
+                                 data-doctor-specialty="{{ (p_info.current_position ~ ' ' ~ p_info.achievement ~ ' ' ~ p_info.course if p_info else '')|lower }}"
+                                 data-doctor-office="{{ (p_info.office ~ ' ' ~ p_info.college if p_info else '')|lower }}">
+                                
+                                <div class="card h-100 doctor-card shadow-sm">
+                                    <div class="card-body p-3 d-flex flex-column justify-content-between">
+                                        <div>
+                                            <!-- Doctor Header -->
+                                            <div class="d-flex align-items-start gap-3 mb-2">
+                                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 text-white fw-bold shadow-sm" style="width: 48px; height: 48px; background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%); font-size: 1.1rem;">
+                                                    <i class="fa-solid fa-user-doctor"></i>
+                                                </div>
+                                                <div class="flex-grow-1 overflow-hidden">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <h6 class="fw-bold mb-0 text-truncate text-dark" title="{{ p_info.full_name if p_info else 'Dr. ' ~ doc.username }}">
+                                                            {% if p_info and p_info.full_name %}
+                                                                {{ p_info.full_name }}
+                                                            {% else %}
+                                                                Dr. {{ doc.username }}
+                                                            {% endif %}
+                                                        </h6>
+                                                        <span class="badge bg-teal-100 text-teal ms-1 flex-shrink-0" style="background: #ccfbf1; color: #0f766e; font-size: 0.7rem;">
+                                                            <i class="fa-solid fa-circle-check"></i> Verified
+                                                        </span>
+                                                    </div>
+                                                    <small class="text-teal fw-semibold d-block text-truncate" style="color: #0d9488;">
+                                                        {{ p_info.current_position if p_info and p_info.current_position else 'Medical Practitioner' }}
+                                                    </small>
+                                                </div>
+                                            </div>
+
+                                            <!-- Doctor Details Pill Box -->
+                                            <div class="bg-light p-2 rounded-3 mb-3 small" style="font-size: 0.82rem;">
+                                                {% if p_info and p_info.achievement %}
+                                                    <div class="mb-1 text-truncate text-secondary">
+                                                        <i class="fa-solid fa-graduation-cap text-muted me-1"></i> <strong>Degree:</strong> {{ p_info.achievement }}
+                                                    </div>
+                                                {% endif %}
+                                                {% if p_info and p_info.college %}
+                                                    <div class="mb-1 text-truncate text-secondary">
+                                                        <i class="fa-solid fa-building-columns text-muted me-1"></i> <strong>College:</strong> {{ p_info.college }}
+                                                    </div>
+                                                {% endif %}
+                                                {% if p_info and p_info.govt_reg %}
+                                                    <div class="mb-1 text-truncate text-secondary font-monospace">
+                                                        <i class="fa-solid fa-id-card text-muted me-1"></i> <strong>Reg:</strong> {{ p_info.govt_reg }}
+                                                    </div>
+                                                {% endif %}
+                                                {% if p_info and p_info.office %}
+                                                    <div class="text-truncate text-secondary">
+                                                        <i class="fa-solid fa-location-dot text-muted me-1"></i> <strong>Chamber:</strong> {{ p_info.office }}
+                                                    </div>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+
+                                        <!-- Card Footer Action -->
+                                        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                                            <small class="text-muted">
+                                                <i class="fa-regular fa-envelope me-1"></i> {{ doc.email }}
+                                            </small>
+                                            {% if p_info %}
+                                                <a href="{{ url_for('dashboard.profile_page', uid=doc.uid) }}" class="btn btn-sm btn-outline-teal fw-bold rounded-pill px-3" style="color: #0d9488; border-color: #0d9488; font-size: 0.8rem;">
+                                                    View Profile <i class="fa-solid fa-chevron-right ms-1 fa-xs"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="badge bg-secondary-subtle text-secondary" style="font-size: 0.75rem;">Profile Pending</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- No Search Results Found message -->
+                    <div id="no-search-results" class="text-center py-5 bg-light rounded-4 my-3" style="display: none;">
+                        <div class="d-inline-flex p-3 rounded-circle bg-white text-muted mb-2 shadow-sm">
+                            <i class="fa-solid fa-magnifying-glass fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">No Matching Doctors Found</h6>
+                        <p class="text-muted small mb-0">Try adjusting your search keywords.</p>
+                    </div>
+
+                {% else %}
+                    <div class="text-center py-5 bg-light rounded-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-white text-muted mb-2 shadow-sm">
+                            <i class="fa-solid fa-user-doctor fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">No Verified Doctors Available Yet</h6>
+                        <p class="text-muted small mb-0">Registered medical practitioners are currently being reviewed by administrators.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
