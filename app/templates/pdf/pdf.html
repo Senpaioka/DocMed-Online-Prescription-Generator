@@ -169,6 +169,13 @@
             color: #0f172a;
         }
 
+        .patient-id-val {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 800;
+            color: #0d9488;
+            letter-spacing: 0.3px;
+        }
+
         /* Main Content Layout Table */
         .main-layout-table {
             width: 100%;
@@ -395,7 +402,7 @@
                     <strong>{{ doctor.profile_info.current_position | title if doctor.profile_info.current_position else 'Consultant Physician' }}</strong>
                 </div>
                 <div class="doctor-reg">
-                    BMDC Reg. No: <span style="font-family: monospace; color: #0d9488;">{{ doctor.profile_info.govt_reg or 'N/A' }}</span>
+                    BMDC Reg. No: <span style="font-weight: 700; color: #0d9488;">{{ doctor.profile_info.govt_reg or 'N/A' }}</span>
                 </div>
             </td>
         </tr>
@@ -422,7 +429,7 @@
                 </td>
                 <td style="width: 20%;">
                     <span class="patient-label">Patient ID</span><br>
-                    <span class="patient-val" style="font-family: monospace; color: #0d9488;">#{{ patient.patient_id }}</span>
+                    <span class="patient-id-val">#{{ patient.patient_id }}</span>
                 </td>
                 <td style="width: 18%; text-align: right;">
                     <span class="patient-label">Date</span><br>
