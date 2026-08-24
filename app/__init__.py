@@ -1,4 +1,15 @@
 import os
+import sys
+
+# Configure Windows DLL path for WeasyPrint (GTK / Pango libraries)
+if os.name == 'nt' and hasattr(os, 'add_dll_directory'):
+    msys2_mingw_bin = r'C:\msys64\mingw64\bin'
+    if os.path.exists(msys2_mingw_bin):
+        try:
+            os.add_dll_directory(msys2_mingw_bin)
+        except Exception:
+            pass
+
 from flask import Flask
 from app.config import config_by_name, DevelopmentConfig
 from app.extensions import db, migrate, login_manager, mail

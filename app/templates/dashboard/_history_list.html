@@ -1,22 +1,42 @@
 {% if history_exists %}
-    <div class="mt-4 mb-4">
-        <h5>Previously Prescribed</h5>
+    <div class="d-flex flex-column gap-3 mt-3">
         {% for data in info.items %}
-        <div class="card mb-2">
-            <div class="card-body">
-                <h5 class="card-title">Patient ID: #{{ data.patient_id }}</h5>
-                <h6 class="card-subtitle mb-2 text-body-secondary">Patient Name: {{ data.patient_name }}</h6>
-                <p class="card-text">Prescribed at: {{ data.created_at.strftime('%d-%m-%Y') }}</p>
-                <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="card-link">Prescription</a>
+        <div class="card border-0 shadow-sm rounded-3 p-3 bg-white hover-shadow transition-all" style="border: 1px solid #e2e8f0 !important;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #f0fdfa; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fa-solid fa-file-medical"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1 text-dark">
+                            {{ data.patient_name | title }}
+                            <span class="badge bg-light text-secondary ms-1 fw-normal font-monospace" style="font-size: 0.75rem;">#{{ data.patient_id }}</span>
+                        </h6>
+                        <small class="text-muted d-block">
+                            <i class="fa-regular fa-calendar me-1"></i> Prescribed on {{ data.created_at.strftime('%d %b, %Y') }}
+                            {% if data.patient_age %} • {{ data.patient_age }} yrs{% endif %}
+                            {% if data.patient_sex %} • {{ data.patient_sex | capitalize }}{% endif %}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="btn btn-sm btn-outline-secondary rounded-2 px-3 py-1 fw-semibold">
+                        <i class="fa-solid fa-eye me-1"></i> View Details
+                    </a>
+                    <a href="{{ url_for('pdf_generator.pdf_generator_page', uid=data.doc_id, patient_id=data.patient_id, download='true') }}" class="btn btn-sm btn-primary rounded-2 px-3 py-1 fw-semibold" style="background: #0d9488; border-color: #0d9488;">
+                        <i class="fa-solid fa-download me-1"></i> Download PDF
+                    </a>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 
-    <div class="text-center mt-3">
+    <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
         {% if info.has_prev %}
             <a href="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.prev_num) }}"
-               class="btn btn-sm btn-outline-secondary me-2"
+               class="btn btn-sm btn-outline-secondary px-3"
                hx-get="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.prev_num) }}"
                hx-target="#history-container"
                hx-swap="innerHTML"
@@ -25,11 +45,11 @@
             </a>
         {% endif %}
     
-        <span class="badge bg-secondary p-2">Page {{ info.page }} of {{ info.pages }}</span>
+        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">Page {{ info.page }} of {{ info.pages }}</span>
     
         {% if info.has_next %}
             <a href="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.next_num) }}"
-               class="btn btn-sm btn-outline-secondary ms-2"
+               class="btn btn-sm btn-outline-secondary px-3"
                hx-get="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.next_num) }}"
                hx-target="#history-container"
                hx-swap="innerHTML"
@@ -39,8 +59,14 @@
         {% endif %}
     </div>    
 {% else %}
-    <div class="text-center py-5">
-        <h3>No History Found</h3>
-        <p class="text-muted">You haven't generated any prescriptions yet.</p>
+    <div class="text-center py-5 bg-white rounded-4 border p-4 my-3">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #f1f5f9; color: #94a3b8; display: inline-flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 12px;">
+            <i class="fa-regular fa-folder-open"></i>
+        </div>
+        <h5 class="fw-bold text-dark mb-1">No Prescriptions Found</h5>
+        <p class="text-muted small mb-3">You haven't generated any prescriptions yet.</p>
+        <a href="{{ url_for('pdf_generator.document_page') }}" class="btn btn-sm btn-primary px-3 py-2 rounded-3" style="background: #0d9488; border-color: #0d9488;">
+            <i class="fa-solid fa-plus me-1"></i> Create First Prescription
+        </a>
     </div>
 {% endif %}

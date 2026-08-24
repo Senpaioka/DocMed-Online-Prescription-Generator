@@ -6,7 +6,6 @@ from app.modules.pdf.models import PrescriptionModel
 from app.modules.account.models import RegistrationModel
 from app.modules.pdf.forms import PrescriptionForm
 import uuid
-from xhtml2pdf import pisa
 import io
 import os
 
@@ -170,65 +169,27 @@ def pdf_prescription_preview(patient_id):
 
 
 
-# Function to convert HTML to PDF and return it as response
-from flask import render_template, make_response, current_app
-from xhtml2pdf import pisa
-import io
-import os
-
-def create_pdf(template_name, context):
-    html = render_template(template_name, **context)
-    pdf = io.BytesIO()
-    pisa_status = pisa.CreatePDF(
-        html, dest=pdf, link_callback=lambda uri, rel: os.path.join(current_app.root_path, uri.lstrip('/'))
-    )
-
-    if pisa_status.err:
-        return "Error generating PDF", 500
-
-    pdf.seek(0)
-    response = make_response(pdf.read())
-    response.headers['Content-Type'] = 'application/pdf'
-    response.headers['Content-Disposition'] = 'inline; filename=prescription.pdf'
-    return response
-
+from app.core.pdf_service import make_pdf_response
 
 
 @pdf_generator.route('/generate_pdf/<uid>/<patient_id>')
 def pdf_generator_page(uid, patient_id):
+    """
+    Renders / downloads the prescription PDF.
+    - default: inline view
+    - ?download=true or ?dl=1: force download attachment
+    """
+    get_patient = PrescriptionModel.query.filter_by(patient_id=patient_id).first_or_404()
+    get_doctor = RegistrationModel.query.get_or_404(uid)
 
-    # getting patient prescription
-    get_patient = PrescriptionModel.query.filter_by(patient_id=patient_id).first()
+    download_mode = request.args.get('download', '').lower() in ('1', 'true', 'yes') or request.args.get('dl') == '1'
 
-    # getting doctor info
-    get_doctor = RegistrationModel.query.get(uid)
+    clean_patient_name = "".join(c for c in (get_patient.patient_name or 'patient') if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')
+    filename = f"Rx_{clean_patient_name}_{get_patient.patient_id}.pdf"
 
     context = {
         'patient': get_patient,
         'doctor': get_doctor,
     }
-    # return render_template('pdf/pdf.html', **context)
 
-    return create_pdf('pdf/pdf.html', context)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
+    return make_pdf_response('pdf/pdf.html', context, filename=filename, download=download_mode)

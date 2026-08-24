@@ -1,154 +1,347 @@
 {% extends 'base.html' %}
 
-{% block title %} PDF Preview {% endblock %}
+{% block title %} Prescription Template Preview - DocMed {% endblock %}
 
 {% block content %}
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .prescription-card {
-            background-image: url("/static/img/bg.png");
-            background-repeat: no-repeat;
-            background-position: center center;
-            background-size: 500px 500px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        .doctor-info {
-            text-align: right;
-            font-size: 14px;
-        }
-        .prescription-header {
-            border-bottom: 2px solid #D3D3D3;
-            padding-bottom: 10px;
-        }
-        .print-btn {
-            text-align: center;
-            margin-top: 20px;
-        }
-        td {
-            width: 50%;
-        }
+<style>
+    :root {
+        --docmed-teal: #0d9488;
+        --docmed-teal-dark: #0f766e;
+        --docmed-navy: #092e3b;
+    }
 
-        @media print {
-            .print-btn {
-                display: none;
-            }
+    body {
+        background-color: #f1f5f9;
+    }
 
-    
+    .template-page-wrapper {
+        max-width: 960px;
+        margin: 36px auto 80px auto;
+    }
 
-        }
-    </style>
-</head>
-<body>
+    /* Top Action Bar */
+    .template-action-bar {
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 18px 24px;
+        box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 14px;
+    }
 
-    <div class="container mt-5">
-        <div class="prescription-card">
-            
-            <!-- Doctor & Clinic Info -->
-            <div class="row prescription-header">
-                <div class="col-md-6">
-                    <p>Patient ID : # patient_id</p>
-                </div>
-                <div class="col-md-6 doctor-info">
-                    <h3>{{ doctor_info.full_name |upper }}</h3>
-                    <p>{{ doctor_info.achievement |upper }}</p>
-                    <span>({{ doctor_info.college |title  }}, {{ doctor_info.higher_degree |title }})</span>
-                    <p>{{ doctor_info.course |title  }}, {{ doctor_info.extra |title }}</p>
-                    <span>{{ doctor_info.current_position |title }}</span>
-                    <p><strong>Reg. No:</strong>{{ doctor_info.govt_reg }}</p>
-                </div>
+    .template-action-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .template-icon-badge {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+        box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+    }
+
+    .prescription-paper-card {
+        background: #ffffff;
+        border-radius: 18px;
+        box-shadow: 0 15px 40px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.9);
+        padding: 42px 48px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .paper-watermark {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        opacity: 0.04;
+        width: 440px;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .paper-header {
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 20px;
+        margin-bottom: 20px;
+    }
+
+    .brand-logo-text {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #092e3b;
+        letter-spacing: -0.02em;
+    }
+
+    .brand-logo-text span {
+        color: #0d9488;
+    }
+
+    .doctor-title-block {
+        text-align: right;
+    }
+
+    .doctor-name {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #092e3b;
+        margin-bottom: 2px;
+    }
+
+    .doctor-achievement {
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #0d9488;
+    }
+
+    .doctor-detail-line {
+        font-size: 0.84rem;
+        color: #475569;
+        margin: 0;
+    }
+
+    .patient-ribbon {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 14px 20px;
+        margin-bottom: 24px;
+    }
+
+    .ribbon-label {
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        font-weight: 700;
+        color: #64748b;
+        letter-spacing: 0.04em;
+    }
+
+    .ribbon-val {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .clinical-section-title {
+        font-size: 0.8rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #0f766e;
+        background: #f0fdfa;
+        border-left: 3px solid #0d9488;
+        padding: 4px 8px;
+        border-radius: 0 4px 4px 0;
+        margin-bottom: 8px;
+    }
+
+    .vitals-item {
+        font-size: 0.86rem;
+        padding: 4px 0;
+        border-bottom: 1px dashed #f1f5f9;
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .rx-big-symbol {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #0d9488;
+        font-family: serif;
+        line-height: 1;
+    }
+
+    .medications-paper-body {
+        font-size: 0.94rem;
+        line-height: 1.7;
+        color: #64748b;
+        min-height: 200px;
+        font-style: italic;
+    }
+
+    .advice-paper-box {
+        background: #fafafa;
+        border: 1px dashed #cbd5e1;
+        border-radius: 10px;
+        padding: 14px 18px;
+        margin-top: 24px;
+    }
+
+    .paper-footer {
+        border-top: 1.5px solid #e2e8f0;
+        padding-top: 20px;
+        margin-top: 30px;
+    }
+</style>
+
+<div class="container template-page-wrapper">
+
+    <!-- Top Action Bar -->
+    <div class="template-action-bar">
+        <div class="template-action-title">
+            <div class="template-icon-badge">
+                <i class="fa-solid fa-stamp"></i>
             </div>
-
-            <!-- Patient Information -->
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong>Name:</strong></p>
-                </div>
-                <div class="col-md-3">
-                    <p><strong>Age:</strong> <span></span></p>
-                </div>
-                <div class="col-md-3">
-                    <p><strong>Sex:</strong> <span></span></p>
-                </div>
-            </div>
-
-            <div class='row'>
-                <div class="col-md-3"></div>
-                <div class="col-md-3"></div>
-                <div class="col-md-3"></div>
-            </div>
-
-            <hr>
-
-            <!-- Symptoms & Diagnosis -->
-
-            <div class='row'>
-                <div class="col-md-5">
-                    <div>
-                        <h6>C/C</h6>
-                        <hr>
-                        <p></p>
-                    </div>
-                    <div>
-                        <h6>O/E</h6>
-                        <hr>
-                        <p>BP:</p>
-                        <p>Pulse:</p>
-                        <p>Temp:</p>
-                        <p>SpO:</p>
-                    </div>
-                    <div>
-                        <h6>Inv</h6>
-                        <hr>
-                        <p></p>
-                    </div>
-                    
-                </div>
-
-                <div class="col-md-7">
-
-                    <h5><i class="fa-solid fa-prescription"></i></h5>
-                    
-
-                </div>
-            </div>
-
-            
-
-            <!-- Prescription Table -->
-            
-
-            <!-- Advice -->
-            <div class='row'>
-                <div class="col-md-5"></div>
-                <div class="col-md-7">
-                    <strong>Advice</strong>
-                    <p></p>
-                </div>
-            </div>
-
-
-            <!-- Doctor's Signature -->
-            <div class="text-end">
-                <img src="{{ url_for('static', filename='uploads/' + doctor_info.signature) }}" alt="sign" style="width: 200px; height: 100px;">
-                <p>Date: (Prescription generate date)<p>
-                <p><strong>Doctor's Signature</strong></p>
-            </div>
-
-
             <div>
-                <p><strong>Chamber/Office Address:</strong> {{ doctor_info.office }}</p>
-                <span><strong>Phone:</strong> {{ doctor_info.phone }}</span>
-                <p><strong>Email:</strong> {{ doctor_info.registration.email }}</p>
+                <h5 class="fw-bold mb-0 text-dark">Prescription Layout Sample</h5>
+                <small class="text-muted">This preview shows your active letterhead, signature, and formatting for all generated PDFs.</small>
             </div>
+        </div>
 
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            <a href="{{ url_for('pdf_generator.document_page') }}" class="btn btn-primary px-3 py-2 rounded-3" style="background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%); border: none;">
+                <i class="fa-solid fa-file-prescription me-1"></i> Open Prescription Studio
+            </a>
+            <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn btn-outline-secondary px-3 py-2 rounded-3">
+                <i class="fa-solid fa-pen-to-square me-1"></i> Edit Header & Sign
+            </a>
         </div>
     </div>
 
+    <!-- Paper Card Preview -->
+    <div class="prescription-paper-card">
+        <img src="{{ url_for('static', filename='img/bg.png') }}" class="paper-watermark" alt="DocMed Background">
+
+        <!-- Paper Header -->
+        <div class="row paper-header align-items-center">
+            <div class="col-md-6">
+                <div class="brand-logo-text">Doc<span>Med</span>.</div>
+                <small class="text-muted text-uppercase fw-semibold" style="letter-spacing: 0.05em; font-size: 0.78rem;">Digital Healthcare & e-Prescription</small>
+                <div class="mt-1">
+                    <span class="badge bg-light text-dark border font-monospace" style="font-size: 0.76rem;">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i> Official Practice Template
+                    </span>
+                </div>
+            </div>
+            <div class="col-md-6 doctor-title-block">
+                <div class="doctor-name">DR. {{ (doctor_info.full_name or doctor_info.registration.username) | upper }}</div>
+                <div class="doctor-achievement">{{ (doctor_info.achievement or 'MBBS') | upper }}</div>
+                <p class="doctor-detail-line">
+                    {{ doctor_info.college | title }}{% if doctor_info.higher_degree %}, {{ doctor_info.higher_degree | title }}{% endif %}
+                </p>
+                {% if doctor_info.course or doctor_info.extra %}
+                <p class="doctor-detail-line">
+                    {{ doctor_info.course | title }}{% if doctor_info.course and doctor_info.extra %}, {% endif %}{{ doctor_info.extra | title }}
+                </p>
+                {% endif %}
+                <p class="doctor-detail-line fw-bold text-dark">
+                    {{ doctor_info.current_position | title }}
+                </p>
+                <p class="doctor-detail-line mt-1">
+                    BMDC Reg. No: <span class="fw-bold font-monospace text-teal" style="color: #0d9488;">{{ doctor_info.govt_reg or 'N/A' }}</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Patient Ribbon Sample -->
+        <div class="patient-ribbon">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-4 col-sm-6">
+                    <div class="ribbon-label">Patient Name</div>
+                    <div class="ribbon-val text-muted">[Patient Full Name]</div>
+                </div>
+                <div class="col-md-2 col-sm-3">
+                    <div class="ribbon-label">Age</div>
+                    <div class="ribbon-val text-muted">[--] Yrs</div>
+                </div>
+                <div class="col-md-2 col-sm-3">
+                    <div class="ribbon-label">Gender</div>
+                    <div class="ribbon-val text-muted">[Gender]</div>
+                </div>
+                <div class="col-md-2 col-sm-6">
+                    <div class="ribbon-label">Patient ID</div>
+                    <div class="ribbon-val font-monospace text-teal" style="color: #0d9488;">#XXXXXXXX</div>
+                </div>
+                <div class="col-md-2 col-sm-6 text-md-end">
+                    <div class="ribbon-label">Date</div>
+                    <div class="ribbon-val text-muted">[DD-MM-YYYY]</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Clinical Sample -->
+        <div class="row g-4 mb-4" style="min-height: 240px;">
+            <div class="col-md-4 border-end pe-md-4">
+                <div class="mb-3">
+                    <div class="clinical-section-title">Chief Complaints (C/C)</div>
+                    <p class="text-muted small mb-0">[Patient symptoms and clinical presentation]</p>
+                </div>
+
+                <div class="mb-3">
+                    <div class="clinical-section-title">On Examination (O/E)</div>
+                    <div class="bg-light p-2 rounded-3 border">
+                        <div class="vitals-item"><span class="text-muted">BP:</span> <span class="text-muted">120/80 mmHg</span></div>
+                        <div class="vitals-item"><span class="text-muted">Pulse:</span> <span class="text-muted">74 bpm</span></div>
+                        <div class="vitals-item"><span class="text-muted">Temp:</span> <span class="text-muted">98.6°F</span></div>
+                        <div class="vitals-item"><span class="text-muted">SpO2:</span> <span class="text-muted">99%</span></div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="clinical-section-title">Investigation Advised</div>
+                    <p class="text-muted small mb-0">[Diagnostic tests & imaging list]</p>
+                </div>
+            </div>
+
+            <div class="col-md-8 ps-md-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="rx-big-symbol">℞</span>
+                    <h6 class="fw-bold mb-0 text-dark" style="letter-spacing: 0.03em;">Prescribed Medications</h6>
+                </div>
+
+                <div class="medications-paper-body">
+                    1. Tab. Napa Extra (500mg+65mg) — 1+0+1 (After meal) — 5 days<br>
+                    2. Cap. Seclo (20mg) — 1+0+1 (Before meal) — 14 days<br>
+                    3. Syp. Tofen (100ml) — 1 tsp at bedtime — 7 days
+                </div>
+
+                <div class="advice-paper-box">
+                    <h6 class="fw-bold mb-1 text-dark small text-uppercase" style="letter-spacing: 0.05em;">
+                        <i class="fa-solid fa-lightbulb text-warning me-1"></i> Advice & Instructions
+                    </h6>
+                    <p class="mb-0 text-muted small" style="line-height: 1.5;">Drink plenty of warm water, adequate rest, follow up in 7 days.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="row paper-footer align-items-end">
+            <div class="col-md-7 text-muted small">
+                <h6 class="fw-bold text-dark mb-1">Chamber / Office Address:</h6>
+                <p class="mb-1 text-dark">{{ doctor_info.office or 'DocMed Telehealth & Clinical Center' }}</p>
+                {% if doctor_info.phone %}
+                <p class="mb-0"><i class="fa-solid fa-phone me-1 fa-xs"></i> <strong>{{ doctor_info.phone }}</strong></p>
+                {% endif %}
+                <p class="mb-0"><i class="fa-solid fa-envelope me-1 fa-xs"></i> {{ doctor_info.registration.email }}</p>
+            </div>
+            <div class="col-md-5 text-md-end text-center mt-3 mt-md-0">
+                {% if doctor_info.signature %}
+                <div class="mb-1">
+                    <img src="{{ url_for('static', filename='uploads/' + doctor_info.signature) }}" alt="Digital Signature" style="max-height: 55px; max-width: 180px; object-fit: contain;">
+                </div>
+                {% endif %}
+                <div class="d-inline-block border-top pt-1 text-center" style="min-width: 160px;">
+                    <strong class="text-dark d-block small">Authorized Signature</strong>
+                    <span class="text-muted" style="font-size: 0.75rem;">Official DocMed Stamp</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
 
 {% endblock %}

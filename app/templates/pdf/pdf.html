@@ -1,121 +1,543 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Prescription</title>
+    <title>Prescription - #{{ patient.patient_id }}</title>
     <style>
         @page {
-            margin: 2cm;
-            background-image: url("{{ url_for('static', filename='img/bg.png') }}");
-        }
-        h2 {
+            size: A4 portrait;
             margin: 0;
-            text-transform: uppercase;
-            color: #2F71B3;
+            @bottom-center {
+                content: "DocMed Digital Healthcare • Page " counter(page) " of " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #94a3b8;
+            }
         }
-        table {
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #1e293b;
+            background-color: #ffffff;
+            font-size: 9.5pt;
+            line-height: 1.45;
+            padding: 0;
+            margin: 0;
+        }
+
+        .page-container {
+            padding: 28px 36px 36px 36px;
+            position: relative;
+            min-height: 100%;
+        }
+
+        /* Watermark Background */
+        .watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            opacity: 0.035;
+            width: 380px;
+            height: 380px;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Header / Clinic Letterhead */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+
+        .brand-col {
+            vertical-align: top;
+            width: 42%;
+        }
+
+        .doctor-col {
+            vertical-align: top;
+            text-align: right;
+            width: 58%;
+        }
+
+        .brand-logo-text {
+            font-size: 20pt;
+            font-weight: 800;
+            color: #092e3b;
+            letter-spacing: -0.5px;
+            margin-bottom: 2px;
+        }
+
+        .brand-logo-text span {
+            color: #0d9488;
+        }
+
+        .brand-subtext {
+            font-size: 8pt;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .rx-badge {
+            display: inline-block;
+            background-color: #f0fdfa;
+            border: 1px solid #ccfbf1;
+            color: #0f766e;
+            font-size: 8pt;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 4px;
+            margin-top: 6px;
+        }
+
+        .doctor-name {
+            font-size: 14pt;
+            font-weight: 800;
+            color: #092e3b;
+            margin-bottom: 2px;
+            letter-spacing: -0.3px;
+        }
+
+        .doctor-degrees {
+            font-size: 9.5pt;
+            font-weight: 700;
+            color: #0d9488;
+            margin-bottom: 2px;
+        }
+
+        .doctor-subdetails {
+            font-size: 8.5pt;
+            color: #475569;
+            line-height: 1.35;
+        }
+
+        .doctor-reg {
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 3px;
+        }
+
+        /* Top Accent Bar */
+        .header-accent-bar {
+            height: 4px;
+            background: linear-gradient(90deg, #092e3b 0%, #0d9488 60%, #14b8a6 100%);
+            border-radius: 2px;
+            margin-bottom: 14px;
+        }
+
+        /* Patient Info Ribbon */
+        .patient-card {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            width: 100%;
+        }
+
+        .patient-table {
             width: 100%;
             border-collapse: collapse;
         }
-        th, td {
-            text-align: left;
+
+        .patient-table td {
+            padding: 2px 6px;
+            font-size: 9pt;
+            vertical-align: middle;
         }
-        .header, .footer {
-            text-align: center;
+
+        .patient-label {
+            color: #64748b;
+            font-size: 8pt;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .patient-val {
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        /* Main Content Layout Table */
+        .main-layout-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 14px;
+        }
+
+        .clinical-col {
+            width: 34%;
+            vertical-align: top;
+            padding-right: 16px;
+            border-right: 1.5px solid #e2e8f0;
+        }
+
+        .rx-col {
+            width: 66%;
+            vertical-align: top;
+            padding-left: 18px;
+        }
+
+        /* Clinical Section Headings */
+        .section-header {
+            font-size: 8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #0f766e;
+            background-color: #f0fdfa;
+            border-left: 3px solid #0d9488;
+            padding: 3px 6px;
+            margin-bottom: 6px;
+            margin-top: 10px;
+        }
+
+        .section-header:first-child {
+            margin-top: 0;
+        }
+
+        .clinical-box {
             margin-bottom: 10px;
         }
-        .column {
-            width: 48%;
-            vertical-align: top;
+
+        .clinical-text {
+            font-size: 9pt;
+            color: #334155;
+            padding-left: 4px;
+            line-height: 1.4;
         }
-        .med-list {
-            margin-top: 15px;
+
+        /* Vitals Table */
+        .vitals-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            background: #ffffff;
+            border: 1px solid #f1f5f9;
+            border-radius: 4px;
+        }
+
+        .vitals-table td {
+            padding: 3px 6px;
+            font-size: 8.5pt;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .vitals-name {
+            color: #64748b;
+            font-weight: 600;
+            width: 45%;
+        }
+
+        .vitals-val {
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        /* Rx Prescription Column */
+        .rx-symbol-row {
+            margin-bottom: 10px;
+        }
+
+        .rx-symbol {
+            font-size: 20pt;
+            font-weight: bold;
+            color: #0d9488;
+            font-family: "Times New Roman", Times, serif;
+            display: inline-block;
+            line-height: 1;
+        }
+
+        .rx-header-text {
+            font-size: 9pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #475569;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .medications-content {
+            font-size: 9.5pt;
+            line-height: 1.7;
+            color: #1e293b;
+            min-height: 280px;
+            padding-left: 6px;
+        }
+
+        .advice-box {
+            margin-top: 18px;
+            padding: 10px 12px;
+            background-color: #fafafa;
+            border: 1px dashed #cbd5e1;
+            border-radius: 6px;
+        }
+
+        .advice-title {
+            font-size: 8pt;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #092e3b;
+            margin-bottom: 4px;
+        }
+
+        .advice-text {
+            font-size: 9pt;
+            color: #334155;
+            line-height: 1.45;
+        }
+
+        /* Footer & Signature Section */
+        .footer-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            padding-top: 14px;
+            border-top: 1.5px solid #e2e8f0;
+        }
+
+        .chamber-col {
+            width: 60%;
+            vertical-align: bottom;
+            font-size: 8.5pt;
+            color: #475569;
+            line-height: 1.4;
+        }
+
+        .chamber-title {
+            font-weight: 700;
+            color: #092e3b;
+            margin-bottom: 2px;
+        }
+
+        .signature-col {
+            width: 40%;
+            vertical-align: bottom;
+            text-align: right;
+        }
+
+        .sig-image {
+            max-height: 52px;
+            max-width: 180px;
+            object-fit: contain;
+            margin-bottom: 4px;
+        }
+
+        .sig-line {
+            border-top: 1.5px solid #0f172a;
+            display: inline-block;
+            min-width: 160px;
+            padding-top: 4px;
+            text-align: center;
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #0f172a;
+        }
+
+        .sig-date {
+            font-size: 7.5pt;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Bottom Security Strip */
+        .security-strip {
+            margin-top: 14px;
+            text-align: center;
+            font-size: 7.5pt;
+            color: #94a3b8;
+            border-top: 1px dotted #e2e8f0;
+            padding-top: 6px;
         }
     </style>
 </head>
-
 <body>
-    <p>Patient ID : #{{ patient.patient_id }}</p>
 
-    <table>
-      <tr>
-          <td></td>
+<div class="page-container">
 
-          <td style="text-align: right;">
-            <h2>{{ doctor.profile_info.full_name |upper }}</h3>
-          <dl>
-            <dt>{{ doctor.profile_info.achievement |upper }}</dt>
-            <dt>({{ doctor.profile_info.college |title  }}, {{ doctor.profile_info.higher_degree |title }})</dt>
-            <dt>{{ doctor.profile_info.course |title  }}, {{ doctor.profile_info.extra |title }}</dt>
-            <dt>{{ doctor.profile_info.current_position |title }}</dt>
-            <dt><strong>Reg. No:</strong>{{ doctor.profile_info.govt_reg }}</dt>
-          </dl> 
-      </tr>
-  </table>
+    <!-- Watermark Background Image if exists -->
+    <img src="{{ url_for('static', filename='img/bg.png', _external=False) }}" class="watermark" alt="DocMed">
 
-  <table>
-    <thead>
-      <tr>
-        <td><strong>Name:</strong> {{ patient.patient_name }}</td>
-        <td><strong>Age:</strong> <span>{{ patient.patient_age }}</span></td>
-        <td><strong>Sex:</strong> <span>{{ patient.patient_sex }}</th>
-      </tr>
-    </thead>
-  </table>
-  <hr>
-
-  <br>
-    <table>
+    <!-- Header / Letterhead -->
+    <table class="header-table">
         <tr>
-            <td class="column">
-                <p><strong>C/C:</strong> {{ patient.cc }}</p>
-                <br>
-                <p><strong>O/E:</strong></p>
-                <ul style="list-style-type: none;">
-                    <li><p><strong>BP:</strong> {{ patient.bp }}</p></li>
-                    <li><p><strong>Pulse:</strong> {{ patient.pulse }}</p></li>
-                    <li><p><strong>Temp:</strong> {{ patient.temp }}</p></li>
-                    <li><p><strong>SpO2:</strong> {{ patient.spo }}</p></li>
-                </ul>
-                <br>
-                <p><strong>Inv:</strong> {{ patient.inv }}</p>
+            <td class="brand-col">
+                <div class="brand-logo-text">Doc<span>Med</span>.</div>
+                <div class="brand-subtext">Digital Prescription & Healthcare</div>
+                <div class="rx-badge">Verified Medical Practitioner</div>
+            </td>
+            <td class="doctor-col">
+                <div class="doctor-name">DR. {{ (doctor.profile_info.full_name or doctor.username) | upper }}</div>
+                <div class="doctor-degrees">{{ (doctor.profile_info.achievement or 'MBBS') | upper }}</div>
+                <div class="doctor-subdetails">
+                    {% if doctor.profile_info.college %}{{ doctor.profile_info.college | title }}{% endif %}
+                    {% if doctor.profile_info.higher_degree %}, {{ doctor.profile_info.higher_degree | title }}{% endif %}
+                </div>
+                {% if doctor.profile_info.course or doctor.profile_info.extra %}
+                <div class="doctor-subdetails">
+                    {{ doctor.profile_info.course | title }}{% if doctor.profile_info.course and doctor.profile_info.extra %}, {% endif %}{{ doctor.profile_info.extra | title }}
+                </div>
+                {% endif %}
+                <div class="doctor-subdetails">
+                    <strong>{{ doctor.profile_info.current_position | title if doctor.profile_info.current_position else 'Consultant Physician' }}</strong>
+                </div>
+                <div class="doctor-reg">
+                    BMDC Reg. No: <span style="font-family: monospace; color: #0d9488;">{{ doctor.profile_info.govt_reg or 'N/A' }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Gradient Accent Bar -->
+    <div class="header-accent-bar"></div>
+
+    <!-- Patient Information Ribbon -->
+    <div class="patient-card">
+        <table class="patient-table">
+            <tr>
+                <td style="width: 32%;">
+                    <span class="patient-label">Patient Name</span><br>
+                    <span class="patient-val">{{ patient.patient_name | title }}</span>
+                </td>
+                <td style="width: 14%;">
+                    <span class="patient-label">Age</span><br>
+                    <span class="patient-val">{{ patient.patient_age }} Yrs</span>
+                </td>
+                <td style="width: 16%;">
+                    <span class="patient-label">Gender</span><br>
+                    <span class="patient-val">{{ patient.patient_sex | capitalize }}</span>
+                </td>
+                <td style="width: 20%;">
+                    <span class="patient-label">Patient ID</span><br>
+                    <span class="patient-val" style="font-family: monospace; color: #0d9488;">#{{ patient.patient_id }}</span>
+                </td>
+                <td style="width: 18%; text-align: right;">
+                    <span class="patient-label">Date</span><br>
+                    <span class="patient-val">{{ patient.created_at.strftime('%d-%m-%Y') }}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Main Clinical & Rx Layout -->
+    <table class="main-layout-table">
+        <tr>
+            <!-- Left Column: Complaints, Vitals, Investigations -->
+            <td class="clinical-col">
+                
+                {% if patient.cc %}
+                <div class="clinical-box">
+                    <div class="section-header">Chief Complaints (C/C)</div>
+                    <div class="clinical-text">{{ patient.cc }}</div>
+                </div>
+                {% endif %}
+
+                {% if patient.bp or patient.pulse or patient.temp or patient.spo %}
+                <div class="clinical-box">
+                    <div class="section-header">On Examination (O/E)</div>
+                    <table class="vitals-table">
+                        {% if patient.bp %}
+                        <tr>
+                            <td class="vitals-name">Blood Pressure:</td>
+                            <td class="vitals-val">{{ patient.bp }} mmHg</td>
+                        </tr>
+                        {% endif %}
+                        {% if patient.pulse %}
+                        <tr>
+                            <td class="vitals-name">Pulse Rate:</td>
+                            <td class="vitals-val">{{ patient.pulse }} bpm</td>
+                        </tr>
+                        {% endif %}
+                        {% if patient.temp %}
+                        <tr>
+                            <td class="vitals-name">Temperature:</td>
+                            <td class="vitals-val">{{ patient.temp }}</td>
+                        </tr>
+                        {% endif %}
+                        {% if patient.spo %}
+                        <tr>
+                            <td class="vitals-name">Oxygen (SpO2):</td>
+                            <td class="vitals-val">{{ patient.spo }}%</td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+                {% endif %}
+
+                {% if patient.inv %}
+                <div class="clinical-box">
+                    <div class="section-header">Investigation Advised</div>
+                    <div class="clinical-text">{{ patient.inv }}</div>
+                </div>
+                {% endif %}
+
             </td>
 
-            <td class="column">
-              <img src="{{ url_for('static', filename='img/prescription-solid.jpg') }}" alt="sign" style="width: 15px; height: 18px;">
-                <div class="med-list">
+            <!-- Right Column: Medications & Advice -->
+            <td class="rx-col">
+                <div class="rx-symbol-row">
+                    <span class="rx-symbol">℞</span>
+                    <span class="rx-header-text">Prescribed Medications</span>
+                </div>
+
+                <div class="medications-content">
                     {{ patient.rx | replace("\n", "<br>") | safe }}
                 </div>
 
-                <br>
-                <br>
-                <br>
-                <p><strong>Advice:</strong> {{ patient.advice }}</p>
+                {% if patient.advice %}
+                <div class="advice-box">
+                    <div class="advice-title">Special Instructions / Advice:</div>
+                    <div class="advice-text">{{ patient.advice }}</div>
+                </div>
+                {% endif %}
             </td>
         </tr>
     </table>
 
-    <table>
+    <!-- Footer: Chamber Info & Doctor Signature -->
+    <table class="footer-table">
         <tr>
-            <td>
-              <dl>
-                <dt><strong>Chamber/Office: </strong>{{ doctor.profile_info.office }}</dt>
-                <dt><strong>Phone: </strong>{{ doctor.profile_info.phone }}</dt>
-                <dt><strong>Email: </strong>{{ doctor.email }}</dt>
-              </dl>
+            <td class="chamber-col">
+                <div class="chamber-title">Chamber / Consultation Address:</div>
+                <div>{{ doctor.profile_info.office or 'DocMed Telehealth & Clinical Center' }}</div>
+                {% if doctor.profile_info.phone %}
+                <div>Phone: <strong>{{ doctor.profile_info.phone }}</strong></div>
+                {% endif %}
+                <div>Email: {{ doctor.email }}</div>
             </td>
-
-            <td style="text-align: right;">
-              <img src="{{ url_for('static', filename='uploads/' + doctor.profile_info.signature) }}" alt="sign" style="width: 200px; height: 100px;">
-                <p>{{ patient.created_at.strftime('%d-%m-%Y') }}</p>
-                <b>Signature</b>
+            <td class="signature-col">
+                {% if doctor.profile_info.signature %}
+                <div>
+                    <img src="{{ url_for('static', filename='uploads/' + doctor.profile_info.signature, _external=False) }}" class="sig-image" alt="Digital Signature">
+                </div>
+                {% endif %}
+                <div class="sig-line">
+                    Authorized Signature
+                </div>
+                <div class="sig-date">Prescribed on: {{ patient.created_at.strftime('%d %B, %Y') }}</div>
             </td>
         </tr>
     </table>
 
-    <div class="footer">
-        <p>Powered by DocMed © {{ patient.created_at.strftime('%Y') }}</p>
+    <!-- Bottom Security & Tamper Check -->
+    <div class="security-strip">
+        Electronically Generated by DocMed Online Healthcare Platform • Verified Practitioner Seal • Document ID: {{ patient.patient_id }}-{{ doctor.uid }}
     </div>
+
+</div>
 
 </body>
 </html>
