@@ -476,26 +476,31 @@
             confirmPassword: '',
             showPass: false,
             showConfirmPass: false,
+            get hasMinLength() { return this.password.length >= 8; },
+            get hasUppercase() { return /[A-Z]/.test(this.password); },
+            get hasLowercase() { return /[a-z]/.test(this.password); },
+            get hasNumber() { return /[0-9]/.test(this.password); },
+            get hasSpecial() { return /[!@#$%^&*()_+\-=\[\]{};:\'\&quot;,<>\/?\\|`~]/.test(this.password); },
+            get passedCriteriaCount() {
+                return (this.hasMinLength ? 1 : 0) +
+                       (this.hasUppercase ? 1 : 0) +
+                       (this.hasLowercase ? 1 : 0) +
+                       (this.hasNumber ? 1 : 0) +
+                       (this.hasSpecial ? 1 : 0);
+            },
             get strengthScore() {
-                let score = 0;
-                if (this.password.length >= 6) score += 25;
-                if (this.password.length >= 10) score += 25;
-                if (/[A-Z]/.test(this.password)) score += 25;
-                if (/[0-9!@#$%^&*]/.test(this.password)) score += 25;
-                return score;
+                return this.passedCriteriaCount * 20;
             },
             get strengthColor() {
-                if (this.strengthScore <= 25) return '#ef4444';
-                if (this.strengthScore <= 50) return '#f59e0b';
-                if (this.strengthScore <= 75) return '#3b82f6';
+                if (this.passedCriteriaCount <= 2) return '#ef4444';
+                if (this.passedCriteriaCount <= 4) return '#f59e0b';
                 return '#10b981';
             },
             get strengthLabel() {
                 if (!this.password) return '';
-                if (this.strengthScore <= 25) return 'Weak';
-                if (this.strengthScore <= 50) return 'Fair';
-                if (this.strengthScore <= 75) return 'Good';
-                return 'Strong';
+                if (this.passedCriteriaCount <= 2) return 'Weak';
+                if (this.passedCriteriaCount <= 4) return 'Good';
+                return 'Strong & Secure';
             }
         }">
             
@@ -560,7 +565,7 @@
                     </div>
                     <div class="input-wrapper">
                         <i class="fa-solid fa-lock input-icon"></i>
-                        {{ form.password(class="input-custom", placeholder="At least 6 characters", required=True, **{'x-model': 'password', ':type': "showPass ? 'text' : 'password'"}) }}
+                        {{ form.password(class="input-custom", placeholder="Min 8 chars, uppercase, lowercase, number & symbol", required=True, **{'x-model': 'password', ':type': "showPass ? 'text' : 'password'"}) }}
                         <button type="button" class="password-toggle-btn" @click="showPass = !showPass" :title="showPass ? 'Hide Password' : 'Show Password'" tabindex="-1">
                             <i :class="showPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
                         </button>
@@ -569,6 +574,27 @@
                     <!-- Password strength visual bar -->
                     <div class="strength-meter" x-show="password.length > 0">
                         <div class="strength-meter-bar" :style="'width: ' + strengthScore + '%; background-color: ' + strengthColor"></div>
+                    </div>
+
+                    <!-- Password Requirements Checklist -->
+                    <div class="password-rules-box mt-2 p-2 rounded bg-light border" x-show="password.length > 0" style="font-size: 0.78rem;">
+                        <div class="row g-1">
+                            <div class="col-6" :class="hasMinLength ? 'text-success' : 'text-muted'">
+                                <i :class="hasMinLength ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> At least 8 characters
+                            </div>
+                            <div class="col-6" :class="hasUppercase ? 'text-success' : 'text-muted'">
+                                <i :class="hasUppercase ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Uppercase letter (A-Z)
+                            </div>
+                            <div class="col-6" :class="hasLowercase ? 'text-success' : 'text-muted'">
+                                <i :class="hasLowercase ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Lowercase letter (a-z)
+                            </div>
+                            <div class="col-6" :class="hasNumber ? 'text-success' : 'text-muted'">
+                                <i :class="hasNumber ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Number (0-9)
+                            </div>
+                            <div class="col-12" :class="hasSpecial ? 'text-success' : 'text-muted'">
+                                <i :class="hasSpecial ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Special character (!@#$%^&*...)
+                            </div>
+                        </div>
                     </div>
 
                     {% for error in form.password.errors %}
@@ -600,6 +626,7 @@
                             <i class="fa-solid fa-circle-check"></i> Passwords match
                         </div>
                     </template>
+
 
                     {% for error in form.confirm_password.errors %}
                         <div class="field-error-text">

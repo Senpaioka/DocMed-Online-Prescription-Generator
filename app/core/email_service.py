@@ -47,12 +47,42 @@ def send_verification_otp(user, expiry_minutes=10) -> bool:
         'user': user,
         'otp': otp,
         'expiry_minutes': expiry_minutes,
-        'app_name': 'DocMed'
+        'app_name': 'DocMed',
+        'current_year': datetime.now().year
     }
 
     return send_email(
         subject='DocMed | Verify Your Email Address (OTP Code)',
         recipient=user.email,
         template_html='emails/otp_verification.html',
+        context=context
+    )
+
+
+def send_welcome_email(user, dashboard_url=None) -> bool:
+    """
+    Send role-specific welcome email after successful email verification.
+    """
+    is_doctor = (getattr(user, 'role', '') == 'doctor') or getattr(user, 'is_doctor', False)
+    
+    if is_doctor:
+        subject = 'Welcome to DocMed | Your Doctor Account is Active! 🩺'
+        template_html = 'emails/welcome_doctor.html'
+    else:
+        subject = 'Welcome to DocMed | Your Account is Verified! 💙'
+        template_html = 'emails/welcome_patient.html'
+
+    context = {
+        'user': user,
+        'is_doctor': is_doctor,
+        'dashboard_url': dashboard_url,
+        'app_name': 'DocMed',
+        'current_year': datetime.now().year
+    }
+
+    return send_email(
+        subject=subject,
+        recipient=user.email,
+        template_html=template_html,
         context=context
     )

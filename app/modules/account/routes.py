@@ -9,7 +9,7 @@ from app.modules.account.forms import (
     ResendOtpForm
 )
 from app.modules.account.models import RegistrationModel
-from app.core.email_service import send_verification_otp
+from app.core.email_service import send_verification_otp, send_welcome_email
 from werkzeug.security import generate_password_hash, check_password_hash
 from email_validator import validate_email
 from sqlalchemy.exc import IntegrityError
@@ -17,6 +17,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 
 
 accounts = Blueprint('accounts', __name__, template_folder='templates')
+
 
 
 # check username availability (HTMX)
@@ -140,12 +141,17 @@ def verify_otp(user_id):
             user.otp_expiry = None
             db.session.commit()
 
+            # Send role-based welcome email (Doctor vs Patient)
+            dashboard_url = url_for('dashboard.dashboard_main_page', uid=user.uid, _external=True)
+            send_welcome_email(user, dashboard_url=dashboard_url)
+
             # Automatically log the user in after successful verification
             login_user(user)
             flash('Email verified successfully! Welcome to DocMed.', 'success')
             return redirect(url_for('dashboard.dashboard_main_page', uid=user.uid))
         else:
             flash('Invalid OTP code. Please check your email and try again.', 'error')
+
 
     context = {
         'user': user,
