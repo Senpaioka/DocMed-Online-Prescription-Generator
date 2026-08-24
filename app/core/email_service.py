@@ -127,3 +127,59 @@ def send_doctor_approval_email(user, dashboard_url=None) -> bool:
     )
 
 
+def send_appointment_confirmed_email(appointment, patient, doctor, doctor_profile=None, patient_dashboard_url=None) -> bool:
+    """
+    Send email to patient notifying them that their appointment has been confirmed & scheduled by the doctor.
+    """
+    doctor_display_name = doctor_profile.full_name if (doctor_profile and doctor_profile.full_name) else f"Dr. {doctor.username}"
+    
+    context = {
+        'appointment': appointment,
+        'patient': patient,
+        'doctor': doctor,
+        'doctor_profile': doctor_profile,
+        'doctor_display_name': doctor_display_name,
+        'patient_dashboard_url': patient_dashboard_url,
+        'app_name': 'DocMed',
+        'current_year': datetime.now().year
+    }
+
+    return send_email(
+        subject=f'Appointment Confirmed with {doctor_display_name} 🗓️ | DocMed',
+        recipient=appointment.patient_email or patient.email,
+        template_html='emails/appointment_confirmed.html',
+        context=context
+    )
+
+
+def send_appointment_cancelled_email(appointment, patient, doctor, doctor_profile=None, reason=None, patient_dashboard_url=None) -> bool:
+    """
+    Send email to patient notifying them that their appointment has been cancelled or rejected by the doctor.
+    """
+    doctor_display_name = doctor_profile.full_name if (doctor_profile and doctor_profile.full_name) else f"Dr. {doctor.username}"
+    is_rejected = (appointment.status == 'rejected')
+
+    subject = f'Appointment Update: {"Declined" if is_rejected else "Cancelled"} by {doctor_display_name} | DocMed'
+
+    context = {
+        'appointment': appointment,
+        'patient': patient,
+        'doctor': doctor,
+        'doctor_profile': doctor_profile,
+        'doctor_display_name': doctor_display_name,
+        'reason': reason or appointment.doctor_notes,
+        'is_rejected': is_rejected,
+        'patient_dashboard_url': patient_dashboard_url,
+        'app_name': 'DocMed',
+        'current_year': datetime.now().year
+    }
+
+    return send_email(
+        subject=subject,
+        recipient=appointment.patient_email or patient.email,
+        template_html='emails/appointment_cancelled.html',
+        context=context
+    )
+
+
+

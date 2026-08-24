@@ -4,14 +4,31 @@
         <div class="card border-0 shadow-sm rounded-3 p-3 bg-white hover-shadow transition-all" style="border: 1px solid #e2e8f0 !important;">
             <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
                 <div class="d-flex align-items-center gap-3">
-                    <div style="width: 44px; height: 44px; border-radius: 12px; background: #f0fdfa; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                    {% if data.appointment_id %}
+                    <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #ecfdf5; color: #059669; font-size: 1.2rem;">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center" style="width: 44px; height: 44px; border-radius: 12px; background: #f0fdfa; color: #0d9488; font-size: 1.2rem;">
                         <i class="fa-solid fa-file-medical"></i>
                     </div>
+                    {% endif %}
                     <div>
-                        <h6 class="fw-bold mb-1 text-dark">
-                            {{ data.patient_name | title }}
-                            <span class="badge bg-light text-secondary ms-1 fw-normal font-monospace" style="font-size: 0.75rem;">#{{ data.patient_id }}</span>
-                        </h6>
+                        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+                            <h6 class="fw-bold mb-0 text-dark">
+                                {{ data.patient_name | title }}
+                                <span class="badge bg-light text-secondary ms-1 fw-normal font-monospace" style="font-size: 0.75rem;">#{{ data.patient_id }}</span>
+                            </h6>
+                            {% if data.appointment_id %}
+                                <span class="badge rounded-pill px-2 py-1 fw-bold" style="font-size: 0.72rem; background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;">
+                                    <i class="fa-solid fa-calendar-check me-1"></i> Appointed
+                                </span>
+                            {% else %}
+                                <span class="badge rounded-pill px-2 py-1 fw-semibold" style="font-size: 0.72rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0;">
+                                    <i class="fa-solid fa-user me-1"></i> General
+                                </span>
+                            {% endif %}
+                        </div>
                         <small class="text-muted d-block">
                             <i class="fa-regular fa-calendar me-1"></i> Prescribed on {{ data.created_at.strftime('%d %b, %Y') }}
                             {% if data.patient_age %} • {{ data.patient_age }} yrs{% endif %}

@@ -92,13 +92,14 @@ def init_admin(app):
 
     from app.modules.account.models import RegistrationModel
     from app.modules.account.forms import RegistrationAdminForm
-    from app.modules.dashboard.models import ProfileSetupModel
-    from app.modules.dashboard.forms import ProfileSetUpAdminForm
+    from app.modules.dashboard.models import ProfileSetupModel, AppointmentModel
+    from app.modules.dashboard.forms import ProfileSetUpAdminForm, AppointmentAdminForm
     from app.modules.pdf.models import PrescriptionModel
     from app.modules.pdf.forms import PrescriptionAdminForm
 
     admin.add_view(RegistrationAdminForm(RegistrationModel, db.session, name='User Accounts'))
     admin.add_view(ProfileSetUpAdminForm(ProfileSetupModel, db.session, name='Doctor Profiles'))
+    admin.add_view(AppointmentAdminForm(AppointmentModel, db.session, name='Appointments'))
     admin.add_view(PrescriptionAdminForm(PrescriptionModel, db.session, name='Prescriptions'))
     
     admin.add_link(MenuLink(name='Home Page', url='/', category='Navigation'))

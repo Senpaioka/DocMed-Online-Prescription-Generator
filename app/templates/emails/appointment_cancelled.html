@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Update - DocMed</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f1f5f9;
+      padding: 40px 15px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .header {
+      background: linear-gradient(135deg, #092e3b 0%, #334155 100%);
+      padding: 36px 30px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .brand-title {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+    .brand-title span {
+      color: #2dd4bf;
+    }
+    .content {
+      padding: 36px 32px;
+    }
+    .status-banner {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .status-banner h3 {
+      margin: 0 0 4px 0;
+      color: #991b1b;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .status-banner p {
+      margin: 0;
+      color: #b91c1c;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    .message {
+      font-size: 15px;
+      line-height: 1.65;
+      color: #475569;
+      margin-bottom: 22px;
+    }
+    .details-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e2e8f0;
+      font-size: 14px;
+    }
+    .details-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .details-label {
+      color: #64748b;
+      font-weight: 600;
+    }
+    .details-value {
+      color: #0f172a;
+      font-weight: 700;
+      text-align: right;
+    }
+    .reason-box {
+      background: #fff1f2;
+      border-left: 4px solid #f43f5e;
+      padding: 14px 16px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    .reason-box p {
+      margin: 0;
+      font-size: 14px;
+      color: #881337;
+    }
+    .btn {
+      display: inline-block;
+      background: #0d9488;
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 24px 30px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      
+      <!-- Header -->
+      <div class="header">
+        <div class="badge">{% if is_rejected %}Request Declined{% else %}Appointment Cancelled{% endif %}</div>
+        <h1 class="brand-title">Doc<span>Med</span></h1>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content">
+        <div class="status-banner">
+          <h3>{% if is_rejected %}Appointment Request Declined{% else %}Appointment Has Been Cancelled{% endif %}</h3>
+          <p>We are writing to notify you regarding an update to your consultation request.</p>
+        </div>
+
+        <h2 class="greeting">Hello, {{ appointment.patient_name }}</h2>
+        <p class="message">
+          {% if is_rejected %}
+            We regret to inform you that <strong>{{ doctor_display_name }}</strong> is unable to accept your appointment request at this time.
+          {% else %}
+            Your scheduled appointment with <strong>{{ doctor_display_name }}</strong> has been cancelled.
+          {% endif %}
+        </p>
+
+        {% if reason %}
+        <div class="reason-box">
+          <p><strong>Doctor's Remarks:</strong> {{ reason }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Details Card -->
+        <div class="details-card">
+          <div class="details-row">
+            <span class="details-label">Doctor</span>
+            <span class="details-value">{{ doctor_display_name }}</span>
+          </div>
+          {% if appointment.scheduled_date %}
+          <div class="details-row">
+            <span class="details-label">Scheduled Date/Time</span>
+            <span class="details-value">{{ appointment.scheduled_date }} at {{ appointment.scheduled_time }}</span>
+          </div>
+          {% endif %}
+          <div class="details-row">
+            <span class="details-label">Status</span>
+            <span class="details-value" style="color: #ef4444; text-transform: uppercase;">{{ appointment.status }}</span>
+          </div>
+        </div>
+
+        <p class="message" style="font-size: 14px; color: #475569;">
+          You are welcome to browse our directory and request an appointment with another verified medical specialist or select an alternative date.
+        </p>
+
+        {% if patient_dashboard_url %}
+        <div style="text-align: center; margin: 30px 0 10px 0;">
+          <a href="{{ patient_dashboard_url }}" class="btn">Find Another Doctor &rarr;</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p style="margin: 0 0 6px 0;">&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        <p style="margin: 0;">This is an automated notification from DocMed.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

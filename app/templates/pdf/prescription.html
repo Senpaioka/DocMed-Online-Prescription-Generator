@@ -308,6 +308,30 @@
 		{% endwith %}
 	</div>
 
+	{% if appointment %}
+	<div class="alert alert-info d-flex align-items-center justify-content-between flex-wrap gap-2 rounded-4 py-3 px-4 mb-4 border-0 shadow-sm" style="background: #e0f2fe; color: #0369a1;">
+		<div class="d-flex align-items-center gap-3">
+			<div class="rounded-circle p-2 bg-white text-info shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; color: #0284c7 !important;">
+				<i class="fa-solid fa-calendar-check fs-5"></i>
+			</div>
+			<div>
+				<div class="fw-bold fs-6">Writing Prescription for Scheduled Appointment</div>
+				<div class="small opacity-75">
+					Patient: <strong>{{ appointment.patient_name }}</strong> &bull; 
+					Phone: <strong>{{ appointment.patient_phone }}</strong> &bull; 
+					Email: <strong>{{ appointment.patient_email }}</strong>
+					{% if appointment.scheduled_date %}
+						&bull; Scheduled on: {{ appointment.scheduled_date.strftime('%d %b %Y') if appointment.scheduled_date.strftime else appointment.scheduled_date }} at {{ appointment.scheduled_time }}
+					{% endif %}
+				</div>
+			</div>
+		</div>
+		<a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid) }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-semibold">
+			<i class="fa-solid fa-arrow-left me-1"></i> Back to Appointments
+		</a>
+	</div>
+	{% endif %}
+
 	<div class="row g-4">
 		<!-- Left Column: Form & Medicine Search -->
 		<div class="col-lg-7">
@@ -365,6 +389,9 @@
 					  hx-target="#live-preview-container"
 					  hx-swap="innerHTML">
 					{{ form.hidden_tag() }}
+					{% if appointment %}
+					<input type="hidden" name="appointment_id" value="{{ appointment.id }}">
+					{% endif %}
 
 					<!-- 1. Patient Info -->
 					<div class="mb-4">

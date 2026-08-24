@@ -362,8 +362,19 @@
               <i class="fa-solid fa-file-prescription text-teal" style="color: #5eead4;"></i> Rx Studio
             </a>
           {% else %}
-            <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn-edit-doctor">
-              <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
+            {% if user.role == 'doctor' and user.verified_doctor %}
+              <button 
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#profileBookingModal"
+                class="btn-action-primary"
+                style="padding: 10px 22px; font-size: 0.9rem; border-radius: 10px; font-weight: 700;"
+              >
+                <i class="fa-solid fa-calendar-plus me-1"></i> Book Appointment
+              </button>
+            {% endif %}
+            <a href="{{ url_for('dashboard.verified_doctors_page', uid=current_user.uid) }}" class="btn-edit-doctor">
+              <i class="fa-solid fa-arrow-left"></i> Doctors Directory
             </a>
           {% endif %}
         </div>
@@ -519,5 +530,58 @@
   {% endif %}
 
 </div>
+
+{% if current_user.uid != user.uid and user.role == 'doctor' and user.verified_doctor %}
+<!-- Profile Appointment Booking Modal -->
+<div class="modal fade" id="profileBookingModal" tabindex="-1" aria-labelledby="profileBookingModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+      <div class="modal-header text-white" style="background: linear-gradient(135deg, #092e3b 0%, #0d5257 100%);">
+        <div class="d-flex align-items-center gap-2">
+          <i class="fa-solid fa-calendar-plus fs-5 text-teal" style="color: #5eead4;"></i>
+          <h6 class="modal-title fw-bold" id="profileBookingModalLabel">Book Appointment with {{ info.full_name }}</h6>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('dashboard.request_appointment', doctor_id=user.uid) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+        <div class="modal-body p-4">
+          <div class="p-3 mb-3 rounded-3" style="background: #f0fdfa; border: 1px solid #ccfbf1;">
+            <h6 class="fw-bold text-dark mb-1">{{ info.full_name }}</h6>
+            <small class="text-teal d-block fw-semibold" style="color: #0d9488;">{{ info.current_position }}</small>
+            <small class="text-muted">Chamber: {{ info.office or 'DocMed Chamber' }}</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-bold small text-dark">Patient Name <span class="text-danger">*</span></label>
+            <input type="text" name="patient_name" class="form-control rounded-3" value="{{ current_user.username }}" required>
+          </div>
+
+          <div class="row g-2 mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-dark">Patient Email <span class="text-danger">*</span></label>
+              <input type="email" name="patient_email" class="form-control rounded-3" value="{{ current_user.email }}" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-bold small text-dark">Contact Phone <span class="text-danger">*</span></label>
+              <input type="tel" name="patient_phone" class="form-control rounded-3" placeholder="+880 1700-000000" required>
+            </div>
+          </div>
+
+          <div class="alert alert-info py-2 px-3 small rounded-3 mb-0" style="font-size: 0.85rem;">
+            <i class="fa-solid fa-circle-info me-1"></i> Once submitted, the doctor will assign your consultation date and time, and you will receive an email confirmation.
+          </div>
+        </div>
+        <div class="modal-footer bg-light border-top">
+          <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-teal text-white fw-bold rounded-pill px-4" style="background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%);">
+            <i class="fa-solid fa-paper-plane me-1"></i> Request Appointment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
 
 {% endblock %}

@@ -208,6 +208,12 @@
                         <i class="fa-solid fa-gauge"></i> Doctor Overview
                     </a>
 
+                    {% if current_user.verified_doctor or current_user.is_admin %}
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-calendar-check"></i> Patient Appointments
+                    </a>
+                    {% endif %}
+
                     <!-- Admin Links -->
                     {% if current_user.role == 'admin' or current_user.is_admin %}
                     <a href="{{ url_for('admin.index') }}" class="sidebar-link text-warning fw-bold">

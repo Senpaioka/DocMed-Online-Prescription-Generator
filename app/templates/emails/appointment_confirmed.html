@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Appointment Confirmed - DocMed</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #f1f5f9;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      width: 100%;
+      background-color: #f1f5f9;
+      padding: 40px 15px;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      border: 1px solid #e2e8f0;
+    }
+    .header {
+      background: linear-gradient(135deg, #092e3b 0%, #0d5257 60%, #0f766e 100%);
+      padding: 36px 30px;
+      text-align: center;
+      color: #ffffff;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #5eead4;
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .brand-title {
+      font-size: 26px;
+      font-weight: 800;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+    .brand-title span {
+      color: #2dd4bf;
+    }
+    .content {
+      padding: 36px 32px;
+    }
+    .status-banner {
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+    .status-banner h3 {
+      margin: 0 0 4px 0;
+      color: #166534;
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .status-banner p {
+      margin: 0;
+      color: #15803d;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .greeting {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    .message {
+      font-size: 15px;
+      line-height: 1.65;
+      color: #475569;
+      margin-bottom: 22px;
+    }
+    .details-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .details-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px dashed #e2e8f0;
+      font-size: 14px;
+    }
+    .details-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+    .details-label {
+      color: #64748b;
+      font-weight: 600;
+    }
+    .details-value {
+      color: #0f172a;
+      font-weight: 700;
+      text-align: right;
+    }
+    .btn {
+      display: inline-block;
+      background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%);
+      color: #ffffff !important;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .footer {
+      background: #f8fafc;
+      border-top: 1px solid #e2e8f0;
+      padding: 24px 30px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="container">
+      
+      <!-- Header -->
+      <div class="header">
+        <div class="badge">Appointment Scheduled</div>
+        <h1 class="brand-title">Doc<span>Med</span></h1>
+      </div>
+
+      <!-- Main Content -->
+      <div class="content">
+        <div class="status-banner">
+          <h3>🗓️ Your Appointment is Confirmed!</h3>
+          <p>The practitioner has reviewed your request and confirmed your schedule.</p>
+        </div>
+
+        <h2 class="greeting">Hello, {{ appointment.patient_name }}! 👋</h2>
+        <p class="message">
+          Great news! <strong>{{ doctor_display_name }}</strong> has accepted your appointment request and assigned your consultation date and time.
+        </p>
+
+        <!-- Details Card -->
+        <div class="details-card">
+          <div class="details-row">
+            <span class="details-label">Doctor</span>
+            <span class="details-value">{{ doctor_display_name }}</span>
+          </div>
+          {% if doctor_profile and doctor_profile.current_position %}
+          <div class="details-row">
+            <span class="details-label">Specialty / Title</span>
+            <span class="details-value">{{ doctor_profile.current_position }}</span>
+          </div>
+          {% endif %}
+          <div class="details-row">
+            <span class="details-label">Confirmed Date</span>
+            <span class="details-value" style="color: #0d9488;">
+              {{ appointment.scheduled_date.strftime('%A, %d %B %Y') if appointment.scheduled_date else appointment.preferred_date }}
+            </span>
+          </div>
+          <div class="details-row">
+            <span class="details-label">Confirmed Time</span>
+            <span class="details-value" style="color: #0d9488;">{{ appointment.scheduled_time or 'As scheduled' }}</span>
+          </div>
+          {% if doctor_profile and doctor_profile.office %}
+          <div class="details-row">
+            <span class="details-label">Chamber / Location</span>
+            <span class="details-value">{{ doctor_profile.office }}</span>
+          </div>
+          {% endif %}
+          {% if appointment.doctor_notes %}
+          <div class="details-row">
+            <span class="details-label">Doctor Notes / Instructions</span>
+            <span class="details-value">{{ appointment.doctor_notes }}</span>
+          </div>
+          {% endif %}
+        </div>
+
+        <p class="message" style="font-size: 13px; color: #64748b;">
+          💡 <strong>Tip:</strong> Please arrive 10-15 minutes prior to your scheduled time with any previous medical records or prescriptions.
+        </p>
+
+        {% if patient_dashboard_url %}
+        <div style="text-align: center; margin: 30px 0 10px 0;">
+          <a href="{{ patient_dashboard_url }}" class="btn">View in My Appointments &rarr;</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <p style="margin: 0 0 6px 0;">&copy; {{ current_year }} {{ app_name }}. All rights reserved.</p>
+        <p style="margin: 0;">This is an automated notification regarding your appointment booking on DocMed.</p>
+      </div>
+
+    </div>
+  </div>
+</body>
+</html>

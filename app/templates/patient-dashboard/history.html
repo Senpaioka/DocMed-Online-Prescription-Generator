@@ -149,6 +149,10 @@
                         <i class="fa-solid fa-user-doctor"></i> Find Verified Doctors
                     </a>
 
+                    <a href="{{ url_for('dashboard.patient_appointments_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-calendar-check"></i> My Appointments
+                    </a>
+
                     <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="sidebar-link active">
                         <i class="fa-solid fa-clock-rotate-left"></i> My Prescriptions
                     </a>

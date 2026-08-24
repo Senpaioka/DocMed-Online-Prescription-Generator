@@ -3,7 +3,7 @@ from app.extensions import db
 from werkzeug.utils import secure_filename
 import os
 from app.modules.dashboard.forms import ProfileSetUpForm, UpdateProfileSetUpForm
-from app.modules.dashboard.models import ProfileSetupModel
+from app.modules.dashboard.models import ProfileSetupModel, AppointmentModel
 from app.modules.account.models import RegistrationModel
 from app.modules.pdf.models import PrescriptionModel
 from app.modules.search.forms import SearchForm
@@ -65,6 +65,236 @@ def verified_doctors_page(uid):
     }
 
     return render_template('patient-dashboard/verified_doctors.html', **context)
+
+
+# ==========================================
+# APPOINTMENT MANAGEMENT SYSTEM
+# ==========================================
+
+# Patient: Request an appointment with a verified doctor
+@dashboard.route('/appointment/request/<int:doctor_id>', methods=['POST'])
+@login_required
+def request_appointment(doctor_id):
+    doctor = RegistrationModel.query.get_or_404(doctor_id)
+    
+    if doctor.role != 'doctor' or not doctor.verified_doctor:
+        flash("Appointments can only be scheduled with verified doctors.", "error")
+        return redirect(url_for('dashboard.verified_doctors_page', uid=current_user.uid))
+
+    if current_user.uid == doctor_id:
+        flash("You cannot book an appointment with yourself.", "warning")
+        return redirect(url_for('dashboard.verified_doctors_page', uid=current_user.uid))
+
+    patient_name = request.form.get('patient_name', '').strip() or current_user.username
+    patient_email = request.form.get('patient_email', '').strip() or current_user.email
+    patient_phone = request.form.get('patient_phone', '').strip()
+
+    if not patient_phone:
+        flash("Please provide your contact phone number to request an appointment.", "error")
+        return redirect(url_for('dashboard.verified_doctors_page', uid=current_user.uid))
+
+    new_appointment = AppointmentModel(
+        patient_id=current_user.uid,
+        doctor_id=doctor.uid,
+        status='pending',
+        patient_name=patient_name,
+        patient_email=patient_email,
+        patient_phone=patient_phone
+    )
+
+    try:
+        db.session.add(new_appointment)
+        db.session.commit()
+        flash(f"Appointment request submitted to Dr. {doctor.username}! The doctor will assign and schedule a date and time for you.", "success")
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"Error booking appointment: {e}")
+        flash("Failed to submit appointment request. Please try again.", "error")
+
+    return redirect(url_for('dashboard.patient_appointments_page', uid=current_user.uid))
+
+
+# Patient: View all appointments for the logged in patient
+@dashboard.route('/my-appointments/<int:uid>')
+@login_required
+def patient_appointments_page(uid):
+    if current_user.uid != uid and not current_user.is_admin:
+        flash("Unauthorized access.", "error")
+        return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
+
+    user = RegistrationModel.query.get_or_404(uid)
+    appointments = AppointmentModel.query.filter_by(patient_id=uid).order_by(AppointmentModel.created_at.desc()).all()
+
+    context = {
+        'user': user,
+        'appointments': appointments,
+    }
+    return render_template('patient-dashboard/appointments.html', **context)
+
+
+# Doctor: View doctor appointment management dashboard
+@dashboard.route('/doctor-appointments/<int:uid>')
+@login_required
+@doctor_required
+def doctor_appointments_page(uid):
+    if current_user.uid != uid and not current_user.is_admin:
+        flash("Unauthorized access.", "error")
+        return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
+
+    user = RegistrationModel.query.get_or_404(uid)
+    status_filter = request.args.get('status', 'all')
+
+    query = AppointmentModel.query.filter_by(doctor_id=uid)
+    if status_filter != 'all':
+        query = query.filter_by(status=status_filter)
+
+    appointments = query.order_by(AppointmentModel.created_at.desc()).all()
+
+    pending_count = AppointmentModel.query.filter_by(doctor_id=uid, status='pending').count()
+    confirmed_count = AppointmentModel.query.filter_by(doctor_id=uid, status='confirmed').count()
+    completed_count = AppointmentModel.query.filter_by(doctor_id=uid, status='completed').count()
+    total_count = AppointmentModel.query.filter_by(doctor_id=uid).count()
+
+    context = {
+        'user': user,
+        'appointments': appointments,
+        'active_filter': status_filter,
+        'pending_count': pending_count,
+        'confirmed_count': confirmed_count,
+        'completed_count': completed_count,
+        'total_count': total_count,
+    }
+    return render_template('dashboard/doctor_appointments.html', **context)
+
+
+# Doctor: Accept / Schedule appointment and notify patient by email
+@dashboard.route('/doctor/appointment/confirm/<int:appointment_id>', methods=['POST'])
+@login_required
+@doctor_required
+def confirm_appointment(appointment_id):
+    appointment = AppointmentModel.query.get_or_404(appointment_id)
+
+    if appointment.doctor_id != current_user.uid and not current_user.is_admin:
+        flash("You do not have permission to manage this appointment.", "error")
+        return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+    scheduled_date_str = request.form.get('scheduled_date', '').strip()
+    scheduled_time = request.form.get('scheduled_time', '').strip()
+    doctor_notes = request.form.get('doctor_notes', '').strip()
+
+    if not scheduled_date_str or not scheduled_time:
+        flash("Please specify both a confirmed appointment date and time.", "error")
+        return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+    from datetime import datetime as dt
+    try:
+        scheduled_date = dt.strptime(scheduled_date_str, '%Y-%m-%d').date()
+    except ValueError:
+        flash("Invalid scheduled date format.", "error")
+        return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+    appointment.status = 'confirmed'
+    appointment.scheduled_date = scheduled_date
+    appointment.scheduled_time = scheduled_time
+    appointment.doctor_notes = doctor_notes
+    db.session.commit()
+
+    # Dispatch email notification to patient
+    from app.core.email_service import send_appointment_confirmed_email
+    patient = RegistrationModel.query.get(appointment.patient_id)
+    doctor = RegistrationModel.query.get(appointment.doctor_id)
+    doctor_profile = ProfileSetupModel.query.filter_by(user_id=doctor.uid).first()
+    
+    patient_dashboard_url = url_for('dashboard.patient_appointments_page', uid=patient.uid, _external=True)
+    email_sent = send_appointment_confirmed_email(
+        appointment=appointment,
+        patient=patient,
+        doctor=doctor,
+        doctor_profile=doctor_profile,
+        patient_dashboard_url=patient_dashboard_url
+    )
+
+    if email_sent:
+        flash(f"Appointment with {appointment.patient_name} confirmed for {scheduled_date_str} at {scheduled_time}. Email notification sent to patient!", "success")
+    else:
+        flash(f"Appointment confirmed, but notification email could not be sent.", "warning")
+
+    return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+
+# Doctor: Reject a pending appointment request
+@dashboard.route('/doctor/appointment/reject/<int:appointment_id>', methods=['POST'])
+@login_required
+@doctor_required
+def reject_appointment(appointment_id):
+    appointment = AppointmentModel.query.get_or_404(appointment_id)
+
+    if appointment.doctor_id != current_user.uid and not current_user.is_admin:
+        flash("You do not have permission to manage this appointment.", "error")
+        return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+    rejection_reason = request.form.get('rejection_reason', '').strip()
+    appointment.status = 'rejected'
+    if rejection_reason:
+        appointment.doctor_notes = rejection_reason
+    db.session.commit()
+
+    # Dispatch rejection email to patient
+    from app.core.email_service import send_appointment_cancelled_email
+    patient = RegistrationModel.query.get(appointment.patient_id)
+    doctor = RegistrationModel.query.get(appointment.doctor_id)
+    doctor_profile = ProfileSetupModel.query.filter_by(user_id=doctor.uid).first()
+    patient_dashboard_url = url_for('dashboard.verified_doctors_page', uid=patient.uid, _external=True)
+
+    send_appointment_cancelled_email(
+        appointment=appointment,
+        patient=patient,
+        doctor=doctor,
+        doctor_profile=doctor_profile,
+        reason=rejection_reason,
+        patient_dashboard_url=patient_dashboard_url
+    )
+
+    flash(f"Appointment request from {appointment.patient_name} has been rejected. Notification email sent to patient.", "info")
+    return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+
+# Doctor: Cancel a previously scheduled/confirmed appointment
+@dashboard.route('/doctor/appointment/cancel/<int:appointment_id>', methods=['POST'])
+@login_required
+@doctor_required
+def cancel_appointment(appointment_id):
+    appointment = AppointmentModel.query.get_or_404(appointment_id)
+
+    if appointment.doctor_id != current_user.uid and not current_user.is_admin:
+        flash("You do not have permission to cancel this appointment.", "error")
+        return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
+    cancellation_reason = request.form.get('cancellation_reason', '').strip()
+    appointment.status = 'cancelled'
+    if cancellation_reason:
+        appointment.doctor_notes = cancellation_reason
+    db.session.commit()
+
+    # Dispatch cancellation email to patient
+    from app.core.email_service import send_appointment_cancelled_email
+    patient = RegistrationModel.query.get(appointment.patient_id)
+    doctor = RegistrationModel.query.get(appointment.doctor_id)
+    doctor_profile = ProfileSetupModel.query.filter_by(user_id=doctor.uid).first()
+    patient_dashboard_url = url_for('dashboard.verified_doctors_page', uid=patient.uid, _external=True)
+
+    send_appointment_cancelled_email(
+        appointment=appointment,
+        patient=patient,
+        doctor=doctor,
+        doctor_profile=doctor_profile,
+        reason=cancellation_reason,
+        patient_dashboard_url=patient_dashboard_url
+    )
+
+    flash(f"Appointment with {appointment.patient_name} has been cancelled. An email has been sent to notify the patient.", "info")
+    return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
 
 
 

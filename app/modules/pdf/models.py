@@ -12,6 +12,9 @@ class PrescriptionModel(db.Model):
     patient_name = db.Column(db.String(50), nullable=False)
     patient_age = db.Column(db.Integer(), nullable=False)
     patient_sex = db.Column(db.String(10), nullable=False)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=True)
+
+    appointment = db.relationship('AppointmentModel', foreign_keys=[appointment_id], backref=db.backref('prescriptions', lazy='dynamic'))
 
     cc = db.Column(db.String(255), nullable=True)
     bp = db.Column(db.String(20), nullable=True)

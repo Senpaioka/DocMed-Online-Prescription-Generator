@@ -67,6 +67,23 @@ from markupsafe import Markup
 
 ####### Admin Panel ########
 
+class AppointmentAdminForm(ModelView):
+    column_list = ['id', 'patient_name', 'patient_email', 'patient_phone', 'status', 'preferred_date', 'scheduled_date', 'scheduled_time', 'created_at']
+    column_labels = {
+        'id': 'ID',
+        'patient_name': 'Patient Name',
+        'patient_email': 'Patient Email',
+        'patient_phone': 'Phone',
+        'status': 'Status',
+        'preferred_date': 'Requested Date',
+        'scheduled_date': 'Confirmed Date',
+        'scheduled_time': 'Confirmed Time',
+        'created_at': 'Requested At'
+    }
+    column_searchable_list = ['patient_name', 'patient_email', 'patient_phone']
+    column_filters = ['status', 'scheduled_date']
+    can_create = False
+
 class ProfileSetUpAdminForm(ModelView):
 
     form = ProfileSetUpForm

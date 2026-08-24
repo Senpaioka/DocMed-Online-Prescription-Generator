@@ -125,6 +125,37 @@ def document_page():
     doctor_id = current_user.uid
     unique_id = short_uuid()
 
+    appointment_id = request.args.get('appointment_id', type=int) or request.form.get('appointment_id', type=int)
+    appointment = None
+    if appointment_id:
+        from app.modules.dashboard.models import AppointmentModel
+        appointment = AppointmentModel.query.filter_by(id=appointment_id, doctor_id=current_user.uid).first()
+
+    if request.method == 'GET':
+        if appointment:
+            form.patient_name.data = appointment.patient_name
+            if appointment.reason:
+                form.cc.data = appointment.reason
+            if appointment.patient and appointment.patient.gender:
+                gender = appointment.patient.gender.lower()
+                if gender in ['male', 'female', 'other']:
+                    form.patient_sex.data = gender
+            
+            # Auto-fill age from previous prescription if available
+            past_rx = PrescriptionModel.query.filter_by(patient_name=appointment.patient_name).order_by(PrescriptionModel.created_at.desc()).first()
+            if past_rx and past_rx.patient_age:
+                form.patient_age.data = past_rx.patient_age
+
+        if request.args.get('patient_name'):
+            form.patient_name.data = request.args.get('patient_name')
+        if request.args.get('patient_age', type=int):
+            form.patient_age.data = request.args.get('patient_age', type=int)
+        if request.args.get('patient_sex'):
+            gender = request.args.get('patient_sex').lower()
+            if gender in ['male', 'female', 'other']:
+                form.patient_sex.data = gender
+        if request.args.get('cc'):
+            form.cc.data = request.args.get('cc')
 
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -156,10 +187,16 @@ def document_page():
                 spo = spo,
                 inv = inv,
                 rx = rx,
-                advice = advice
+                advice = advice,
+                appointment_id = appointment.id if appointment else None
             )
 
             db.session.add(generate_prescription)
+
+            # Automatically mark appointment as completed when prescription is generated
+            if appointment:
+                appointment.status = 'completed'
+                db.session.add(appointment)
 
             try:
                 db.session.commit()
@@ -168,11 +205,26 @@ def document_page():
                 flash("Something Went Wrong", "error")
                 return redirect(url_for('pdf_generator.document_page')) 
             
+            if appointment:
+                flash(f"Prescription generated and appointment with {appointment.patient_name} marked as completed!", "success")
+            
             return redirect(url_for('pdf_generator.pdf_prescription_preview', patient_id=unique_id))
         
 
     context = {
         'form': form,
+        'appointment': appointment,
+        'name': form.patient_name.data,
+        'age': form.patient_age.data,
+        'sex': form.patient_sex.data,
+        'cc': form.cc.data,
+        'bp': form.bp.data,
+        'pulse': form.pulse.data,
+        'temp': form.temp.data,
+        'spo': form.spo.data,
+        'inv': form.inv.data,
+        'rx': form.rx.data,
+        'advice': form.advice.data,
     }
     return render_template('pdf/prescription.html', **context)
 

@@ -311,7 +311,18 @@
                 <i class="fa-solid fa-file-pdf"></i>
             </div>
             <div>
-                <h5 class="fw-bold mb-0 text-dark">Prescription Generated Successfully</h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="fw-bold mb-0 text-dark">Prescription Generated Successfully</h5>
+                    {% if patient.appointment_id %}
+                        <span class="badge rounded-pill px-2 py-1 fw-bold" style="font-size: 0.75rem; background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0;">
+                            <i class="fa-solid fa-calendar-check me-1"></i> Appointed Patient
+                        </span>
+                    {% else %}
+                        <span class="badge rounded-pill px-2 py-1 fw-semibold" style="font-size: 0.75rem; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;">
+                            <i class="fa-solid fa-user me-1"></i> General Patient
+                        </span>
+                    {% endif %}
+                </div>
                 <small class="text-muted">Patient ID: <strong class="text-dark font-monospace">#{{ patient.patient_id }}</strong> • Ready to print or download</small>
             </div>
         </div>

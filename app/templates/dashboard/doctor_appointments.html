@@ -1,0 +1,611 @@
+{% extends 'base.html' %}
+
+{% block title %} Doctor Appointments Management | DocMed {% endblock %}
+
+{% block content %}
+
+<style>
+    .dashboard-container {
+        padding: 30px 0 60px;
+    }
+
+    .role-badge-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        border-radius: 9999px;
+    }
+
+    .role-doctor {
+        background: #ccfbf1;
+        color: #0f766e;
+    }
+
+    .sidebar-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        background: linear-gradient(135deg, #092e3b 0%, #0d5257 100%);
+        color: #ffffff;
+        padding: 22px 20px;
+    }
+
+    .sidebar-nav {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.92rem;
+        border-radius: 10px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .sidebar-link:hover {
+        background: #f1f5f9;
+        color: #0d9488;
+        transform: translateX(3px);
+    }
+
+    .sidebar-link.active {
+        background: #f0fdfa;
+        color: #0d9488;
+        font-weight: 700;
+    }
+
+    .sidebar-link i {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+        color: #64748b;
+    }
+
+    .sidebar-link:hover i, .sidebar-link.active i {
+        color: #0d9488;
+    }
+
+    .dash-action-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        margin-bottom: 20px;
+    }
+
+    .appointment-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 20px;
+        background: #ffffff;
+        transition: all 0.2s ease;
+    }
+
+    .appointment-card:hover {
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.07);
+        border-color: #cbd5e1;
+    }
+
+    .badge-status {
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 5px 12px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+    }
+
+    .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fde68a;
+    }
+
+    .badge-confirmed {
+        background: #dcfce7;
+        color: #166534;
+        border: 1px solid #bbf7d0;
+    }
+
+    .badge-cancelled, .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+    }
+
+    .filter-pill {
+        border-radius: 9999px;
+        padding: 0.25rem 1rem;
+        font-weight: 700;
+        font-size: 0.875rem;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .filter-pill-all {
+        background: #ffffff;
+        color: #475569;
+        border: 1px solid #cbd5e1;
+    }
+    .filter-pill-all.active {
+        background: #092e3b;
+        color: #ffffff;
+        border-color: #092e3b;
+    }
+
+    .filter-pill-pending {
+        background: #fffbeb;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+    .filter-pill-pending.active {
+        background: #d97706;
+        color: #ffffff;
+        border-color: #d97706;
+    }
+
+    .filter-pill-confirmed {
+        background: #f0fdf4;
+        color: #166534;
+        border: 1px solid #86efac;
+    }
+    .filter-pill-confirmed.active {
+        background: #0d9488;
+        color: #ffffff;
+        border-color: #0d9488;
+    }
+
+    .filter-pill-cancelled {
+        background: #fff1f2;
+        color: #9f1239;
+        border: 1px solid #fecdd3;
+    }
+    .filter-pill-cancelled.active {
+        background: #e11d48;
+        color: #ffffff;
+        border-color: #e11d48;
+    }
+
+    .filter-pill-completed {
+        background: #f0fdfa;
+        color: #0f766e;
+        border: 1px solid #99f6e4;
+    }
+    .filter-pill-completed.active {
+        background: #0f766e;
+        color: #ffffff;
+        border-color: #0f766e;
+    }
+
+    .badge-completed {
+        background: #ccfbf1;
+        color: #0f766e;
+        border: 1px solid #99f6e4;
+    }
+
+    .btn-action-view-rx {
+        background: #0d9488 !important;
+        color: #ffffff !important;
+        border: 1px solid #0d9488 !important;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .btn-action-view-rx:hover {
+        background: #0b7a70 !important;
+        border-color: #0b7a70 !important;
+        color: #ffffff !important;
+    }
+
+    .btn-action-update-rx {
+        background: #ffffff !important;
+        color: #334155 !important;
+        border: 1.5px solid #cbd5e1 !important;
+        font-weight: 600;
+        transition: all 0.2s ease;
+    }
+    .btn-action-update-rx:hover {
+        background: #f1f5f9 !important;
+        color: #0f172a !important;
+        border-color: #94a3b8 !important;
+    }
+
+    .btn.btn-outline-danger {
+        background: #ffffff !important;
+        color: #dc2626 !important;
+        border: 1px solid #fca5a5 !important;
+    }
+    .btn.btn-outline-danger:hover {
+        background: #fee2e2 !important;
+        color: #991b1b !important;
+        border-color: #f87171 !important;
+    }
+</style>
+
+<div class="container dashboard-container" x-data="{
+    activeModalAppt: null,
+    setAppt(appt) {
+        this.activeModalAppt = appt;
+    }
+}">
+    <!-- Top Greeting Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #092e3b;">
+                Patient Appointments
+            </h2>
+            <p class="text-muted mb-0 small">
+                Review appointment requests, assign consultation slots, and manage patient bookings.
+            </p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <span class="role-badge-chip role-doctor"><i class="fa-solid fa-stethoscope"></i> Verified Doctor</span>
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)" x-transition:leave.duration.400ms>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-4 col-md-5">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white text-dark rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            <i class="fa-solid fa-user-doctor text-teal fs-5" style="color: #0d9488;"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">Dr. {{ current_user.username }}</h6>
+                            <small class="text-white-50">{{ current_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-gauge"></i> Overview
+                    </a>
+
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid) }}" class="sidebar-link active">
+                        <i class="fa-solid fa-calendar-check"></i> Patient Appointments
+                        {% if pending_count > 0 %}
+                            <span class="badge bg-warning text-dark rounded-pill ms-auto">{{ pending_count }}</span>
+                        {% endif %}
+                    </a>
+
+                    <a href="{{ url_for('pdf_generator.document_page') }}" class="sidebar-link">
+                        <i class="fa-solid fa-file-prescription"></i> Write Prescription
+                    </a>
+
+                    <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Prescription History
+                    </a>
+
+                    <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-user-doctor"></i> Doctor Profile
+                    </a>
+
+                    <a href="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-key"></i> Account Credentials
+                    </a>
+
+                    <hr class="my-2 border-slate-200">
+
+                    <a href="{{ url_for('accounts.logout_view') }}" class="sidebar-link text-danger">
+                        <i class="fa-solid fa-right-from-bracket text-danger"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Appointments Content -->
+        <div class="col-lg-8 col-md-7">
+            <div class="dash-action-card">
+                <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="p-2 rounded-3" style="background:#ccfbf1; color:#0f766e;">
+                            <i class="fa-solid fa-calendar-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0" style="color: #092e3b;">Appointment Requests</h5>
+                            <small class="text-muted">Manage patient requests, schedule dates, or cancel bookings</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Status Filter Pills -->
+                <div class="d-flex gap-2 mb-4 flex-wrap">
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid, status='all') }}" 
+                       class="filter-pill filter-pill-all {% if active_filter == 'all' %}active{% endif %}">
+                        All ({{ total_count }})
+                    </a>
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid, status='pending') }}" 
+                       class="filter-pill filter-pill-pending {% if active_filter == 'pending' %}active{% endif %}">
+                        <i class="fa-solid fa-clock-rotate-left me-1"></i> Pending ({{ pending_count }})
+                    </a>
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid, status='confirmed') }}" 
+                       class="filter-pill filter-pill-confirmed {% if active_filter == 'confirmed' %}active{% endif %}">
+                        <i class="fa-solid fa-circle-check me-1"></i> Confirmed ({{ confirmed_count }})
+                    </a>
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid, status='completed') }}" 
+                       class="filter-pill filter-pill-completed {% if active_filter == 'completed' %}active{% endif %}">
+                        <i class="fa-solid fa-clipboard-check me-1"></i> Completed ({{ completed_count }})
+                    </a>
+                    <a href="{{ url_for('dashboard.doctor_appointments_page', uid=current_user.uid, status='cancelled') }}" 
+                       class="filter-pill filter-pill-cancelled {% if active_filter == 'cancelled' %}active{% endif %}">
+                        <i class="fa-solid fa-ban me-1"></i> Cancelled / Declined
+                    </a>
+                </div>
+
+                {% if appointments %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for appt in appointments %}
+                            <div class="appointment-card shadow-sm">
+                                <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 44px; height: 44px; background: linear-gradient(135deg, #092e3b 0%, #0d5257 100%);">
+                                            <i class="fa-solid fa-user"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">{{ appt.patient_name }}</h6>
+                                            <small class="text-muted">
+                                                <i class="fa-regular fa-envelope me-1"></i>{{ appt.patient_email }} &bull; 
+                                                <i class="fa-solid fa-phone ms-1 me-1"></i>{{ appt.patient_phone }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        {% if appt.status == 'pending' %}
+                                            <span class="badge-status badge-pending"><i class="fa-solid fa-clock-rotate-left me-1"></i> Pending Action</span>
+                                        {% elif appt.status == 'confirmed' %}
+                                            <span class="badge-status badge-confirmed"><i class="fa-solid fa-circle-check me-1"></i> Confirmed & Scheduled</span>
+                                        {% elif appt.status == 'completed' %}
+                                            <span class="badge-status badge-completed"><i class="fa-solid fa-clipboard-check me-1"></i> Completed & Prescribed</span>
+                                        {% elif appt.status == 'rejected' %}
+                                            <span class="badge-status badge-rejected"><i class="fa-solid fa-circle-xmark me-1"></i> Declined</span>
+                                        {% elif appt.status == 'cancelled' %}
+                                            <span class="badge-status badge-cancelled"><i class="fa-solid fa-ban me-1"></i> Cancelled</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <!-- Patient details & Assigned schedule -->
+                                <div class="bg-light p-3 rounded-3 mb-3 small">
+                                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                        <div>
+                                            <span class="text-muted d-block">Scheduled Consultation:</span>
+                                            {% if appt.scheduled_date %}
+                                                <strong class="text-teal fs-6" style="color: #0f766e;">
+                                                    <i class="fa-regular fa-calendar-check me-1"></i>
+                                                    {{ appt.scheduled_date.strftime('%A, %d %B %Y') if appt.scheduled_date.strftime else appt.scheduled_date }} at {{ appt.scheduled_time }}
+                                                </strong>
+                                            {% else %}
+                                                <span class="text-warning-emphasis fw-semibold"><i class="fa-solid fa-clock me-1"></i> Awaiting your date & time assignment</span>
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <span class="text-muted d-block">Patient Contact:</span>
+                                            <strong class="text-dark">{{ appt.patient_phone }}</strong> ({{ appt.patient_email }})
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if appt.doctor_notes %}
+                                <div class="mb-3 small">
+                                    <div class="p-2 rounded-2 {% if appt.status in ['cancelled', 'rejected'] %}bg-danger-subtle text-danger{% else %}bg-info-subtle text-primary{% endif %}">
+                                        <strong>Your Notes / Remarks:</strong> {{ appt.doctor_notes }}
+                                    </div>
+                                </div>
+                                {% endif %}
+
+                                <!-- Action Buttons -->
+                                <div class="d-flex flex-wrap justify-content-between align-items-center pt-2 border-top gap-2">
+                                    <small class="text-muted">Requested on {{ appt.created_at.strftime('%d %b %Y, %I:%M %p') if appt.created_at else '' }}</small>
+                                    
+                                    <div class="d-flex gap-2">
+                                        {% if appt.status == 'pending' %}
+                                            <button 
+                                                type="button" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#confirmModal"
+                                                @click="setAppt({ id: '{{ appt.id }}', name: '{{ appt.patient_name }}', phone: '{{ appt.patient_phone }}' })"
+                                                class="btn btn-sm btn-success rounded-pill px-3 fw-bold"
+                                            >
+                                                <i class="fa-solid fa-calendar-check me-1"></i> Assign Date & Time
+                                            </button>
+
+                                            <button 
+                                                type="button" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#rejectModal"
+                                                @click="setAppt({ id: '{{ appt.id }}', name: '{{ appt.patient_name }}' })"
+                                                class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold"
+                                            >
+                                                <i class="fa-solid fa-xmark me-1"></i> Decline
+                                            </button>
+
+                                        {% elif appt.status == 'confirmed' %}
+                                            <a href="{{ url_for('pdf_generator.document_page', appointment_id=appt.id) }}" class="btn btn-sm rounded-pill px-3 fw-semibold text-white shadow-sm" style="background: #0d9488;">
+                                                <i class="fa-solid fa-file-prescription me-1"></i> Write Rx
+                                            </a>
+
+                                            <button 
+                                                type="button" 
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#cancelModal"
+                                                @click="setAppt({ id: '{{ appt.id }}', name: '{{ appt.patient_name }}' })"
+                                                class="btn btn-sm btn-outline-danger rounded-pill px-3 fw-semibold"
+                                            >
+                                                <i class="fa-solid fa-ban me-1"></i> Cancel Appointment
+                                            </button>
+
+                                        {% elif appt.status == 'completed' %}
+                                            {% set linked_rx = appt.prescriptions.order_by(appt.prescriptions.statement.froms[0].c.created_at.desc()).first() if appt.prescriptions else None %}
+                                            {% if linked_rx %}
+                                                <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=linked_rx.patient_id) }}" class="btn btn-sm btn-action-view-rx rounded-pill px-3 shadow-sm">
+                                                    <i class="fa-solid fa-file-medical me-1"></i> View Prescription
+                                                </a>
+                                            {% endif %}
+                                            <a href="{{ url_for('pdf_generator.document_page', appointment_id=appt.id) }}" class="btn btn-sm btn-action-update-rx rounded-pill px-3 shadow-sm">
+                                                <i class="fa-solid fa-pen-to-square me-1"></i> Update / New Rx
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 bg-light rounded-4">
+                        <div class="d-inline-flex p-3 rounded-circle bg-white text-muted mb-2 shadow-sm">
+                            <i class="fa-solid fa-calendar-check fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-dark mb-1">No Appointments in this view</h6>
+                        <p class="text-muted small mb-0">Patient requests for appointments will appear here.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm & Schedule Modal -->
+    <div class="modal fade" id="confirmModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%);">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-calendar-check me-2"></i> Assign Appointment Date & Time</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form :action="activeModalAppt ? '{{ url_for('dashboard.confirm_appointment', appointment_id=0) }}'.replace('/0', '/' + activeModalAppt.id) : '#'" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    <div class="modal-body p-4">
+                        <template x-if="activeModalAppt">
+                            <div class="p-3 mb-3 rounded-3 bg-light border">
+                                <span class="text-muted d-block small">Patient:</span>
+                                <strong class="text-dark" x-text="activeModalAppt.name"></strong>
+                                <span class="text-muted d-block small mt-1">Phone:</span>
+                                <span class="text-teal fw-semibold" x-text="activeModalAppt.phone"></span>
+                            </div>
+                        </template>
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark">Appointment Date <span class="text-danger">*</span></label>
+                                <input type="date" name="scheduled_date" class="form-control rounded-3" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-bold small text-dark">Appointment Time <span class="text-danger">*</span></label>
+                                <input type="text" name="scheduled_time" class="form-control rounded-3" placeholder="e.g. 10:30 AM or 06:00 PM" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-dark">Instructions / Notes for Patient (Optional)</label>
+                            <textarea name="doctor_notes" rows="2" class="form-control rounded-3" placeholder="e.g. Please bring previous blood test reports and arrive 10 minutes early."></textarea>
+                        </div>
+
+                        <div class="alert alert-success py-2 px-3 small rounded-3 mb-0" style="font-size: 0.8rem;">
+                            <i class="fa-solid fa-paper-plane me-1"></i> An automated confirmation email with these details will be sent immediately to the patient.
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top">
+                        <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 fw-bold">
+                            <i class="fa-solid fa-check me-1"></i> Confirm & Send Email
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Request Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                <div class="modal-header bg-danger text-white">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-circle-xmark me-2"></i> Decline Appointment Request</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form :action="activeModalAppt ? '{{ url_for('dashboard.reject_appointment', appointment_id=0) }}'.replace('/0', '/' + activeModalAppt.id) : '#'" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    <div class="modal-body p-4">
+                        <p class="text-dark small mb-3">
+                            Are you sure you want to decline the appointment request from <strong x-text="activeModalAppt ? activeModalAppt.name : 'Patient'"></strong>?
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-dark">Reason for Declining (Sent to Patient)</label>
+                            <textarea name="rejection_reason" rows="3" class="form-control rounded-3" placeholder="e.g. Schedule is fully booked on this date. Please select another day." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top">
+                        <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Back</button>
+                        <button type="submit" class="btn btn-sm btn-danger rounded-pill px-4 fw-bold">Decline Request & Send Email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cancel Appointment Modal -->
+    <div class="modal fade" id="cancelModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                <div class="modal-header bg-danger text-white">
+                    <h6 class="modal-title fw-bold"><i class="fa-solid fa-ban me-2"></i> Cancel Confirmed Appointment</h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form :action="activeModalAppt ? '{{ url_for('dashboard.cancel_appointment', appointment_id=0) }}'.replace('/0', '/' + activeModalAppt.id) : '#'" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    <div class="modal-body p-4">
+                        <p class="text-dark small mb-3">
+                            Are you sure you want to cancel the confirmed appointment with <strong x-text="activeModalAppt ? activeModalAppt.name : 'Patient'"></strong>?
+                        </p>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-dark">Cancellation Reason / Explanation <span class="text-danger">*</span></label>
+                            <textarea name="cancellation_reason" rows="3" class="form-control rounded-3" placeholder="e.g. Doctor called into urgent emergency surgery. Please reschedule." required></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-top">
+                        <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Back</button>
+                        <button type="submit" class="btn btn-sm btn-danger rounded-pill px-4 fw-bold">Cancel Appointment & Send Email</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
