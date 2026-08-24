@@ -1,149 +1,627 @@
 {% extends 'base.html' %}
 
-{% block title %} Update {% endblock %}
+{% block title %} Update Profile - DocMed {% endblock %}
 
 {% block content %}
 
+<style>
+  .update-wrapper {
+    max-width: 880px;
+    margin: 40px auto 80px auto;
+  }
 
-<div class="container mt-4 mb-4">
-    <div class="block">
-      <div class="row justify-content-center">
-        <h1>Update Profile Info</h1>
+  /* Toast Notification Container */
+  .toast-banner-container {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 9999;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
+  .modern-toast {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
 
-        <!-- flash message -->
-        <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition:leave.duration.500ms>
-          {% with messages = get_flashed_messages(with_categories=True) %}
-              {% if messages %}
-                  <ul class="flashes">
-                      {% for category, message in messages %}
-                          <li class="flash {{ category}}">{{ message }}</li>
-                      {% endfor %}
-                  </ul>
-              {% endif %}
-          {% endwith %}
+  .modern-toast.success {
+    border-left: 5px solid #10b981;
+    color: #065f46;
+  }
+
+  .modern-toast.error, .modern-toast.danger {
+    border-left: 5px solid #ef4444;
+    color: #991b1b;
+  }
+
+  .modern-toast.info {
+    border-left: 5px solid #3b82f6;
+    color: #1e40af;
+  }
+
+  .update-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 10px 35px -5px rgba(15, 23, 42, 0.08), 0 0 0 1px rgba(226, 232, 240, 0.8);
+    overflow: hidden;
+    border: none;
+  }
+
+  .update-header {
+    background: linear-gradient(135deg, #092e3b 0%, #0d9488 100%);
+    padding: 36px 36px 30px 36px;
+    color: #ffffff;
+    position: relative;
+  }
+
+  .update-header h2 {
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: 6px;
+    color: #ffffff;
+  }
+
+  .update-header p {
+    color: #ccfbf1;
+    font-size: 0.95rem;
+    margin-bottom: 0;
+    opacity: 0.9;
+  }
+
+  .update-badge-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #5eead4;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .update-section {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 24px 22px;
+    margin-bottom: 24px;
+    transition: all 0.25s ease;
+  }
+
+  .update-section:hover {
+    border-color: #cbd5e1;
+    background: #fbfcfe;
+  }
+
+  .section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #edf2f7;
+  }
+
+  .section-icon-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: #ccfbf1;
+    color: #0d9488;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  .section-title {
+    font-size: 1.12rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+  }
+
+  .section-subtitle {
+    font-size: 0.8rem;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .form-label-custom {
+    font-weight: 600;
+    font-size: 0.86rem;
+    color: #334155;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .form-label-custom .req-star {
+    color: #f43f5e;
+    margin-left: 3px;
+    font-weight: bold;
+  }
+
+  .form-label-custom .optional-tag {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #94a3b8;
+  }
+
+  .custom-input {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    color: #0f172a;
+    transition: all 0.2s ease;
+    background-color: #ffffff;
+  }
+
+  .custom-input:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+    background-color: #ffffff;
+  }
+
+  .custom-input::placeholder {
+    color: #94a3b8;
+    font-size: 0.88rem;
+  }
+
+  /* Signature replacement box */
+  .signature-upload-box {
+    border: 2px dashed #cbd5e1;
+    border-radius: 12px;
+    background: #ffffff;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.25s ease;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .signature-upload-box:hover {
+    border-color: #0d9488;
+    background: #f0fdfa;
+  }
+
+  .signature-upload-box input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+    z-index: 5;
+  }
+
+  .sig-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #e6fffa;
+    color: #0d9488;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 8px;
+  }
+
+  .sig-preview-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 12px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+
+  .btn-submit-update {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    border: none;
+    color: #ffffff;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 14px 28px;
+    border-radius: 12px;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .btn-submit-update:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(13, 148, 136, 0.45);
+    color: #ffffff;
+    filter: brightness(1.06);
+  }
+
+  .btn-view-profile {
+    background: #ffffff !important;
+    color: #092e3b !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 8px 18px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-view-profile:hover {
+    background: #f0fdfa !important;
+    color: #0d9488 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+  }
+
+  .btn-cancel-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.92rem;
+    text-decoration: none;
+    padding: 10px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-cancel-link:hover {
+    color: #0f172a;
+  }
+</style>
+
+<!-- Top Fixed Toast Messages (Alpine-powered) -->
+<div class="toast-banner-container" x-data="{
+  toasts: [],
+  init() {
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          this.addToast({{ message | tojson }}, {{ category | tojson }});
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  },
+  addToast(msg, cat) {
+    const id = Date.now() + Math.random();
+    this.toasts.push({ id, message: msg, category: cat });
+    setTimeout(() => this.removeToast(id), 6000);
+  },
+  removeToast(id) {
+    this.toasts = this.toasts.filter(t => t.id !== id);
+  }
+}">
+  <template x-for="toast in toasts" :key="toast.id">
+    <div class="modern-toast" :class="toast.category" x-transition:enter="animate__animated animate__fadeInDown" x-transition:leave="animate__animated animate__fadeOutRight">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa-solid" :class="{
+          'fa-circle-check text-success': toast.category === 'success',
+          'fa-triangle-exclamation text-danger': toast.category === 'error' || toast.category === 'danger',
+          'fa-circle-info text-primary': toast.category === 'info'
+        }"></i>
+        <span x-text="toast.message"></span>
       </div>
-      
+      <button type="button" class="btn-close btn-close-sm" @click="removeToast(toast.id)" aria-label="Close" style="font-size: 0.75rem;"></button>
+    </div>
+  </template>
+</div>
 
-        {% if data %}
-        <form action="{{ url_for('dashboard.update_profile_info', uid=current_user.uid ) }}" method="POST" enctype="multipart/form-data" x-data="{ sigPreview: null }">
-          {{ form.hidden_tag() }}
-          <!-- Personal Information Info -->
-          <div class="row mt-4 mb-4">
-            <h3>Personal Information</h3>
-            <div class="col-12 col-sm-6">
-              <div class="form-group">
-                <label class="text-black" for="fname">Full Name</label><span>*</span>
-                   {{ form.full_name (class="form-control", placeholder='Example: Dr. Strange', required=True) }}
-              </div>
-            </div>
-            <div class="col-6 col-sm-3">
-              <div class="form-group">
-                <label class="text-black" for="age">Birth Date</label><span>*</span>
-                {{ form.birth_date (class="form-control", required=True) }}
-              </div>
-            </div>
-            <div class="col-6 col-sm-3">
-              <div class="form-group">
-                <label class="text-black" for="gender">Sex</label><span>*</span>
-                {{ form.sex (class="form-control", required=True) }}
-              </div>
-            </div>
+<div class="container update-wrapper">
 
-            <div class="row mt-4 mb-4">
-              <div class="col-6 col-sm-6">
-                <div class="form-group">
-                  <label class="text-black" for="college">Achievements</label><span>*</span>
-                {{ form.achievement (class="form-control", placeholder='Example: MBBS, FCPS', required=True) }}
-                </div>
-              </div>
-              <div class="col-6 col-sm-6">
-                <div class="form-group">
-                  <label class="text-black" for="phone">Phone (Optional)</label>
-                  {{ form.phone (class="form-control", placeholder="Phone Number") }}
-                </div>
-              </div>
-            </div>
-          </div>
-  
-          <!-- Spacer -->
-          <hr class="my-4">
-  
-          <!-- educational Inputs -->
-          <h3>Educational Information</h3>
-          <div class="form-group mb-4">
-            <label class="text-black" for="college">College</label><span>*</span>
-            {{ form.college (class="form-control", placeholder='Example: Dhaka Medical College', required=True) }}
-          </div>
-
-          <div class="form-group mb-4">
-            <label class="text-black" for="college">University (Optional)</label>
-            {{ form.higher_degree (class="form-control", placeholder='If any', required=False) }}
-          </div>
-
-          <div class="form-group mb-4">
-            <label class="text-black" for="college">Courses (Optional)</label>
-            {{ form.course (class="form-control", placeholder='If any', required=False) }}
-          </div>
-
-          <div class="form-group mb-4">
-            <label class="text-black" for="college">Extra (Optional)</label>
-            {{ form.extra (class="form-control", placeholder='If any', required=False) }}
-          </div>
-
-          <!-- position and reg. no -->
-           <h3>Professional Info</h3>
-          <div class="row mb-4 mt-4">
-            <div class="col-12 col-sm-6 col-md-4">
-              <div class="form-group">
-                <label class="text-black" for="cc">Current Position</label><span>*</span>
-                {{ form.current_position (class="form-control", placeholder='Example: General Practitioner', required=True) }}
-              </div>
-            </div>
-  
-            <div class="col-12 col-sm-6 col-md-4">
-              <div class="form-group">
-                <label class="text-black" for="inv">Govt. Registration Number </label><span>*</span>
-                {{ form.govt_reg (class="form-control", placeholder='Govt Provided ID', required=True) }}
-              </div>
-            </div>
-
-            <div class="col-12 col-sm-6 col-md-4">
-                <div class="form-group">
-                  <label class="text-black" for="inv">Upload Signature</label><span>*</span>
-                  {{ form.signature (class="form-control", placeholder='Upload Image', **{'@change': "if ($event.target.files.length) sigPreview = URL.createObjectURL($event.target.files[0])"}) }}
-                  <template x-if="sigPreview">
-                    <div class="mt-2 text-center p-2 border rounded bg-light">
-                      <small class="text-muted d-block mb-1">New Signature Preview:</small>
-                      <img :src="sigPreview" class="img-fluid" style="max-height: 70px; border: 1px dashed #ccc; padding: 2px;">
-                    </div>
-                  </template>
-                </div>
-              </div>
-          </div>
-
-          <!-- chamber or address -->
-  
-          <div class="form-group mb-4">
-            <label class="text-black" for="advice">Chamber/Office Address (Optional)</label>
-            {{ form.office (class="form-control", placeholder='If any', required=False) }}
-          </div>
-          
-          <!-- Submit Button -->
-          {{ form.submit (class="btn btn-primary btn-block") }}
-        </form>
-        {% else %}
-
-        <div class="mt-4 mb-4">
-            <br>
-            <h3>Attention:</h3>
-            <p>No profile data  found. Setup your profile first.</p>
-            <p>Setup your profile <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}">Here</a></p>
+  {% if not data %}
+    <!-- Incomplete / Missing Profile State -->
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+      <div class="mb-3">
+        <div class="d-inline-flex p-3 rounded-circle" style="background: #fef3c7; color: #d97706; width: 64px; height: 64px; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-user-doctor fs-3"></i>
         </div>
-        {% endif %}
+      </div>
+      <h3 class="fw-bold text-dark mb-2">No Profile Found</h3>
+      <p class="text-muted mx-auto mb-4" style="max-width: 460px;">
+        You have not set up your physician credentials yet. Complete your profile setup to generate e-prescriptions.
+      </p>
+      <div>
+        <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="btn btn-primary px-4 py-2 fw-bold rounded-3">
+          <i class="fa-solid fa-plus-circle me-1"></i> Setup Profile Now
+        </a>
       </div>
     </div>
-  </div>
+  {% else %}
 
+    <div class="update-card">
+      
+      <!-- Top Header Banner -->
+      <div class="update-header">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="update-badge-icon">
+              <i class="fa-solid fa-user-pen"></i>
+            </div>
+            <div>
+              <h2>Update Profile Info</h2>
+              <p>Modify your medical qualifications, practice chambers, and digital signature.</p>
+            </div>
+          </div>
+          <div class="d-flex align-items-center gap-2">
+            <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="btn-view-profile">
+              <i class="fa-solid fa-eye"></i> View Profile
+            </a>
+          </div>
+        </div>
+      </div>
 
-{% endblock %}
+      <!-- Main Update Form -->
+      <div class="p-4 p-md-5" x-data="{ 
+        sigPreview: null,
+        fileName: '',
+        handleFile(e) {
+          if (e.target.files && e.target.files[0]) {
+            this.sigPreview = URL.createObjectURL(e.target.files[0]);
+            this.fileName = e.target.files[0].name;
+          }
+        }
+      }">
+        <form action="{{ url_for('dashboard.update_profile_info', uid=current_user.uid ) }}" method="POST" enctype="multipart/form-data">
+          {{ form.hidden_tag() }}
+
+          <!-- SECTION 1: Personal Information -->
+          <div class="update-section">
+            <div class="section-title-wrap">
+              <div class="section-icon-box">
+                <i class="fa-solid fa-id-card"></i>
+              </div>
+              <div>
+                <h4 class="section-title">Personal Information</h4>
+                <p class="section-subtitle">Basic identity and personal contact details</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.full_name.id }}">
+                    <span>Full Name <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.full_name(class="form-control custom-input", placeholder='e.g. Dr. John Doe', required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6 col-md-3">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.birth_date.id }}">
+                    <span>Birth Date <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.birth_date(class="form-control custom-input", required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-sm-6 col-md-3">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.sex.id }}">
+                    <span>Sex <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.sex(class="form-control custom-input", required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-7">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.achievement.id }}">
+                    <span>Medical Degrees / Achievements <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.achievement(class="form-control custom-input", placeholder='e.g. MBBS, FCPS, MD', required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-5">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.phone.id }}">
+                    <span>Phone Number</span>
+                    <span class="optional-tag">Optional</span>
+                  </label>
+                  {{ form.phone(class="form-control custom-input", placeholder='+880 1XXXXXXXXX') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 2: Educational Qualifications -->
+          <div class="update-section">
+            <div class="section-title-wrap">
+              <div class="section-icon-box">
+                <i class="fa-solid fa-graduation-cap"></i>
+              </div>
+              <div>
+                <h4 class="section-title">Educational Background</h4>
+                <p class="section-subtitle">Medical schooling, universities, and post-grad distinctions</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.college.id }}">
+                    <span>Medical College / Alma Mater <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.college(class="form-control custom-input", placeholder='e.g. Dhaka Medical College', required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.higher_degree.id }}">
+                    <span>Postgraduate University / Institute</span>
+                    <span class="optional-tag">Optional</span>
+                  </label>
+                  {{ form.higher_degree(class="form-control custom-input", placeholder='e.g. BSMMU / Royal College of Physicians') }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.course.id }}">
+                    <span>Specialized Trainings / Courses</span>
+                    <span class="optional-tag">Optional</span>
+                  </label>
+                  {{ form.course(class="form-control custom-input", placeholder='e.g. CCD (BIRDEM), Fellowship in Cardiology') }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.extra.id }}">
+                    <span>Additional Distinctions</span>
+                    <span class="optional-tag">Optional</span>
+                  </label>
+                  {{ form.extra(class="form-control custom-input", placeholder='e.g. Gold Medalist, Fellow of WHO') }}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- SECTION 3: Professional Practice & Signature -->
+          <div class="update-section">
+            <div class="section-title-wrap">
+              <div class="section-icon-box">
+                <i class="fa-solid fa-stethoscope"></i>
+              </div>
+              <div>
+                <h4 class="section-title">Professional Practice & Signature</h4>
+                <p class="section-subtitle">Official registration and digital signature for prescriptions</p>
+              </div>
+            </div>
+
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.current_position.id }}">
+                    <span>Current Designation / Title <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.current_position(class="form-control custom-input", placeholder='e.g. Assistant Professor, Consultant', required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.govt_reg.id }}">
+                    <span>BMDC / Govt. Registration Number <span class="req-star">*</span></span>
+                  </label>
+                  {{ form.govt_reg(class="form-control custom-input", placeholder='e.g. A-12345', required=True) }}
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.office.id }}">
+                    <span>Chamber / Hospital Address</span>
+                    <span class="optional-tag">Optional</span>
+                  </label>
+                  {{ form.office(class="form-control custom-input", placeholder='e.g. Room 402, Square Hospital, Panthapath, Dhaka') }}
+                </div>
+              </div>
+
+              <div class="col-12">
+                <div class="form-group">
+                  <label class="form-label-custom">
+                    <span>Digital Prescription Signature</span>
+                    <span class="optional-tag text-muted">Leave empty to keep current signature</span>
+                  </label>
+                  
+                  <div class="signature-upload-box" @dragover.prevent @drop.prevent="handleFile($event)">
+                    {{ form.signature(class="custom-file-input", **{'@change': "handleFile($event)"}) }}
+                    
+                    <div class="sig-icon-wrap">
+                      <i class="fa-solid fa-signature"></i>
+                    </div>
+                    <div class="fw-bold text-dark mb-1" x-text="fileName ? fileName : 'Click or drop to upload replacement signature'"></div>
+                    <p class="text-muted small mb-0">PNG or JPG with transparent background recommended</p>
+                  </div>
+
+                  <!-- New Signature Preview -->
+                  <template x-if="sigPreview">
+                    <div class="sig-preview-card">
+                      <div class="d-flex align-items-center justify-content-between w-100 mb-2 px-2">
+                        <span class="small fw-semibold text-muted"><i class="fa-solid fa-circle-check text-success me-1"></i> New Signature Selected:</span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Ready to save</span>
+                      </div>
+                      <div class="p-2 bg-light rounded border w-100 text-center">
+                        <img :src="sigPreview" class="img-fluid" style="max-height: 75px; object-fit: contain;">
+                      </div>
+                    </div>
+                  </template>
+
+                  <!-- Current Signature Display when no new one picked -->
+                  {% if data.signature %}
+                  <template x-if="!sigPreview">
+                    <div class="sig-preview-card">
+                      <div class="d-flex align-items-center justify-content-between w-100 mb-2 px-2">
+                        <span class="small fw-semibold text-muted"><i class="fa-solid fa-image me-1"></i> Current Active Signature:</span>
+                        <span class="badge bg-light text-secondary border">Active on file</span>
+                      </div>
+                      <div class="p-2 bg-light rounded border w-100 text-center">
+                        <img src="{{ url_for('static', filename='uploads/' + data.signature) }}" class="img-fluid" style="max-height: 65px; object-fit: contain;">
+                      </div>
+                    </div>
+                  </template>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Actions -->
+          <div class="mt-4 pt-2">
+            <button type="submit" class="btn btn-submit-update">
+              <i class="fa-solid fa-floppy-disk"></i> Save & Update Profile
+            </button>
+            <div class="text-center mt-2">
+              <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="btn-cancel-link">
+                <i class="fa-solid fa-arrow-left"></i> Cancel & Return to Profile
+              </a>
+            </div>
+          </div>
+
+        </form>
+      </div>
+    </div>
+
+  {% endif %}
+
+</div>
+
+{% endblock %}

@@ -1,117 +1,515 @@
 {% extends 'base.html' %}
 
-{% block title %} Profile Info {% endblock %}
+{% block title %} Doctor Profile - DocMed {% endblock %}
 
 {% block content %}
 
+<style>
+  .profile-container {
+    max-width: 960px;
+    margin: 40px auto 80px auto;
+  }
 
-<div class="container mt-4 mb-4">
-    <div class="block">
-      <div class="row justify-content-center">
-        <h1>Profile Information</h1>
+  /* Toast Notification Container */
+  .toast-banner-container {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    z-index: 9999;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
 
-        <div class="mt-4 mb-4">
-        <h5>Personal Information</h5>
+  .modern-toast {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 14px 18px;
+    box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(226, 232, 240, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 0.92rem;
+    font-weight: 500;
+  }
 
-        <!-- flash message -->
-        <div class="mb-3" id="flash-messages">
-            {% with messages = get_flashed_messages(with_categories=True) %}
-                {% if messages %}
-                    <ul class="flashes">
-                        {% for category, message in messages %}
-                            <li class="flash {{ category}}">{{ message }}</li>
-                        {% endfor %}
-                    </ul>
-                {% endif %}
-            {% endwith %}
+  .modern-toast.success {
+    border-left: 5px solid #10b981;
+    color: #065f46;
+  }
+
+  .modern-toast.error, .modern-toast.danger {
+    border-left: 5px solid #ef4444;
+    color: #991b1b;
+  }
+
+  .modern-toast.info {
+    border-left: 5px solid #3b82f6;
+    color: #1e40af;
+  }
+
+  .profile-hero-card {
+    background: linear-gradient(135deg, #092e3b 0%, #0d9488 100%);
+    border-radius: 20px;
+    padding: 36px;
+    color: #ffffff;
+    box-shadow: 0 10px 30px -5px rgba(9, 46, 59, 0.25);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-avatar-box {
+    width: 80px;
+    height: 80px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.2rem;
+    color: #5eead4;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+  }
+
+  .credential-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    padding: 5px 12px;
+    border-radius: 9999px;
+    font-size: 0.82rem;
+    color: #ffffff;
+    font-weight: 600;
+  }
+
+  .info-card-section {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
+    padding: 26px;
+    margin-bottom: 24px;
+    transition: all 0.2s ease;
+  }
+
+  .info-card-section:hover {
+    border-color: #cbd5e1;
+    box-shadow: 0 6px 24px -2px rgba(15, 23, 42, 0.08);
+  }
+
+  .section-header-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .section-badge-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #ccfbf1;
+    color: #0d9488;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+
+  .detail-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 11px 0;
+    border-bottom: 1px solid #f8fafc;
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .detail-label {
+    width: 38%;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #64748b;
+    margin: 0;
+  }
+
+  .detail-value {
+    width: 62%;
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+  }
+
+  .signature-preview-holder {
+    background: #f8fafc;
+    border: 1.5px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+  }
+
+  .signature-preview-holder img {
+    max-height: 75px;
+    max-width: 200px;
+    object-fit: contain;
+  }
+
+  .btn-edit-doctor {
+    background: #ffffff !important;
+    color: #092e3b !important;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 22px;
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transition: all 0.2s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-edit-doctor:hover {
+    background: #f0fdfa !important;
+    color: #0d9488 !important;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    text-decoration: none;
+  }
+
+  .btn-rx-studio {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 20px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+  }
+
+  .btn-rx-studio:hover {
+    background: rgba(0, 0, 0, 0.5) !important;
+    color: #5eead4 !important;
+    transform: translateY(-2px);
+    text-decoration: none;
+  }
+
+  .btn-edit-adjustments {
+    background: #f0fdfa !important;
+    border: 1.5px solid #0d9488 !important;
+    color: #0d9488 !important;
+    font-weight: 700;
+    font-size: 0.88rem;
+    padding: 8px 18px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.15);
+    transition: all 0.2s ease;
+  }
+
+  .btn-edit-adjustments:hover {
+    background: #0d9488 !important;
+    color: #ffffff !important;
+    border-color: #0d9488 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
+    text-decoration: none;
+  }
+
+  .btn-action-primary {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%) !important;
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 0.95rem;
+    padding: 11px 24px;
+    border-radius: 10px;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 14px rgba(13, 148, 136, 0.3);
+    transition: all 0.2s ease;
+  }
+
+  .btn-action-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(13, 148, 136, 0.4);
+    filter: brightness(1.06);
+    color: #ffffff !important;
+    text-decoration: none;
+  }
+
+</style>
+
+<!-- Top Fixed Toast Messages (Alpine-powered) -->
+<div class="toast-banner-container" x-data="{
+  toasts: [],
+  init() {
+    {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          this.addToast({{ message | tojson }}, {{ category | tojson }});
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  },
+  addToast(msg, cat) {
+    const id = Date.now() + Math.random();
+    this.toasts.push({ id, message: msg, category: cat });
+    setTimeout(() => this.removeToast(id), 6000);
+  },
+  removeToast(id) {
+    this.toasts = this.toasts.filter(t => t.id !== id);
+  }
+}">
+  <template x-for="toast in toasts" :key="toast.id">
+    <div class="modern-toast" :class="toast.category" x-transition:enter="animate__animated animate__fadeInDown" x-transition:leave="animate__animated animate__fadeOutRight">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa-solid" :class="{
+          'fa-circle-check text-success': toast.category === 'success',
+          'fa-triangle-exclamation text-danger': toast.category === 'error' || toast.category === 'danger',
+          'fa-circle-info text-primary': toast.category === 'info'
+        }"></i>
+        <span x-text="toast.message"></span>
+      </div>
+      <button type="button" class="btn-close btn-close-sm" @click="removeToast(toast.id)" aria-label="Close" style="font-size: 0.75rem;"></button>
+    </div>
+  </template>
+</div>
+
+<div class="container profile-container">
+
+  {% if not info %}
+    <!-- Incomplete Profile Warning State -->
+    <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white mb-4">
+      <div class="mb-3">
+        <div class="d-inline-flex p-3 rounded-circle" style="background: #fef3c7; color: #d97706; width: 64px; height: 64px; align-items: center; justify-content: center;">
+          <i class="fa-solid fa-user-doctor fs-3"></i>
         </div>
-        
-        <table class="table table-bordered mt-3 mb-3">
-            <tbody>
-                <tr>
-                    <th>Full Name</th>
-                    <td>{{ info.full_name }}</td>
-                </tr>
-                <tr>
-                    <th>Date of Birth</th>
-                    <td>{{ info.birth_date.strftime('%d-%m-%Y') }}</td>
-                </tr>
-                <tr>
-                    <th>Phone</th>
-                    <td>{{ info.phone }}</td>
-                </tr>
-                <tr>
-                    <th>Gender</th>
-                    <td>{{ info.sex }}</td>
-                </tr>
-                <tr>
-                    <th>Achievements</th>
-                    <td>{{ info.achievement }}</td>
-                </tr>
-            </tbody>
-        </table>
+      </div>
+      <h3 class="fw-bold text-dark mb-2">Doctor Profile Incomplete</h3>
+      <p class="text-muted mx-auto mb-4" style="max-width: 480px;">
+        You haven't completed your medical profile setup yet. Complete your setup now to start generating validated prescriptions with digital signatures.
+      </p>
+      <div>
+        <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="btn-action-primary">
+          <i class="fa-solid fa-plus-circle"></i> Complete Profile Setup
+        </a>
+      </div>
+    </div>
+  {% else %}
+
+    <!-- Top Hero Banner Card -->
+    <div class="profile-hero-card">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-3">
+          <div class="profile-avatar-box">
+            <i class="fa-solid fa-user-doctor"></i>
+          </div>
+          <div>
+            <h2 class="fw-bold text-white mb-1" style="letter-spacing: -0.02em;">
+              {{ info.full_name }}
+            </h2>
+            <div class="d-flex align-items-center gap-2 flex-wrap mt-1">
+              <span class="credential-chip">
+                <i class="fa-solid fa-stethoscope text-teal" style="color: #5eead4;"></i> {{ info.current_position }}
+              </span>
+              <span class="credential-chip">
+                <i class="fa-solid fa-medal text-warning"></i> {{ info.achievement }}
+              </span>
+              <span class="credential-chip font-monospace">
+                <i class="fa-solid fa-id-card text-info"></i> BMDC: {{ info.govt_reg }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2">
+          <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn-edit-doctor">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+          </a>
+          <a href="{{ url_for('pdf_generator.document_page') }}" class="btn-rx-studio">
+            <i class="fa-solid fa-file-prescription text-teal" style="color: #5eead4;"></i> Rx Studio
+          </a>
+        </div>
+      </div>
     </div>
 
+    <div class="row g-4">
+      <!-- Left Column: Personal & Educational -->
+      <div class="col-lg-6">
+        
+        <!-- Personal Info Card -->
+        <div class="info-card-section">
+          <div class="section-header-title">
+            <div class="section-badge-icon">
+              <i class="fa-solid fa-id-card"></i>
+            </div>
+            <span>Personal Information</span>
+          </div>
 
-        <div class="mt-4 mb-4">
-            <h5>Educational Information</h5>
-            <table class="table table-bordered mt-3 mb-3">
-                <tbody>
-                    <tr>
-                        <th>College</th>
-                        <td>{{ info.college }}</td>
-                    </tr>
-                    <tr>
-                        <th>University</th>
-                        <td>{{ info.higher_degree }}</td>
-                    </tr>
-                    <tr>
-                        <th>Courses</th>
-                        <td>{{ info.course }}</td>
-                    </tr>
-                    <tr>
-                        <th>Extra Info</th>
-                        <td>{{ info.extra }}</td>
-                    </tr>
-                </tbody>
-            </table>
+          <div class="detail-row">
+            <p class="detail-label">Full Name</p>
+            <p class="detail-value">{{ info.full_name }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Date of Birth</p>
+            <p class="detail-value">
+              {% if info.birth_date %}
+                {{ info.birth_date.strftime('%B %d, %Y') if info.birth_date.strftime else info.birth_date }}
+              {% else %}
+                <span class="text-muted">Not specified</span>
+              {% endif %}
+            </p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Sex / Gender</p>
+            <p class="detail-value">{{ info.sex | capitalize }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Phone Number</p>
+            <p class="detail-value">{{ info.phone or 'Not provided' }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Medical Degrees</p>
+            <p class="detail-value text-teal" style="color: #0d9488;">{{ info.achievement }}</p>
+          </div>
         </div>
 
+        <!-- Educational Background Card -->
+        <div class="info-card-section">
+          <div class="section-header-title">
+            <div class="section-badge-icon">
+              <i class="fa-solid fa-graduation-cap"></i>
+            </div>
+            <span>Educational Credentials</span>
+          </div>
 
-        <div class="mt-4 mb-4">
-            <h5>Professional Information</h5>
-            <table class="table table-bordered mt-3 mb-3">
-                <tbody>
-                    <tr>
-                        <th>Current Position</th>
-                        <td>{{ info.current_position }}</td>
-                    </tr>
-                    <tr>
-                        <th>Govt. Registration ID</th>
-                        <td>{{ info.govt_reg }}</td>
-                    </tr>
-                    <tr>
-                        <th>Chamber/Office Address</th>
-                        <td>{{ info.office }}</td>
-                    </tr>
-                    <tr>
-                        <th>Signature</th>
-                        <!--<td><img src="{{ info.signature }}" alt="sign" style="width: 200px; height: 100px;"></td>-->
-                        <td><img src="{{ url_for('static', filename='uploads/' + info.signature) }}" alt="sign" style="width: 200px; height: 100px;"></td>
-                        
-                    </tr>
-                </tbody>
-            </table>
+          <div class="detail-row">
+            <p class="detail-label">Medical College</p>
+            <p class="detail-value">{{ info.college }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Postgraduate Institute</p>
+            <p class="detail-value">{{ info.higher_degree or 'N/A' }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Courses / Fellowships</p>
+            <p class="detail-value">{{ info.course or 'None listed' }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Extra Distinctions</p>
+            <p class="detail-value">{{ info.extra or 'None' }}</p>
+          </div>
         </div>
 
+      </div>
 
-        <div class="text-center mt-3">
-            <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn btn-primary"><i class="fa-regular fa-pen-to-square"></i> Edit Data</a>
-        </div>    
+      <!-- Right Column: Professional Practice & Signature -->
+      <div class="col-lg-6">
+        
+        <!-- Professional Practice Card -->
+        <div class="info-card-section">
+          <div class="section-header-title">
+            <div class="section-badge-icon">
+              <i class="fa-solid fa-stethoscope"></i>
+            </div>
+            <span>Professional Practice</span>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Designation</p>
+            <p class="detail-value fw-bold text-dark">{{ info.current_position }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Govt. Registration No.</p>
+            <p class="detail-value font-monospace fw-bold" style="color: #0d9488;">{{ info.govt_reg }}</p>
+          </div>
+
+          <div class="detail-row">
+            <p class="detail-label">Chamber / Address</p>
+            <p class="detail-value">{{ info.office or 'Not specified' }}</p>
+          </div>
+        </div>
+
+        <!-- Digital Signature Card -->
+        <div class="info-card-section">
+          <div class="section-header-title">
+            <div class="section-badge-icon">
+              <i class="fa-solid fa-signature"></i>
+            </div>
+            <span>Prescription Signature</span>
+          </div>
+
+          <p class="text-muted small mb-3">This signature is stamped automatically on your generated PDF prescriptions.</p>
+
+          <div class="text-center w-100">
+            {% if info.signature %}
+              <div class="signature-preview-holder">
+                <img src="{{ url_for('static', filename='uploads/' + info.signature) }}" alt="Digital Signature">
+                <small class="text-muted mt-2 d-block font-monospace" style="font-size: 0.75rem;">Verified Digital Signature</small>
+              </div>
+            {% else %}
+              <div class="alert alert-warning small p-3 rounded-3">
+                <i class="fa-solid fa-triangle-exclamation me-1"></i> No signature on file. Please update your profile.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Quick Quick Action Strip -->
+        <div class="d-flex align-items-center justify-content-between p-3 rounded-4 bg-light border">
+          <div>
+            <h6 class="fw-bold mb-0 text-dark">Need to make adjustments?</h6>
+            <small class="text-muted">Update contact details, chamber timings, or qualifications.</small>
+          </div>
+          <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="btn-edit-adjustments">
+            <i class="fa-solid fa-pen-to-square"></i> Edit Info
+          </a>
+        </div>
 
       </div>
     </div>
-  </div>
 
+  {% endif %}
 
-{% endblock %}
+</div>
+
+{% endblock %}

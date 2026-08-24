@@ -85,11 +85,16 @@ def preview_live():
 @login_required
 @doctor_required
 def document_page():
+    # Require doctor to complete profile setup before generating prescriptions
+    if not current_user.profile_info:
+        flash("Please complete your doctor profile setup first before generating prescriptions.", "error")
+        return redirect(url_for('dashboard.setup_page', uid=current_user.uid))
 
     form = PrescriptionForm()
 
     doctor_id = current_user.uid
     unique_id = short_uuid()
+
 
     if request.method == 'POST':
         if form.validate_on_submit():

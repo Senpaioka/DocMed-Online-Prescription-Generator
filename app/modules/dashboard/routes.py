@@ -261,14 +261,19 @@ def history_page(uid):
 @login_required
 @doctor_required
 def pdf_template_preview(uid):
+    user = RegistrationModel.query.get(uid)
+    if not user or not user.profile_info:
+        flash("Please complete your doctor profile setup first to view your template.", "error")
+        return redirect(url_for('dashboard.setup_page', uid=uid))
 
-    get_doctor_info = RegistrationModel.query.get(uid).profile_info
+    get_doctor_info = user.profile_info
 
     context = {
         'doctor_info': get_doctor_info,
     }
 
     return render_template('dashboard/preview.html', **context)
+
 
 
 
