@@ -1,83 +1,812 @@
 {% extends 'base.html' %}
 
-{% block title %} Update{% endblock %}
+{% block title %} Account Settings | DocMed {% endblock %}
 
 {% block content %}
 
-        <div class="container d-flex justify-content-center">
-            <div class="register-container">
-                <h3 class="text-center mb-4">Edit Login Credentials</h3>
-                <!-- flash message -->
-                <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition:leave.duration.500ms>
-                    {% with messages = get_flashed_messages(with_categories=True) %}
-                        {% if messages %}
-                            <ul class="flashes">
-                                {% for category, message in messages %}
-                                    <li class="flash {{ category}}">{{ message }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    {% endwith %}
+<style>
+    :root {
+        --docmed-primary: #0d9488;
+        --docmed-primary-dark: #0f766e;
+        --docmed-primary-light: #ccfbf1;
+        --docmed-navy: #092e3b;
+        --docmed-surface: #ffffff;
+        --docmed-border: #e2e8f0;
+        --docmed-text-main: #1e293b;
+        --docmed-text-muted: #64748b;
+    }
+
+    body {
+        background-color: #f1f5f9;
+        color: var(--docmed-text-main);
+    }
+
+    .auth-wrapper {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
+
+    .auth-card {
+        background: var(--docmed-surface);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8);
+        overflow: hidden;
+        width: 100%;
+        max-width: 1040px;
+        display: flex;
+        flex-direction: row;
+        margin: 0 auto;
+    }
+
+    /* Left Side: Summary & Quick Navigation Panel */
+    .brand-panel {
+        flex: 0.95;
+        background: linear-gradient(145deg, #092e3b 0%, #0d5257 50%, #0f766e 100%);
+        color: #ffffff;
+        padding: 48px 36px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .brand-panel::before {
+        content: "";
+        position: absolute;
+        width: 280px;
+        height: 280px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(45, 212, 191, 0.25) 0%, rgba(13, 148, 136, 0) 70%);
+        top: -70px;
+        right: -70px;
+        pointer-events: none;
+    }
+
+    .brand-panel::after {
+        content: "";
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, rgba(15, 118, 110, 0) 70%);
+        bottom: -50px;
+        left: -50px;
+        pointer-events: none;
+    }
+
+    .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #5eead4;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        width: fit-content;
+        margin-bottom: 20px;
+    }
+
+    .account-avatar-card {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 16px;
+        padding: 16px 18px;
+        backdrop-filter: blur(8px);
+        margin-bottom: 24px;
+    }
+
+    .account-avatar-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 14px;
+        background: rgba(94, 234, 212, 0.2);
+        border: 1.5px solid #5eead4;
+        color: #5eead4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+
+    .account-user-name {
+        margin: 0;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #ffffff;
+        line-height: 1.2;
+    }
+
+    .account-user-role {
+        margin: 4px 0 0;
+        font-size: 0.8rem;
+        color: #ccfbf1;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .brand-title {
+        font-size: 1.75rem;
+        font-weight: 800;
+        line-height: 1.3;
+        letter-spacing: -0.02em;
+        margin-bottom: 12px;
+        color: #ffffff;
+    }
+
+    .brand-title span {
+        color: #5eead4;
+    }
+
+    .brand-desc {
+        color: #cbd5e1;
+        font-size: 0.9rem;
+        line-height: 1.6;
+        margin-bottom: 26px;
+    }
+
+    .feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        margin-bottom: 24px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .feature-icon-box {
+        width: 34px;
+        height: 34px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #5eead4;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+
+    .feature-text h6 {
+        margin: 0;
+        font-size: 0.88rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .feature-text p {
+        margin: 2px 0 0;
+        font-size: 0.78rem;
+        color: #94a3b8;
+        line-height: 1.4;
+    }
+
+    .quick-links-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(8px);
+    }
+
+    .quick-links-title {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #5eead4;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .quick-nav-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        color: #ffffff !important;
+        font-size: 0.84rem;
+        font-weight: 600;
+        padding: 7px 14px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        margin-right: 6px;
+        margin-bottom: 6px;
+    }
+
+    .quick-nav-btn:hover {
+        background: rgba(255, 255, 255, 0.28);
+        color: #ffffff !important;
+        transform: translateY(-1px);
+    }
+
+    /* Right Side: Form Panel */
+    .form-panel {
+        flex: 1.2;
+        padding: 44px 40px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .form-header {
+        margin-bottom: 24px;
+    }
+
+    .form-header-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--docmed-primary);
+        background: var(--docmed-primary-light);
+        padding: 4px 10px;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+
+    .form-header h2 {
+        font-size: 1.65rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+        margin-bottom: 4px;
+    }
+
+    .form-header p {
+        color: var(--docmed-text-muted);
+        font-size: 0.88rem;
+        margin: 0;
+    }
+
+    /* Section divider inside form */
+    .form-subhead {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 22px 0 16px 0;
+        padding-top: 14px;
+        border-top: 1px dashed #e2e8f0;
+    }
+
+    .form-subhead-title {
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #475569;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    .form-subhead-pill {
+        font-size: 0.72rem;
+        font-weight: 600;
+        background: #f1f5f9;
+        color: #64748b;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .form-group-custom {
+        margin-bottom: 16px;
+        position: relative;
+    }
+
+    .form-label-custom {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        pointer-events: none;
+        transition: color 0.2s ease;
+        z-index: 4;
+    }
+
+    .input-custom {
+        width: 100%;
+        padding: 10px 14px 10px 40px !important;
+        font-size: 0.92rem;
+        border: 1.5px solid var(--docmed-border);
+        border-radius: 10px !important;
+        background-color: #ffffff;
+        color: #0f172a;
+        transition: all 0.2s ease;
+        outline: none;
+    }
+
+    .input-custom:focus {
+        border-color: var(--docmed-primary) !important;
+        box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+        background-color: #ffffff;
+    }
+
+    .input-custom:focus + .input-icon,
+    .input-wrapper:focus-within .input-icon {
+        color: var(--docmed-primary);
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 12px;
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+        font-size: 1rem;
+        transition: color 0.2s ease;
+        z-index: 4;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .password-toggle-btn:hover {
+        color: var(--docmed-primary);
+    }
+
+    /* Password strength & meter */
+    .strength-meter {
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        margin-top: 6px;
+        overflow: hidden;
+    }
+
+    .strength-meter-bar {
+        height: 100%;
+        transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .field-error-text {
+        font-size: 0.78rem;
+        color: #dc2626;
+        font-weight: 600;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    /* Alerts */
+    .alert-docmed {
+        border-radius: 12px;
+        padding: 12px 16px;
+        margin-bottom: 18px;
+        font-size: 0.88rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .alert-docmed-error {
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+    }
+
+    .alert-docmed-success {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
+    }
+
+    .alert-docmed-info {
+        background-color: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+    }
+
+    /* Action Buttons */
+    .btn-docmed-submit {
+        background: linear-gradient(135deg, var(--docmed-primary) 0%, var(--docmed-primary-dark) 100%);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 12px 24px;
+        border-radius: 10px;
+        border: none;
+        box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+        transition: all 0.25s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        cursor: pointer;
+    }
+
+    .btn-docmed-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45);
+        color: #ffffff;
+    }
+
+    .btn-cancel-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.88rem;
+        padding: 12px 18px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        text-decoration: none;
+        transition: all 0.2s ease;
+    }
+
+    .btn-cancel-link:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        border-color: #cbd5e1;
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .auth-card {
+            flex-direction: column;
+            max-width: 580px;
+        }
+
+        .brand-panel {
+            padding: 34px 28px;
+        }
+
+        .form-panel {
+            padding: 34px 28px;
+        }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+
+        <!-- Left Side: User Summary & Info Panel -->
+        <div class="brand-panel">
+            <div>
+                <div class="brand-badge">
+                    <i class="fa-solid fa-user-gear"></i> Account Settings
                 </div>
 
-                <form method="POST" action="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}">
-                    {{ form.hidden_tag() }}
-                     <!-- Username -->
-                     <div class="mb-3">
-                        <label for="name" class="form-label">Username</label>
-                        {{ form.username (class="form-control",placeholder='Unique Username' ,required=True) }}
-
-                        <!-- error handling -->
-                        {% for error in form.username.errors %}
-                            <span style="color: red;">{{ error }}</span>
-                        {% endfor %}
+                <!-- Logged-in User Identity Card -->
+                <div class="account-avatar-card">
+                    <div class="account-avatar-icon">
+                        {% if current_user.role == 'doctor' %}
+                            <i class="fa-solid fa-user-doctor"></i>
+                        {% elif current_user.is_admin or current_user.role == 'admin' %}
+                            <i class="fa-solid fa-user-shield"></i>
+                        {% else %}
+                            <i class="fa-solid fa-user"></i>
+                        {% endif %}
                     </div>
-        
-                    <!-- Email -->
-                    <div class="mb-3">
-                        <label for="email" class="form-label">Email</label>
-                        {{ form.email (class="form-control",placeholder='Enter Your Email' ,required=True) }}
-
-                        <!-- error handling -->
-                        {% for error in form.email.errors %}
-                            <span style="color: red;">{{ error }}</span>
-                        {% endfor %}
+                    <div>
+                        <h5 class="account-user-name">
+                            {% if current_user.role == 'doctor' %}Dr. {% endif %}{{ current_user.username }}
+                        </h5>
+                        <p class="account-user-role">
+                            <i class="fa-solid fa-circle-check text-success"></i>
+                            <span class="text-capitalize">{{ current_user.role or 'User' }} Account</span>
+                        </p>
                     </div>
-        
-                    <!-- Password -->
-                    <div class="mb-3" x-data="{ show: false }">
-                        <label for="new_password" class="form-label">New Password</label>
-                        <div class="input-group">
-                            {{ form.new_password (class="form-control", placeholder='Set a new password', **{':type': "show ? 'text' : 'password'"}) }}
-                            <button class="btn btn-primary" type="button" @click="show = !show" :title="show ? 'Hide Password' : 'Show Password'">
-                                <i :class="show ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash'"></i>
-                            </button>
+                </div>
+
+                <h1 class="brand-title">Manage Your <span>DocMed Credentials.</span></h1>
+                <p class="brand-desc">Keep your login credentials, email address, and security credentials up-to-date and protected.</p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h6>Enhanced Security</h6>
+                            <p>Update password anytime with mandatory strength requirements.</p>
                         </div>
                     </div>
 
-                    <div class="mb-3" x-data="{ show: false }">
-                        <label for="confirm_password" class="form-label">Confirm Password</label>
-                        <div class="input-group">
-                            {{ form.confirm_password (class="form-control", placeholder='Confirm Password', **{':type': "show ? 'text' : 'password'"}) }}
-                            <button class="btn btn-primary" type="button" @click="show = !show" :title="show ? 'Hide Password' : 'Show Password'">
-                                <i :class="show ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash'"></i>
-                            </button>
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="fa-solid fa-envelope-circle-check"></i>
                         </div>
-                        <!-- error handling -->
-                        {% for error in form.confirm_password.errors %}
-                            <span style="color: red;">{{ error }}</span>
-                        {% endfor %}
+                        <div class="feature-text">
+                            <h6>Verified Email</h6>
+                            <p>Used for official OTPs, password recovery, and Rx notifications.</p>
+                        </div>
                     </div>
-        
-                    <!-- Gender -->
-                    <div class="mb-3">
-                        <label for="gender" class="form-label">Gender</label>
-                            {{ form.gender (class="form-control",placeholder='Your Gender' ,required=True) }}
+
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h6>Instant Synchronization</h6>
+                            <p>Changes take effect immediately across all your active sessions.</p>
+                        </div>
                     </div>
-        
-                    <!-- Submit Button -->
-                     {{ form.update (class="btn btn-primary w-100") }}
-                </form> 
+                </div>
+            </div>
+
+            <!-- Quick Navigation Card -->
+            <div class="quick-links-card mt-3">
+                <div class="quick-links-title">
+                    <i class="fa-solid fa-compass"></i> Quick Navigation
+                </div>
+                <div>
+                    {% if current_user.role == 'doctor' and current_user.profile_info %}
+                    <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="quick-nav-btn">
+                        <i class="fa-solid fa-id-card"></i> Doctor Profile
+                    </a>
+                    <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="quick-nav-btn">
+                        <i class="fa-solid fa-user-pen"></i> Edit Profile Info
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="quick-nav-btn">
+                        <i class="fa-solid fa-gauge"></i> Dashboard
+                    </a>
+                    {% endif %}
+                </div>
             </div>
         </div>
+
+        <!-- Right Side: Account Update Form -->
+        <div class="form-panel" x-data="{
+            newPassword: '',
+            confirmPassword: '',
+            showNewPass: false,
+            showConfirmPass: false,
+            get hasMinLength() { return this.newPassword.length >= 8; },
+            get hasUppercase() { return /[A-Z]/.test(this.newPassword); },
+            get hasLowercase() { return /[a-z]/.test(this.newPassword); },
+            get hasNumber() { return /[0-9]/.test(this.newPassword); },
+            get hasSpecial() { return /[!@#$%^&*()_+\-=\[\]{};:\'\&quot;,<>\/?\\|`~]/.test(this.newPassword); },
+            get passedCriteriaCount() {
+                return (this.hasMinLength ? 1 : 0) +
+                       (this.hasUppercase ? 1 : 0) +
+                       (this.hasLowercase ? 1 : 0) +
+                       (this.hasNumber ? 1 : 0) +
+                       (this.hasSpecial ? 1 : 0);
+            },
+            get strengthScore() {
+                return this.passedCriteriaCount * 20;
+            },
+            get strengthColor() {
+                if (this.passedCriteriaCount <= 2) return '#ef4444';
+                if (this.passedCriteriaCount <= 4) return '#f59e0b';
+                return '#10b981';
+            },
+            get strengthLabel() {
+                if (!this.newPassword) return '';
+                if (this.passedCriteriaCount <= 2) return 'Weak';
+                if (this.passedCriteriaCount <= 4) return 'Good';
+                return 'Strong & Secure';
+            }
+        }">
+
+            <div class="form-header">
+                <span class="form-header-badge">
+                    <i class="fa-solid fa-sliders"></i> Profile Credentials
+                </span>
+                <h2>Edit Account Info</h2>
+                <p>Update your personal account credentials and security settings.</p>
+            </div>
+
+            <!-- Flash messages -->
+            <div id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)" x-transition:leave.duration.400ms>
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert-docmed {{ 'alert-docmed-error' if category == 'error' or category == 'danger' else ('alert-docmed-success' if category == 'success' else 'alert-docmed-info') }}">
+                                <i class="{{ 'fa-solid fa-circle-exclamation' if category == 'error' or category == 'danger' else ('fa-solid fa-circle-check' if category == 'success' else 'fa-solid fa-circle-info') }}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <form method="POST" action="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}">
+                {{ form.hidden_tag() }}
+
+                <!-- Username -->
+                <div class="form-group-custom">
+                    <label for="username" class="form-label-custom">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user input-icon"></i>
+                        {{ form.username(class="input-custom", placeholder="Unique username", required=True) }}
+                    </div>
+
+                    {% for error in form.username.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Email -->
+                <div class="form-group-custom">
+                    <label for="email" class="form-label-custom">Email Address</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        {{ form.email(class="input-custom", placeholder="user@example.com", required=True) }}
+                    </div>
+
+                    {% for error in form.email.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Gender -->
+                <div class="form-group-custom">
+                    <label for="gender" class="form-label-custom">Gender</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-venus-mars input-icon"></i>
+                        {{ form.gender(class="input-custom", required=True) }}
+                    </div>
+
+                    {% for error in form.gender.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Change Password Subheading -->
+                <div class="form-subhead">
+                    <span class="form-subhead-title"><i class="fa-solid fa-key me-1 text-teal"></i> Change Password</span>
+                    <span class="form-subhead-pill">Optional — leave blank to keep current</span>
+                </div>
+
+                <!-- New Password -->
+                <div class="form-group-custom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <label for="new_password" class="form-label-custom">New Password</label>
+                        <span class="small fw-semibold" :style="'color:' + strengthColor" x-text="strengthLabel" x-show="newPassword.length > 0"></span>
+                    </div>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        {{ form.new_password(class="input-custom", placeholder="Leave blank to keep existing password", **{'x-model': 'newPassword', ':type': "showNewPass ? 'text' : 'password'"}) }}
+                        <button type="button" class="password-toggle-btn" @click="showNewPass = !showNewPass" :title="showNewPass ? 'Hide Password' : 'Show Password'" tabindex="-1">
+                            <i :class="showNewPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                        </button>
+                    </div>
+
+                    <!-- Password strength visual bar -->
+                    <div class="strength-meter" x-show="newPassword.length > 0">
+                        <div class="strength-meter-bar" :style="'width: ' + strengthScore + '%; background-color: ' + strengthColor"></div>
+                    </div>
+
+                    <!-- Password Requirements Checklist (shown when typing a new password) -->
+                    <div class="password-rules-box mt-2 p-2 rounded bg-light border" x-show="newPassword.length > 0" style="font-size: 0.78rem;">
+                        <div class="row g-1">
+                            <div class="col-6" :class="hasMinLength ? 'text-success' : 'text-muted'">
+                                <i :class="hasMinLength ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> At least 8 characters
+                            </div>
+                            <div class="col-6" :class="hasUppercase ? 'text-success' : 'text-muted'">
+                                <i :class="hasUppercase ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Uppercase letter (A-Z)
+                            </div>
+                            <div class="col-6" :class="hasLowercase ? 'text-success' : 'text-muted'">
+                                <i :class="hasLowercase ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Lowercase letter (a-z)
+                            </div>
+                            <div class="col-6" :class="hasNumber ? 'text-success' : 'text-muted'">
+                                <i :class="hasNumber ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Number (0-9)
+                            </div>
+                            <div class="col-12" :class="hasSpecial ? 'text-success' : 'text-muted'">
+                                <i :class="hasSpecial ? 'fa-solid fa-circle-check text-success' : 'fa-regular fa-circle text-muted'" class="me-1"></i> Special character (!@#$%^&*...)
+                            </div>
+                        </div>
+                    </div>
+
+                    {% for error in form.new_password.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="form-group-custom">
+                    <label for="confirm_password" class="form-label-custom">Confirm New Password</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-shield-halved input-icon"></i>
+                        {{ form.confirm_password(class="input-custom", placeholder="Confirm new password", **{'x-model': 'confirmPassword', ':type': "showConfirmPass ? 'text' : 'password'"}) }}
+                        <button type="button" class="password-toggle-btn" @click="showConfirmPass = !showConfirmPass" :title="showConfirmPass ? 'Hide Password' : 'Show Password'" tabindex="-1">
+                            <i :class="showConfirmPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                        </button>
+                    </div>
+
+                    <template x-if="newPassword && confirmPassword && newPassword !== confirmPassword">
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> Passwords do not match
+                        </div>
+                    </template>
+
+                    <template x-if="newPassword && confirmPassword && newPassword === confirmPassword">
+                        <div class="text-success small fw-semibold mt-1">
+                            <i class="fa-solid fa-circle-check"></i> Passwords match
+                        </div>
+                    </template>
+
+                    {% for error in form.confirm_password.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="row g-2 mt-4">
+                    <div class="col-sm-8">
+                        <button type="submit" class="btn-docmed-submit w-100">
+                            <i class="fa-solid fa-check"></i> Save Changes
+                        </button>
+                    </div>
+                    <div class="col-sm-4">
+                        {% if current_user.role == 'doctor' and current_user.profile_info %}
+                        <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="btn-cancel-link w-100">
+                            <i class="fa-solid fa-arrow-left"></i> Cancel
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn-cancel-link w-100">
+                            <i class="fa-solid fa-arrow-left"></i> Cancel
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+</div>
+
 {% endblock %}
