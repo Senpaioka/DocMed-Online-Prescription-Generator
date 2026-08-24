@@ -49,6 +49,7 @@ dependencies = [
     "pyphen==0.17.2",
     "python-bidi==0.6.6",
     "python-decouple==3.8",
+    "python-dotenv>=1.2.3",
     "pyyaml==6.0.2",
     "qrcode==8.0",
     "reportlab==4.3.1",
