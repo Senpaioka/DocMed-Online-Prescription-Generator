@@ -4,72 +4,250 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.png') }}">
-		<!-- Bootstrap CSS -->
-		<link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
-		<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/tiny-slider.css') }}" rel="stylesheet">
-		<link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
-		<!-- HTMX -->
-		<script src="{{ url_for('static', filename='htmx/htmx.js') }}"></script>
-		<!-- Alpine.js -->
-		<script defer src="{{ url_for('static', filename='alpine/alpine.js') }}"></script>
-	</head>
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <style>
-        body {
-            background-color: #f8f9fa;
-        }
-        .register-container {
-            width: 500px;
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-            margin-top: 50px;
-            margin-bottom: 100px;
-        }
+  <!-- Bootstrap & FontAwesome CSS -->
+  <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/tiny-slider.css') }}" rel="stylesheet">
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
 
-		.flash.error {
-			color: red;
-		}
+  <!-- HTMX -->
+  <script src="{{ url_for('static', filename='htmx/htmx.js') }}"></script>
+  <!-- Alpine.js -->
+  <script defer src="{{ url_for('static', filename='alpine/alpine.js') }}"></script>
 
-		.flash.success {
-			color: green;
-		}
+  <style>
+    :root {
+      --docmed-primary: #0d9488;
+      --docmed-primary-dark: #0f766e;
+      --docmed-primary-light: #ccfbf1;
+      --docmed-navy: #092e3b;
+      --docmed-dark: #0f172a;
+      --docmed-bg: #f8fafc;
+      --docmed-border: #e2e8f0;
+    }
 
-    </style>
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--docmed-bg);
+      color: #1e293b;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-	<body>
+    /* Modern Navbar */
+    .docmed-navbar {
+      background: #092e3b;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 14px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(9, 46, 59, 0.25);
+    }
 
-    <!-- Start Header/Navigation -->
-	<nav class="custom-navbar navbar navbar navbar-expand-md navbar-dark bg-dark" arial-label="Furni navigation bar">
+    .docmed-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #ffffff !important;
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
 
-		<div class="container">
-			<a class="navbar-brand" href="{{ url_for('home.home_page') }}">DocMed<span>.</span></a>
+    .brand-icon-wrapper {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0d9488 0%, #14b8a6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 1rem;
+      box-shadow: 0 2px 10px rgba(13, 148, 136, 0.4);
+    }
 
-			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsFurni" aria-controls="navbarsFurni" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
-			</button>
+    .docmed-brand span {
+      color: #5eead4;
+    }
 
-			<div class="collapse navbar-collapse" id="navbarsFurni">
-				<ul class="custom-navbar-nav navbar-nav ms-auto mb-2 mb-md-0">
-					<li class="nav-item">
-						{% if current_user.is_authenticated %}
-						<a class="nav-link" href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}">Dashboard</a>
-						{% endif %}
-					</li>
-				</ul>
+    .docmed-nav-link {
+      color: #cbd5e1 !important;
+      font-weight: 600;
+      font-size: 0.92rem;
+      padding: 8px 16px !important;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-				<ul class="custom-navbar-cta navbar-nav mb-2 mb-md-0 ms-5">
-					{% if current_user.is_authenticated %}
-					<li><a class="nav-link" href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}"><img src="{{ url_for('static', filename='img/user.svg') }}"> {{ current_user.username }} </a></li>
-					<li><a class="nav-link" href="{{ url_for('accounts.logout_view') }}">Logout</a></li>
-					{% else %}
-					<li><a class="nav-link" href="#"><img src="{{ url_for('static', filename='img/user.svg') }}"></a></li>
-					{% endif %}
-				</ul>
-			</div>
-		</div>
-			
-	</nav>
-		<!-- End Header/Navigation -->
+    .docmed-nav-link:hover {
+      color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* User Profile Pill */
+    .user-pill {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      color: #ffffff !important;
+      font-weight: 600;
+      font-size: 0.88rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .user-pill:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #5eead4 !important;
+    }
+
+    .user-avatar-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #0d9488;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      color: white;
+    }
+
+    /* CTA Buttons */
+    .btn-nav-login {
+      color: #e2e8f0 !important;
+      font-weight: 600;
+      font-size: 0.9rem;
+      padding: 8px 18px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-nav-login:hover {
+      color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-nav-register {
+      background: linear-gradient(135deg, var(--docmed-primary) 0%, var(--docmed-primary-dark) 100%);
+      color: #ffffff !important;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 8px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.35);
+      transition: all 0.25s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-nav-register:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(13, 148, 136, 0.45);
+      filter: brightness(1.08);
+    }
+
+    .btn-nav-logout {
+      color: #fda4af !important;
+      font-weight: 600;
+      font-size: 0.88rem;
+      padding: 6px 14px;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-nav-logout:hover {
+      background: rgba(244, 63, 94, 0.12);
+      color: #ff859b !important;
+    }
+
+    /* Keep compatibility for existing login container */
+    .register-container {
+      width: 480px;
+      background: #ffffff;
+      padding: 34px;
+      border-radius: 18px;
+      box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(226, 232, 240, 0.8);
+      margin-top: 40px;
+      margin-bottom: 60px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Start Header / Modern Navigation -->
+  <nav class="docmed-navbar navbar navbar-expand-md navbar-dark">
+    <div class="container">
+      <a class="docmed-brand" href="{{ url_for('home.home_page') }}">
+        <div class="brand-icon-wrapper">
+          <i class="fa-solid fa-notes-medical"></i>
+        </div>
+        <span>DocMed</span>.
+      </a>
+
+      <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsDocMed" aria-controls="navbarsDocMed" aria-expanded="false" aria-label="Toggle navigation">
+        <i class="fa-solid fa-bars text-white"></i>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsDocMed">
+        <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-md-center gap-md-2">
+          <li class="nav-item">
+            <a class="docmed-nav-link" href="{{ url_for('home.home_page') }}">
+              <i class="fa-solid fa-house fa-sm"></i> Home
+            </a>
+          </li>
+
+          {% if current_user.is_authenticated %}
+          <li class="nav-item">
+            <a class="docmed-nav-link" href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}">
+              <i class="fa-solid fa-gauge fa-sm"></i> Dashboard
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+
+        <div class="d-flex align-items-center gap-2 ms-md-3 mt-3 mt-md-0">
+          {% if current_user.is_authenticated %}
+            <a class="user-pill" href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}">
+              <span class="user-avatar-icon"><i class="fa-solid fa-user-doctor"></i></span>
+              <span>Dr. {{ current_user.username }}</span>
+            </a>
+            <a class="btn-nav-logout" href="{{ url_for('accounts.logout_view') }}">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Logout
+            </a>
+          {% else %}
+            <a class="btn-nav-register" href="{{ url_for('accounts.login_page') }}">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+            </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </nav>
+  <!-- End Header / Navigation -->

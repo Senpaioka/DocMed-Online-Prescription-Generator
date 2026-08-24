@@ -1,26 +1,58 @@
-
 		<!-- Start Footer Section -->
-		<footer class="footer-section">
-			<div class="container relative">
-			<div class="border-top copyright">
-				<div class="row pt-4">
-					<div class="col-lg-6">
-						<p class="mb-2 text-center text-lg-start">Copyright &copy;
-						<script>document.write(new Date().getFullYear());</script>. 
-						All Rights Reserved. &mdash; Designed with love by <a href="https://untree.co">Untree.co</a> Distributed By <a hreff="https://themewagon.com">ThemeWagon</a></p>
+		<footer class="docmed-footer mt-auto">
+			<div class="container py-4">
+				<div class="row align-items-center gy-3">
+					<div class="col-md-7 text-center text-md-start">
+						<div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-2">
+							<span class="footer-logo-dot"></span>
+							<span class="fw-bold text-white fs-5">DocMed Platform</span>
+							<span class="badge border px-2 py-1" style="font-size: 0.82rem; color: #5eead4; background: rgba(13, 148, 136, 0.15); border-color: rgba(94, 234, 212, 0.3) !important;">
+								<i class="fa-solid fa-shield-halved"></i> HIPAA Ready
+							</span>
+						</div>
+						<p class="footer-desc mb-0">
+							Empowering healthcare practitioners with intelligent, compliant digital prescription management.
+						</p>
+					</div>
+
+					<div class="col-md-5 text-center text-md-end">
+						<p class="footer-copy mb-0">
+							&copy; <script>document.write(new Date().getFullYear());</script> DocMed Inc. All rights reserved.
+						</p>
 					</div>
 				</div>
 			</div>
-
-			</div>
 		</footer>
-		<!-- End Footer Section -->	
+		<!-- End Footer Section -->
 
+		<style>
+			.docmed-footer {
+				background: #062029;
+				border-top: 1px solid rgba(255, 255, 255, 0.08);
+				color: #cbd5e1;
+			}
+			.footer-logo-dot {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background-color: #0d9488;
+				display: inline-block;
+			}
+			.footer-desc {
+				font-size: 0.95rem;
+				color: #94a3b8;
+				line-height: 1.5;
+			}
+			.footer-copy {
+				font-size: 0.92rem;
+				color: #94a3b8;
+				font-weight: 500;
+			}
+		</style>
 
-
+		<!-- JavaScript Bundles -->
 		<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/tiny-slider.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/custom.js') }}"></script>
 	</body>
-
 </html>

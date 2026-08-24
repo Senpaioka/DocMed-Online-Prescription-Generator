@@ -1,60 +1,520 @@
 {% extends 'base.html' %}
 
-{% block title %} Login {% endblock %}
+{% block title %} Sign In | DocMed {% endblock %}
 
 {% block content %}
 
-        <div class="container d-flex justify-content-center">
-            <div class="register-container">
-                <h3 class="text-center mb-4">Login</h3>
+<style>
+    :root {
+        --docmed-primary: #0d9488;
+        --docmed-primary-dark: #0f766e;
+        --docmed-primary-light: #ccfbf1;
+        --docmed-navy: #0f172a;
+        --docmed-surface: #ffffff;
+        --docmed-border: #e2e8f0;
+        --docmed-text-main: #1e293b;
+        --docmed-text-muted: #64748b;
+    }
 
-                <!-- flash message -->
-                <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition:leave.duration.500ms>
-                    {% with messages = get_flashed_messages(with_categories=True) %}
-                        {% if messages %}
-                            <ul class="flashes">
-                                {% for category, message in messages %}
-                                    <li class="flash {{ category}}">{{ message }}</li>
-                                {% endfor %}
-                            </ul>
-                        {% endif %}
-                    {% endwith %}
-                </div>
+    body {
+        background-color: #f1f5f9;
+        color: var(--docmed-text-main);
+    }
 
+    .auth-wrapper {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
 
-                <form action="{{ url_for('accounts.login_page') }}" method="POST">
-                    {{ form.hidden_tag() }}
-                     <!-- Full -->
-                     <div class="mb-3">
-                        <label for="name" class="form-label">Username</label>
-                        {{ form.username (class='form-control', placeholder='Your Username')}}
-                    </div>
+    .auth-card {
+        background: var(--docmed-surface);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8);
+        overflow: hidden;
+        width: 100%;
+        max-width: 1040px;
+        display: flex;
+        flex-direction: row;
+        margin: 0 auto;
+    }
 
-                    <!-- error handler -->
-                     {% for error in form.username.errors %}
-                     <span style="color:red;">{{ error }}</span>
-                     {% endfor %}
+    /* Left Hero / Brand Panel */
+    .brand-panel {
+        flex: 1;
+        background: linear-gradient(145deg, #092e3b 0%, #0d5257 50%, #0f766e 100%);
+        color: #ffffff;
+        padding: 48px 40px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
 
+    .brand-panel::before {
+        content: "";
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(45, 212, 191, 0.25) 0%, rgba(13, 148, 136, 0) 70%);
+        top: -70px;
+        right: -70px;
+        pointer-events: none;
+    }
+
+    .brand-panel::after {
+        content: "";
+        position: absolute;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(14, 165, 233, 0.2) 0%, rgba(15, 118, 110, 0) 70%);
+        bottom: -50px;
+        left: -50px;
+        pointer-events: none;
+    }
+
+    .brand-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(10px);
+        padding: 6px 14px;
+        border-radius: 9999px;
+        font-size: 0.82rem;
+        font-weight: 600;
+        color: #5eead4;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        width: fit-content;
+        margin-bottom: 24px;
+    }
+
+    .brand-title {
+        font-size: 2rem;
+        font-weight: 800;
+        line-height: 1.25;
+        letter-spacing: -0.02em;
+        margin-bottom: 14px;
+        color: #ffffff;
+    }
+
+    .brand-title span {
+        color: #5eead4;
+    }
+
+    .brand-desc {
+        color: #cbd5e1;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        margin-bottom: 32px;
+    }
+
+    .feature-list {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        margin-bottom: 32px;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+    }
+
+    .feature-icon-box {
+        width: 38px;
+        height: 38px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #5eead4;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .feature-text h6 {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    .feature-text p {
+        margin: 2px 0 0;
+        font-size: 0.8rem;
+        color: #94a3b8;
+    }
+
+    .trust-card {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 14px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        backdrop-filter: blur(8px);
+    }
+
+    .trust-rating {
+        color: #fbbf24;
+        font-size: 0.85rem;
+        margin-bottom: 2px;
+    }
+
+    .trust-sub {
+        font-size: 0.78rem;
+        color: #cbd5e1;
+        margin: 0;
+    }
+
+    .trust-highlight {
+        font-weight: 700;
+        color: #ffffff;
+    }
+
+    /* Right Form Panel */
+    .form-panel {
+        flex: 1.1;
+        padding: 50px 48px;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .form-header {
+        margin-bottom: 28px;
+    }
+
+    .form-header h2 {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--docmed-navy);
+        letter-spacing: -0.02em;
+        margin-bottom: 6px;
+    }
+
+    .form-header p {
+        color: var(--docmed-text-muted);
+        font-size: 0.9rem;
+        margin: 0;
+    }
+
+    .form-group-custom {
+        margin-bottom: 20px;
+        position: relative;
+    }
+
+    .form-label-custom {
+        display: block;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #475569;
+        margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .input-icon {
+        position: absolute;
+        left: 14px;
+        color: #94a3b8;
+        font-size: 0.95rem;
+        pointer-events: none;
+        transition: color 0.2s ease;
+        z-index: 4;
+    }
+
+    .input-custom {
+        width: 100%;
+        padding: 12px 14px 12px 42px !important;
+        font-size: 0.92rem;
+        border: 1.5px solid var(--docmed-border);
+        border-radius: 10px !important;
+        background-color: #f8fafc;
+        color: var(--docmed-text-main);
+        transition: all 0.2s ease;
+    }
+
+    .input-custom:focus {
+        background-color: #ffffff;
+        border-color: var(--docmed-primary);
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.12);
+        outline: none;
+    }
+
+    .input-custom:focus ~ .input-icon,
+    .input-wrapper:focus-within .input-icon {
+        color: var(--docmed-primary);
+    }
+
+    .password-toggle-btn {
+        position: absolute;
+        right: 10px;
+        background: transparent;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 6px 8px;
+        border-radius: 6px;
+        transition: color 0.2s ease;
+        z-index: 5;
+    }
+
+    .password-toggle-btn:hover {
+        color: var(--docmed-text-main);
+    }
+
+    /* CTA Button */
+    .btn-docmed-submit {
+        background: linear-gradient(135deg, var(--docmed-primary) 0%, var(--docmed-primary-dark) 100%);
+        color: #ffffff !important;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 13px 20px;
+        border-radius: 10px;
+        border: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+    }
+
+    .btn-docmed-submit:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(13, 148, 136, 0.45);
+        filter: brightness(1.05);
+    }
+
+    .btn-docmed-submit:active {
+        transform: translateY(0);
+    }
+
+    /* Flash Messages */
+    .alert-docmed {
+        padding: 10px 14px;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 18px;
+    }
+
+    .alert-docmed-error {
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #b91c1c;
+    }
+
+    .alert-docmed-success {
+        background-color: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #15803d;
+    }
+
+    .field-error-text {
+        font-size: 0.78rem;
+        color: #dc2626;
+        font-weight: 600;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .auth-footer-text {
+        text-align: center;
+        font-size: 0.88rem;
+        color: var(--docmed-text-muted);
+        margin-top: 24px;
+        margin-bottom: 0;
+    }
+
+    .auth-footer-text a {
+        color: var(--docmed-primary);
+        font-weight: 700;
+        text-decoration: none;
+        transition: color 0.2s ease;
+    }
+
+    .auth-footer-text a:hover {
+        color: var(--docmed-primary-dark);
+        text-decoration: underline;
+    }
+
+    /* Responsive */
+    @media (max-width: 991.98px) {
+        .auth-card {
+            flex-direction: column;
+            max-width: 540px;
+        }
+
+        .brand-panel {
+            padding: 34px 28px;
+        }
+
+        .form-panel {
+            padding: 34px 28px;
+        }
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
         
-                    <!-- Password -->
-                    <div class="mb-3" x-data="{ show: false }">
-                        <label for="password" class="form-label">Password</label>
-                        <div class="input-group">
-                            {{ form.password (class='form-control', placeholder='Your Password', **{':type': "show ? 'text' : 'password'"}) }}
-                            <button class="btn btn-primary" type="button" @click="show = !show" :title="show ? 'Hide Password' : 'Show Password'">
-                                <i :class="show ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash'"></i>
-                            </button>
+        <!-- Left Side: Brand & Trust Panel -->
+        <div class="brand-panel">
+            <div>
+                <div class="brand-badge">
+                    <i class="fa-solid fa-lock-medical"></i> Secure Practitioner Sign In
+                </div>
+                <h1 class="brand-title">Welcome Back to <span>DocMed.</span></h1>
+                <p class="brand-desc">Log in to manage your medical consultations, generate compliant digital prescriptions, and access verified patient records.</p>
+
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="fa-solid fa-file-signature"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h6>Prescription Management</h6>
+                            <p>Fast access to active and archived prescription records.</p>
                         </div>
                     </div>
-                    <br>
-                    <!-- Submit Button -->
-                     {{ form.login (class="btn btn-primary w-100") }}
-                </form>
+
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h6>End-to-End Encryption</h6>
+                            <p>Secure authentication designed for healthcare confidentiality.</p>
+                        </div>
+                    </div>
+
+                    <div class="feature-item">
+                        <div class="feature-icon-box">
+                            <i class="fa-solid fa-laptop-medical"></i>
+                        </div>
+                        <div class="feature-text">
+                            <h6>Multi-Device Workspace</h6>
+                            <p>Seamlessly prescribe from your clinic desktop, tablet, or phone.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trust Badge Card -->
+            <div class="trust-card mt-3">
+                <div>
+                    <div class="trust-rating">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                    <p class="trust-sub"><span class="trust-highlight">Trusted by 1,200+</span> Healthcare Providers</p>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-light text-dark fw-bold px-2 py-1"><i class="fa-solid fa-circle-check text-success"></i> Active Session</span>
+                </div>
             </div>
         </div>
-        
-        <div>
-            <p style="text-align: center;">Don't have an account? <a href="{{ url_for('accounts.registration_page') }}" style="color: green;">Create Account</a></p>
+
+        <!-- Right Side: Login Form -->
+        <div class="form-panel" x-data="{ showPass: false }">
+            
+            <div class="form-header">
+                <h2>Practitioner Sign In</h2>
+                <p>Enter your username and password to continue</p>
+            </div>
+
+            <!-- Flash messages -->
+            <div id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)" x-transition:leave.duration.400ms>
+                {% with messages = get_flashed_messages(with_categories=True) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert-docmed {{ 'alert-docmed-error' if category == 'error' or category == 'danger' else 'alert-docmed-success' }}">
+                                <i class="{{ 'fa-solid fa-circle-exclamation' if category == 'error' or category == 'danger' else 'fa-solid fa-circle-check' }}"></i>
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+            </div>
+
+            <form action="{{ url_for('accounts.login_page') }}" method="POST">
+                {{ form.hidden_tag() }}
+
+                <!-- Username -->
+                <div class="form-group-custom">
+                    <label for="username" class="form-label-custom">Username</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-doctor input-icon"></i>
+                        {{ form.username(class="input-custom", placeholder="Enter your username", required=True) }}
+                    </div>
+
+                    {% for error in form.username.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Password -->
+                <div class="form-group-custom">
+                    <label for="password" class="form-label-custom">Password</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-lock input-icon"></i>
+                        {{ form.password(class="input-custom", placeholder="Enter your password", required=True, **{':type': "showPass ? 'text' : 'password'"}) }}
+                        <button type="button" class="password-toggle-btn" @click="showPass = !showPass" :title="showPass ? 'Hide Password' : 'Show Password'" tabindex="-1">
+                            <i :class="showPass ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye'"></i>
+                        </button>
+                    </div>
+
+                    {% for error in form.password.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-docmed-submit w-100">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Dashboard
+                </button>
+            </form>
+
+            <p class="auth-footer-text">
+                Don't have a DocMed account? <a href="{{ url_for('accounts.registration_page') }}">Register here</a>
+            </p>
         </div>
-        
+
+    </div>
+</div>
+
 {% endblock %}
+
