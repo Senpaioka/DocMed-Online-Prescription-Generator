@@ -26,6 +26,9 @@ class RegistrationModel(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean(), default=False, nullable=False)
     is_active = db.Column(db.Boolean(), default=True, nullable=False)
 
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
     def __repr__(self):
         return self.username
     

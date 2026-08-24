@@ -7,9 +7,8 @@ from app.modules.dashboard.models import ProfileSetupModel
 from app.modules.account.models import RegistrationModel
 from app.modules.pdf.models import PrescriptionModel
 from app.modules.search.forms import SearchForm
-from werkzeug.utils import secure_filename
-import os
 from flask_login import login_required, current_user
+from sqlalchemy.exc import IntegrityError
 import time
 
 

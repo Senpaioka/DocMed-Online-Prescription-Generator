@@ -30,6 +30,8 @@ class ProfileSetupModel(db.Model):
      # This field stores the filename or relative path of the uploaded image.
     signature = db.Column(db.String(255), nullable=False)
     
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
     def __repr__(self):
         return self.full_name
