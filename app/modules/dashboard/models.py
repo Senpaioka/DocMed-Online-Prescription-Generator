@@ -80,4 +80,64 @@ class AppointmentModel(db.Model):
     def __repr__(self):
         return f"<Appointment #{self.id} Patient={self.patient_name} Doctor_ID={self.doctor_id} Status={self.status}>"
 
+
+class NotificationModel(db.Model):
+    __tablename__ = 'notifications'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('registration.uid'), nullable=False)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id'), nullable=True)
+
+    title = db.Column(db.String(150), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    event_type = db.Column(db.String(50), default='general', nullable=False)
+    link_url = db.Column(db.String(255), nullable=True)
+    is_read = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    # Relationships
+    user = db.relationship('RegistrationModel', foreign_keys=[user_id], backref=db.backref('notifications', lazy='dynamic', cascade='all, delete-orphan'))
+    appointment = db.relationship('AppointmentModel', foreign_keys=[appointment_id], backref=db.backref('notifications', lazy='dynamic'))
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if 'is_read' not in kwargs:
+            self.is_read = False
+        if 'created_at' not in kwargs:
+            self.created_at = datetime.now()
+
+    def __repr__(self):
+        return f"<Notification #{self.id} User={self.user_id} Type={self.event_type} Read={self.is_read}>"
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'appointment_id': self.appointment_id,
+            'title': self.title,
+            'message': self.message,
+            'event_type': self.event_type,
+            'link_url': self.link_url,
+            'is_read': self.is_read,
+            'created_at': self.created_at.strftime('%Y-%m-%d %H:%M:%S') if self.created_at else None,
+            'time_ago': self.get_time_ago()
+        }
+
+    def get_time_ago(self):
+        if not self.created_at:
+            return "Just now"
+        delta = datetime.now() - self.created_at
+        seconds = int(delta.total_seconds())
+        if seconds < 60:
+            return "Just now"
+        minutes = seconds // 60
+        if minutes < 60:
+            return f"{minutes}m ago"
+        hours = minutes // 60
+        if hours < 24:
+            return f"{hours}h ago"
+        days = hours // 24
+        return f"{days}d ago"
+
+
     

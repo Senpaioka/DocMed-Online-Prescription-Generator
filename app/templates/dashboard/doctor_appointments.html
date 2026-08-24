@@ -608,4 +608,18 @@
 
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        window.addEventListener('docmed:appointment_update', function(e) {
+            console.log('[DocMed Doctor SSE] Live appointment event:', e.detail);
+            // If new appointment request or update, reload page content smoothly
+            if (e.detail && e.detail.eventType === 'new_appointment_request') {
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
+            }
+        });
+    });
+</script>
+
 {% endblock %}

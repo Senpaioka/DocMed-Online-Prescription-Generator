@@ -206,6 +206,13 @@ def document_page():
                 return redirect(url_for('pdf_generator.document_page')) 
             
             if appointment:
+                # Dispatch real-time SSE & DB notification to patient
+                try:
+                    from app.core.notification_service import notify_patient_prescription_ready
+                    notify_patient_prescription_ready(appointment=appointment, prescription_unique_id=unique_id)
+                except Exception as ex:
+                    current_app.logger.warning(f"Failed to push prescription notification: {ex}")
+
                 flash(f"Prescription generated and appointment with {appointment.patient_name} marked as completed!", "success")
             
             return redirect(url_for('pdf_generator.pdf_prescription_preview', patient_id=unique_id))

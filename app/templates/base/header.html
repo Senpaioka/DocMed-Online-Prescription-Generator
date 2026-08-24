@@ -4,6 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="shortcut icon" href="{{ url_for('static', filename='img/favicon.png') }}">
+
+  {% if current_user.is_authenticated %}
+    <meta name="user-id" content="{{ current_user.uid }}">
+    <meta name="user-role" content="{{ current_user.role }}">
+  {% endif %}
   
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -96,6 +101,194 @@
     .docmed-nav-link:hover {
       color: #ffffff !important;
       background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Notification Bell & Dropdown Styles */
+    .notif-dropdown-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #cbd5e1;
+      position: relative;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .notif-dropdown-btn:hover, .notif-dropdown-btn:focus {
+      background: rgba(255, 255, 255, 0.16);
+      color: #5eead4;
+    }
+    .notif-dropdown-btn::after {
+      display: none;
+    }
+
+    .notif-badge-counter {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: #f43f5e;
+      color: #ffffff;
+      font-size: 0.7rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 9999px;
+      line-height: 1;
+      box-shadow: 0 0 0 2px #092e3b;
+      display: none;
+    }
+
+    @keyframes bellShake {
+      0%, 100% { transform: rotate(0); }
+      20%, 60% { transform: rotate(14deg); }
+      40%, 80% { transform: rotate(-14deg); }
+    }
+    .notif-bell-ring {
+      animation: bellShake 0.6s ease;
+    }
+
+    .notif-dropdown-menu {
+      width: 360px;
+      max-width: 90vw;
+      border-radius: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 15px 35px -5px rgba(15, 23, 42, 0.15);
+      padding: 0;
+      overflow: hidden;
+      margin-top: 10px !important;
+    }
+
+    .notif-dropdown-header {
+      background: #092e3b;
+      color: #ffffff;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .notif-dropdown-body {
+      max-height: 380px;
+      overflow-y: auto;
+    }
+
+    .notif-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s ease;
+      position: relative;
+    }
+    .notif-item:hover {
+      background: #f8fafc;
+      color: inherit;
+    }
+    .notif-item.unread {
+      background: #f0fdfa;
+    }
+
+    .notif-icon-box {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .notif-content {
+      flex: 1;
+      min-width: 0;
+    }
+    .notif-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 2px;
+    }
+    .notif-desc {
+      font-size: 0.78rem;
+      color: #64748b;
+      line-height: 1.35;
+    }
+    .notif-time {
+      font-size: 0.7rem;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .notif-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #0d9488;
+      flex-shrink: 0;
+      align-self: center;
+    }
+
+    /* Floating Real-Time Toast Container */
+    #docmed-toast-container {
+      position: fixed;
+      top: 80px;
+      right: 20px;
+      z-index: 99999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 390px;
+      width: calc(100% - 40px);
+      pointer-events: none;
+    }
+
+    .docmed-toast {
+      pointer-events: auto;
+      background: #ffffff;
+      border-radius: 14px;
+      padding: 16px;
+      border-left: 5px solid #0d9488;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.18);
+      transform: translateX(120%);
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease;
+      border-top: 1px solid #f1f5f9;
+      border-right: 1px solid #f1f5f9;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .docmed-toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    .docmed-toast.hide {
+      transform: translateX(120%);
+      opacity: 0;
+    }
+    .toast-title {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #092e3b;
+    }
+    .toast-msg {
+      font-size: 0.84rem;
+      color: #475569;
+      line-height: 1.4;
+    }
+    .toast-action-btn {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #0d9488;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .toast-action-btn:hover {
+      text-decoration: underline;
     }
 
     /* User Profile Pill */
@@ -201,6 +394,9 @@
 
 <body>
 
+  <!-- Floating Toast Notifications Container -->
+  <div id="docmed-toast-container"></div>
+
   <!-- Start Header / Modern Navigation -->
   <nav class="docmed-navbar navbar navbar-expand-md navbar-dark">
     <div class="container">
@@ -242,6 +438,32 @@
 
         <div class="d-flex align-items-center gap-2 ms-md-3 mt-3 mt-md-0">
           {% if current_user.is_authenticated %}
+            
+            <!-- Real-Time SSE Notification Bell Dropdown -->
+            <div class="dropdown">
+              <button class="notif-dropdown-btn dropdown-toggle" type="button" id="notifDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+                <i class="fa-solid fa-bell" id="notif-bell-icon"></i>
+                <span class="notif-badge-counter" id="notif-badge">0</span>
+              </button>
+              <div class="dropdown-menu dropdown-menu-end notif-dropdown-menu" aria-labelledby="notifDropdown">
+                <div class="notif-dropdown-header">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="fa-solid fa-bell text-teal" style="color: #5eead4;"></i>
+                    <span class="fw-bold fs-6">Live Notifications</span>
+                  </div>
+                  <button type="button" class="btn btn-link btn-sm text-white-50 p-0 text-decoration-none" style="font-size: 0.75rem;" onclick="DocMedNotifications.markAllRead()">
+                    Mark all as read
+                  </button>
+                </div>
+                <div class="notif-dropdown-body" id="notif-list-container">
+                  <div class="text-center py-4 text-muted">
+                    <div class="spinner-border spinner-border-sm text-teal mb-2" role="status"></div>
+                    <p class="small mb-0">Loading updates...</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {% if current_user.role == 'admin' or current_user.is_admin %}
             <a class="user-pill" href="{{ url_for('admin.index') }}">
               <span class="user-avatar-icon">

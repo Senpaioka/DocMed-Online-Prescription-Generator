@@ -1,9 +1,10 @@
-from flask import request, render_template, redirect, url_for, flash, Blueprint, current_app
+from flask import request, render_template, redirect, url_for, flash, Blueprint, current_app, Response, stream_with_context, jsonify
 from app.extensions import db
 from werkzeug.utils import secure_filename
 import os
+import queue
 from app.modules.dashboard.forms import ProfileSetUpForm, UpdateProfileSetUpForm
-from app.modules.dashboard.models import ProfileSetupModel, AppointmentModel
+from app.modules.dashboard.models import ProfileSetupModel, AppointmentModel, NotificationModel
 from app.modules.account.models import RegistrationModel
 from app.modules.pdf.models import PrescriptionModel
 from app.modules.search.forms import SearchForm
@@ -11,10 +12,109 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 import time
 from app.core.roles import doctor_required, role_required, UserRole
+from app.core.sse import sse_manager
+from app.core.notification_service import (
+    notify_patient_appointment_confirmed,
+    notify_patient_appointment_rejected,
+    notify_patient_appointment_cancelled,
+    notify_doctor_new_appointment
+)
 
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 
+
+# ==========================================
+# SSE NOTIFICATION STREAM & API ENDPOINTS
+# ==========================================
+
+@dashboard.route('/notifications/stream')
+@login_required
+def notification_stream():
+    """
+    Server-Sent Events (SSE) streaming endpoint for real-time notifications.
+    Streams instant notifications to the logged-in user.
+    """
+    def event_stream():
+        user_id = current_user.uid
+        q = sse_manager.subscribe(user_id)
+        
+        # Initial connect message with current unread count
+        initial_unread = NotificationModel.query.filter_by(user_id=user_id, is_read=False).count()
+        yield sse_manager.format_sse(
+            event_type='connected',
+            data={'status': 'connected', 'user_id': user_id, 'unread_count': initial_unread}
+        )
+
+        try:
+            while True:
+                try:
+                    # Wait for message in queue (timeout in 15 seconds)
+                    msg = q.get(timeout=15)
+                    yield msg
+                except queue.Empty:
+                    # Periodic heartbeat to keep connection alive through proxies
+                    yield sse_manager.format_ping()
+        except GeneratorExit:
+            pass
+        finally:
+            sse_manager.unsubscribe(user_id, q)
+
+    response = Response(
+        stream_with_context(event_stream()),
+        mimetype='text/event-stream'
+    )
+    response.headers['Cache-Control'] = 'no-cache, no-transform'
+    response.headers['X-Accel-Buffering'] = 'no'
+    response.headers['Connection'] = 'keep-alive'
+    return response
+
+
+@dashboard.route('/notifications/api')
+@login_required
+def get_notifications_api():
+    """Fetch user's recent notifications as JSON."""
+    limit = request.args.get('limit', 20, type=int)
+    notifications = NotificationModel.query.filter_by(user_id=current_user.uid)\
+        .order_by(NotificationModel.created_at.desc()).limit(limit).all()
+    unread_count = NotificationModel.query.filter_by(user_id=current_user.uid, is_read=False).count()
+    return jsonify({
+        'status': 'success',
+        'unread_count': unread_count,
+        'notifications': [n.to_dict() for n in notifications]
+    })
+
+
+@dashboard.route('/notifications/mark-read/<int:notification_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notification_id):
+    """Mark a single notification as read."""
+    notification = NotificationModel.query.filter_by(id=notification_id, user_id=current_user.uid).first()
+    if notification:
+        notification.is_read = True
+        db.session.commit()
+    unread_count = NotificationModel.query.filter_by(user_id=current_user.uid, is_read=False).count()
+    return jsonify({'status': 'success', 'unread_count': unread_count})
+
+
+@dashboard.route('/notifications/mark-all-read', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    """Mark all notifications for the current user as read."""
+    NotificationModel.query.filter_by(user_id=current_user.uid, is_read=False).update({'is_read': True})
+    db.session.commit()
+    return jsonify({'status': 'success', 'unread_count': 0})
+
+
+@dashboard.route('/patient-appointments-feed/<int:uid>')
+@login_required
+def patient_appointments_feed(uid):
+    """Render appointment feed fragment for live SSE-triggered DOM updates."""
+    if current_user.uid != uid and not current_user.is_admin:
+        return "<p class='text-danger'>Unauthorized</p>", 403
+
+    appointments = AppointmentModel.query.filter_by(patient_id=uid).order_by(AppointmentModel.created_at.desc()).all()
+    return render_template('patient-dashboard/_appointments_feed.html', appointments=appointments)
 
 
 # dashboard main page (Overview)
@@ -105,6 +205,10 @@ def request_appointment(doctor_id):
     try:
         db.session.add(new_appointment)
         db.session.commit()
+
+        # Push real-time notification to doctor
+        notify_doctor_new_appointment(new_appointment)
+
         flash(f"Appointment request submitted to Dr. {doctor.username}! The doctor will assign and schedule a date and time for you.", "success")
     except Exception as e:
         db.session.rollback()
@@ -167,7 +271,7 @@ def doctor_appointments_page(uid):
     return render_template('dashboard/doctor_appointments.html', **context)
 
 
-# Doctor: Accept / Schedule appointment and notify patient by email
+# Doctor: Accept / Schedule appointment and notify patient by SSE & email
 @dashboard.route('/doctor/appointment/confirm/<int:appointment_id>', methods=['POST'])
 @login_required
 @doctor_required
@@ -198,6 +302,9 @@ def confirm_appointment(appointment_id):
     appointment.scheduled_time = scheduled_time
     appointment.doctor_notes = doctor_notes
     db.session.commit()
+
+    # Dispatch real-time SSE notification to patient
+    notify_patient_appointment_confirmed(appointment)
 
     # Dispatch email notification to patient
     from app.core.email_service import send_appointment_confirmed_email
@@ -239,6 +346,9 @@ def reject_appointment(appointment_id):
         appointment.doctor_notes = rejection_reason
     db.session.commit()
 
+    # Dispatch real-time SSE notification to patient
+    notify_patient_appointment_rejected(appointment, reason=rejection_reason)
+
     # Dispatch rejection email to patient
     from app.core.email_service import send_appointment_cancelled_email
     patient = RegistrationModel.query.get(appointment.patient_id)
@@ -276,6 +386,9 @@ def cancel_appointment(appointment_id):
         appointment.doctor_notes = cancellation_reason
     db.session.commit()
 
+    # Dispatch real-time SSE notification to patient
+    notify_patient_appointment_cancelled(appointment, reason=cancellation_reason)
+
     # Dispatch cancellation email to patient
     from app.core.email_service import send_appointment_cancelled_email
     patient = RegistrationModel.query.get(appointment.patient_id)
@@ -294,6 +407,7 @@ def cancel_appointment(appointment_id):
 
     flash(f"Appointment with {appointment.patient_name} has been cancelled. An email has been sent to notify the patient.", "info")
     return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
+
 
 
 
