@@ -361,7 +361,7 @@
 					  action="{{ url_for('pdf_generator.document_page') }}"
 					  method="POST"
 					  hx-post="{{ url_for('pdf_generator.preview_live') }}"
-					  hx-trigger="input changed delay:200ms from:input, change from:select, input changed delay:200ms from:textarea"
+					  hx-trigger="load, input delay:200ms, change"
 					  hx-target="#live-preview-container"
 					  hx-swap="innerHTML">
 					{{ form.hidden_tag() }}
@@ -552,6 +552,12 @@
 				const searchInput = document.getElementById('med-search-input');
 				if (searchInput && clearInput) searchInput.value = '';
 			},
+			triggerPreview() {
+				const form = document.getElementById('prescription-form');
+				if (form && typeof htmx !== 'undefined') {
+					htmx.trigger(form, 'input');
+				}
+			},
 			insertMedicine(medText) {
 				const rxArea = document.getElementById('rx');
 				if (rxArea) {
@@ -562,6 +568,7 @@
 						rxArea.value = medText + ' - 1+0+1 (After meal) - 5 days';
 					}
 					rxArea.dispatchEvent(new Event('input', { bubbles: true }));
+					this.triggerPreview();
 				}
 				this.clearSearch(true);
 			},
@@ -570,6 +577,7 @@
 				if (rxArea) {
 					rxArea.value = (rxArea.value || '').trim() + dosageStr;
 					rxArea.dispatchEvent(new Event('input', { bubbles: true }));
+					this.triggerPreview();
 				}
 			},
 			appendAdvice(adviceStr) {
@@ -578,6 +586,7 @@
 					const current = (adviceArea.value || '').trim();
 					adviceArea.value = current ? current + ' ' + adviceStr : adviceStr;
 					adviceArea.dispatchEvent(new Event('input', { bubbles: true }));
+					this.triggerPreview();
 				}
 			},
 			appendInvestigation(invStr) {
@@ -586,6 +595,7 @@
 					const current = (invArea.value || '').trim();
 					invArea.value = current ? current + ', ' + invStr : invStr;
 					invArea.dispatchEvent(new Event('input', { bubbles: true }));
+					this.triggerPreview();
 				}
 			},
 			appendSymptom(symptomStr) {
@@ -594,6 +604,7 @@
 					const current = (ccArea.value || '').trim();
 					ccArea.value = current ? current + ', ' + symptomStr : symptomStr;
 					ccArea.dispatchEvent(new Event('input', { bubbles: true }));
+					this.triggerPreview();
 				}
 			},
 			addCustomSymptom() {
@@ -616,6 +627,10 @@
 				rxArea.value = medText + ' - 1+0+1 (After meal) - 5 days';
 			}
 			rxArea.dispatchEvent(new Event('input', { bubbles: true }));
+			const form = document.getElementById('prescription-form');
+			if (form && typeof htmx !== 'undefined') {
+				htmx.trigger(form, 'input');
+			}
 		}
 		const resultsDiv = document.getElementById('medicine-results');
 		if (resultsDiv) resultsDiv.innerHTML = '';
