@@ -45,6 +45,8 @@ def registration_page():
 
             password = form.password.data
             gender = form.gender.data
+            role = getattr(form, 'role', None)
+            selected_role = role.data if role and role.data else 'patient'
 
             # alternative:
             # username = request.form.get('username')
@@ -59,11 +61,12 @@ def registration_page():
                 username = username,
                 email = safe_email,
                 password = hashed_password,
-                gender = gender
+                gender = gender,
+                role = selected_role
             )
 
             new_user.is_active = True
-            new_user.is_admin = False
+            new_user.is_admin = (selected_role == 'admin')
 
             db.session.add(new_user)
 
@@ -74,8 +77,8 @@ def registration_page():
                 flash("Username already exists. Please choose a different one.", "error")
                 return redirect(url_for('accounts.registration_page')) 
 
-            flash('Account created successfully!', 'success')
-            return redirect(url_for('home.home_page'))
+            flash('Account created successfully! Please login.', 'success')
+            return redirect(url_for('accounts.login_page'))
 
         else:
             flash('Something went wrong!', 'error')

@@ -22,16 +22,32 @@ class RegistrationModel(UserMixin, db.Model):
     profile_info = db.relationship('ProfileSetupModel', backref='registration', uselist=False)
     # one to many
     prescription = db.relationship('PrescriptionModel', backref='prescription', uselist=True, cascade="all, delete-orphan", order_by='desc(PrescriptionModel.created_at)')
+    # role: 'patient' (default), 'doctor', 'admin'
+    role = db.Column(db.String(20), default='patient', nullable=False)
     # admin
     is_admin = db.Column(db.Boolean(), default=False, nullable=False)
     is_active = db.Column(db.Boolean(), default=True, nullable=False)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if not self.role:
+            self.role = 'patient'
 
     def __repr__(self):
-        return self.username
+        return f"{self.username} ({self.role})"
     
     def get_id(self):
         return self.uid
-    
+
+    @property
+    def is_doctor(self):
+        return self.role == 'doctor' or self.is_admin
+
+    @property
+    def is_patient(self):
+        return self.role == 'patient'
+
+    @property
+    def is_admin_role(self):
+        return self.role == 'admin' or self.is_admin
+

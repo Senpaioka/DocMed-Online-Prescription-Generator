@@ -1,132 +1,357 @@
 {% extends 'base.html' %}
 
-{% block title %} Dashboard {% endblock %}
+{% block title %} Dashboard | DocMed {% endblock %}
 
 {% block content %}
 
 <style>
-
-    .sidebar {
-        width: 350px;
-        height: 80vh;
-        position: relative;
-        background-color: #343a40;
-        padding-top: 20px;
-        color: white;
-        overflow-y: auto;
+    .dashboard-container {
+        padding: 30px 0 60px;
     }
 
-    .sidebar a {
-        color: white;
-        padding: 10px;
-        display: block;
+    .role-badge-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px 10px;
+        border-radius: 9999px;
+    }
+
+    .role-doctor {
+        background: #ccfbf1;
+        color: #0f766e;
+    }
+
+    .role-patient {
+        background: #e0e7ff;
+        color: #3730a3;
+    }
+
+    .role-admin {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .sidebar-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        overflow: hidden;
+    }
+
+    .sidebar-header {
+        background: linear-gradient(135deg, #092e3b 0%, #0d5257 100%);
+        color: #ffffff;
+        padding: 22px 20px;
+    }
+
+    .sidebar-nav {
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .sidebar-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 14px;
+        color: #475569;
+        font-weight: 600;
+        font-size: 0.92rem;
+        border-radius: 10px;
         text-decoration: none;
+        transition: all 0.2s ease;
     }
 
-    .sidebar a:hover {
-        background-color: #495057;
+    .sidebar-link:hover {
+        background: #f1f5f9;
+        color: #0d9488;
+        transform: translateX(3px);
     }
 
-    .card {
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+    .sidebar-link.active {
+        background: #f0fdfa;
+        color: #0d9488;
+        font-weight: 700;
     }
 
+    .sidebar-link i {
+        font-size: 1rem;
+        width: 20px;
+        text-align: center;
+        color: #64748b;
+    }
 
+    .sidebar-link:hover i {
+        color: #0d9488;
+    }
+
+    .dash-action-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
+        border: 1px solid #e2e8f0;
+        padding: 24px;
+        margin-bottom: 20px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .dash-stat-box {
+        background: #ffffff;
+        border-radius: 16px;
+        border: 1px solid #e2e8f0;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(15, 23, 42, 0.04);
+        text-align: center;
+        height: 100%;
+    }
+
+    .dash-stat-box h6 {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 8px;
+    }
+
+    .dash-stat-box .stat-val {
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #092e3b;
+        margin: 0;
+    }
 </style>
 
-
-
-
-<div class="container">
-    <div class="row">
-        <div class="col-md-6">
-            <div class="sidebar">
-                <h3 class="text-center">Settings</h3>
-                {% if current_user.is_authenticated and current_user.is_admin %}
-                <a href="{{ url_for('admin.index') }}">Admin Panel</a>
-                {% endif %}
-
-                {% if setup_exists %}
-                <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}">Profile</a>
-                <a href="{{ url_for('dashboard.pdf_template_preview', uid=current_user.uid) }}">Preview Prescription Template</a>
-                <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}">Update Profile Info</a>
+<div class="container dashboard-container">
+    <!-- Top Greeting Bar -->
+    <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
+        <div>
+            <h2 class="fw-bold mb-1" style="color: #092e3b;">
+                {% if current_user.role == 'doctor' or current_user.is_doctor %}
+                    Welcome back, Dr. {{ current_user.username }}!
+                {% elif current_user.role == 'admin' %}
+                    Administrator Dashboard
                 {% else %}
-                <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}">Setup Profile</a>
+                    Welcome back, {{ current_user.username }}!
                 {% endif %}
-                <a href="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}">Update Login Credentials</a>
-                <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}">History</a>
-                <a href="{{ url_for('accounts.logout_view') }}">Logout</a>
+            </h2>
+            <p class="text-muted mb-0 small">
+                Manage your profile, records, and access role-specific medical services.
+            </p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            {% if current_user.role == 'doctor' or (current_user.is_doctor and not current_user.is_admin) %}
+                <span class="role-badge-chip role-doctor"><i class="fa-solid fa-stethoscope"></i> Doctor Account</span>
+            {% elif current_user.role == 'admin' or current_user.is_admin %}
+                <span class="role-badge-chip role-admin"><i class="fa-solid fa-shield-halved"></i> Super Admin</span>
+            {% else %}
+                <span class="role-badge-chip role-patient"><i class="fa-solid fa-user"></i> Patient Account</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Flash message -->
+    <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 7000)" x-transition:leave.duration.400ms>
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fa-solid {{ 'fa-triangle-exclamation' if category == 'error' else 'fa-circle-check' }} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <div class="row g-4">
+        <!-- Sidebar Navigation -->
+        <div class="col-lg-4 col-md-5">
+            <div class="sidebar-card">
+                <div class="sidebar-header">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white text-dark rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                            {% if current_user.role == 'doctor' or current_user.is_doctor %}
+                                <i class="fa-solid fa-user-doctor text-primary fs-5"></i>
+                            {% elif current_user.role == 'admin' %}
+                                <i class="fa-solid fa-user-shield text-warning fs-5"></i>
+                            {% else %}
+                                <i class="fa-solid fa-user text-info fs-5"></i>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-bold">{{ current_user.username }}</h6>
+                            <small class="text-white-50">{{ current_user.email }}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-nav">
+                    <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="sidebar-link active">
+                        <i class="fa-solid fa-gauge"></i> Overview
+                    </a>
+
+                    <!-- Admin Links -->
+                    {% if current_user.role == 'admin' or current_user.is_admin %}
+                    <a href="{{ url_for('admin.index') }}" class="sidebar-link text-warning fw-bold">
+                        <i class="fa-solid fa-shield-halved text-warning"></i> Admin Panel
+                    </a>
+                    {% endif %}
+
+                    <!-- Doctor Links -->
+                    {% if current_user.role == 'doctor' or current_user.is_doctor %}
+                        {% if setup_exists %}
+                        <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="sidebar-link">
+                            <i class="fa-solid fa-id-card"></i> Doctor Profile
+                        </a>
+                        <a href="{{ url_for('dashboard.pdf_template_preview', uid=current_user.uid) }}" class="sidebar-link">
+                            <i class="fa-solid fa-file-invoice"></i> Prescription Template
+                        </a>
+                        <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="sidebar-link">
+                            <i class="fa-solid fa-user-pen"></i> Update Doctor Info
+                        </a>
+                        {% else %}
+                        <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="sidebar-link text-primary fw-bold">
+                            <i class="fa-solid fa-plus-circle text-primary"></i> Setup Doctor Profile
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{{ url_for('pdf_generator.document_page') }}" class="sidebar-link">
+                            <i class="fa-solid fa-file-prescription"></i> Generate Prescription
+                        </a>
+                    {% endif %}
+
+                    <!-- Shared & Patient Links -->
+                    <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-clock-rotate-left"></i> 
+                        {% if current_user.role == 'doctor' or current_user.is_doctor %}
+                            Prescription History
+                        {% else %}
+                            My Prescriptions
+                        {% endif %}
+                    </a>
+
+                    <a href="{{ url_for('accounts.registration_update_page', uid=current_user.uid) }}" class="sidebar-link">
+                        <i class="fa-solid fa-key"></i> Account Credentials
+                    </a>
+
+                    <hr class="my-2 border-slate-200">
+
+                    <a href="{{ url_for('accounts.logout_view') }}" class="sidebar-link text-danger">
+                        <i class="fa-solid fa-right-from-bracket text-danger"></i> Sign Out
+                    </a>
+                </div>
             </div>
         </div>
-    
 
-
-
-        <div class="col-md-6">
-
-            <div class="card text-center mt-3 pt-4 pb-4 px-3" x-data="{ query: '' }">
-                <h5 class="mt-2">Live Search</h5>
-                <div class="mt-2">
+        <!-- Main Dashboard Actions Area -->
+        <div class="col-lg-8 col-md-7">
+            
+            <!-- DOCTOR & ADMIN ROLE: Live Search & Rx Generator -->
+            {% if current_user.role == 'doctor' or current_user.is_doctor or current_user.role == 'admin' %}
+                
+                <!-- Live Search Card -->
+                <div class="dash-action-card" x-data="{ query: '' }">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <i class="fa-solid fa-magnifying-glass text-teal fs-5"></i>
+                        <h5 class="fw-bold mb-0">Search Patient Prescriptions</h5>
+                    </div>
                     <form action="{{ url_for('user_search.search_result_page', uid=current_user.uid) }}" method="POST" class="d-flex position-relative">
                         {{ form.hidden_tag() }}
-                        {{ form.search (class="form-control me-2", placeholder="Type Patient ID or Name...", **{'x-model': 'query', 'hx-post': url_for('user_search.live_search', uid=current_user.uid), 'hx-trigger': 'keyup changed delay:300ms, search', 'hx-target': '#dashboard-search-results', 'hx-swap': 'innerHTML'}) }}
-                        <button type="button" class="btn btn-outline-secondary me-2" x-show="query.length > 0" @click="query = ''; document.getElementById('dashboard-search-results').innerHTML = '';" title="Clear">
+                        {{ form.search (class="form-control form-control-lg me-2 rounded-3 fs-6", placeholder="Type Patient ID or Name...", **{'x-model': 'query', 'hx-post': url_for('user_search.live_search', uid=current_user.uid), 'hx-trigger': 'keyup changed delay:300ms, search', 'hx-target': '#dashboard-search-results', 'hx-swap': 'innerHTML'}) }}
+                        <button type="button" class="btn btn-outline-secondary me-2 rounded-3" x-show="query.length > 0" @click="query = ''; document.getElementById('dashboard-search-results').innerHTML = '';" title="Clear">
                             <i class="fa fa-times"></i>
                         </button>
-                        {{ form.submit (class="btn btn-primary") }}
+                        {{ form.submit (class="btn btn-primary px-4 rounded-3 fw-bold") }}
                     </form>
                     <div id="dashboard-search-results" class="mt-2 text-start" @click.outside="query = ''; $el.innerHTML = '';"></div>
                 </div>
-            </div>
 
-
-
-            <div class="card text-center mt-3 pt-5 pb-5">
-                <h5 class="mt-3">Generate New Prescription</h5>
-                <div class="mt-3">
+                <!-- Generate Prescription Card -->
+                <div class="dash-action-card text-center py-4">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-teal-50 text-teal p-3 rounded-circle" style="width: 60px; height: 60px; background: #ccfbf1; color: #0f766e;">
+                            <i class="fa-solid fa-file-waveform fs-3"></i>
+                        </div>
+                    </div>
+                    <h5 class="fw-bold mb-2">Create New Prescription</h5>
+                    <p class="text-muted small mx-auto mb-3" style="max-width: 420px;">
+                        Quickly prescribe medication, diagnostics, vitals, and generate tamper-proof PDF prescriptions.
+                    </p>
                     {% if setup_exists %}
-                    <a href="{{ url_for('pdf_generator.document_page') }}" class="btn btn-primary btn-block" style="width:50%;">Document</a>
+                        <a href="{{ url_for('pdf_generator.document_page') }}" class="btn btn-primary btn-lg px-5 rounded-3 fw-bold shadow-sm">
+                            <i class="fa-solid fa-plus-circle me-1"></i> Open Rx Generator
+                        </a>
                     {% else %}
-                    <p>Please setup your doctor's profile first.</p>
-                    <p>Go to > Setup Profile. Or Click <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}">Here</a></p>
-                    <a href="{{ url_for('pdf_generator.document_page') }}" class="btn btn-primary btn-block disabled" style="width:50%;">Document</a>
+                        <div class="alert alert-warning d-inline-block text-start small mb-3 py-2 px-3 rounded-3">
+                            <i class="fa-solid fa-circle-exclamation me-1"></i> Please complete your doctor's profile to enable PDF signatures.
+                        </div>
+                        <br>
+                        <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="btn btn-warning px-4 rounded-3 fw-bold">
+                            Setup Profile First
+                        </a>
                     {% endif %}
                 </div>
+
+            {% else %}
+                <!-- PATIENT ROLE VIEW -->
+                <div class="dash-action-card">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="p-3 rounded-circle" style="background: #e0e7ff; color: #3730a3;">
+                            <i class="fa-solid fa-notes-medical fs-3"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-1">Patient Portal</h5>
+                            <p class="text-muted small mb-0">Access your digital medical prescriptions and health records.</p>
+                        </div>
+                    </div>
+                    <hr class="border-slate-100">
+                    <div class="p-3 bg-light rounded-3 d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="fw-bold mb-1"><i class="fa-solid fa-file-lines text-primary me-2"></i>View My Prescriptions</h6>
+                            <p class="text-muted small mb-0">View or download all prescriptions created by your attending doctors.</p>
+                        </div>
+                        <a href="{{ url_for('dashboard.history_page', uid=current_user.uid) }}" class="btn btn-outline-primary px-3 fw-bold rounded-3">
+                            View All
+                        </a>
+                    </div>
+                </div>
+
+            {% endif %}
+
+            <!-- Stats / Metrics Grid -->
+            <div class="row g-3">
+                <div class="col-sm-4">
+                    <div class="dash-stat-box">
+                        <h6>Member Since</h6>
+                        <p class="stat-val fs-5">{{ current_user.created_at.strftime('%b %Y') if current_user.created_at else 'N/A' }}</p>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="dash-stat-box">
+                        <h6>{% if current_user.role == 'doctor' %}Prescriptions Issued{% else %}Prescriptions{% endif %}</h6>
+                        <p class="stat-val">{{ current_user.prescription | length if current_user.prescription else 0 }}</p>
+                    </div>
+                </div>
+                <div class="col-sm-4">
+                    <div class="dash-stat-box">
+                        <h6>Status</h6>
+                        <p class="stat-val fs-5 text-success"><i class="fa-solid fa-circle-check fs-6"></i> Active</p>
+                    </div>
+                </div>
             </div>
-
-
-            <div class="row mt-5 pb-5">
-                <div class="col-md-4 mt-1">
-                    <div class="card text-center p-4">
-                        <h5>Member Since</h5>
-                        <p></p>
-                        <p>{{ current_user.created_at.strftime('%d/%m/%Y')}}</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mt-1">
-                    <div class="card text-center p-4">
-                        <h5>Prescription Generated</h5>
-                        <p>{{ current_user.prescription |length }}</p>
-                    </div>
-                </div>
-                <div class="col-md-4 mt-1">
-                    <div class="card text-center p-4">
-                        <h5>Account Status</h5>
-                        <p>Active</p>
-                    </div>
-                </div>
-            </div>
-
 
         </div>
     </div>
 </div>
 
-
-
-
-
-
-
-
-{% endblock %}
+{% endblock %}

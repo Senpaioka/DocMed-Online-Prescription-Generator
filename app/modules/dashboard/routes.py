@@ -10,9 +10,7 @@ from app.modules.search.forms import SearchForm
 from flask_login import login_required, current_user
 from sqlalchemy.exc import IntegrityError
 import time
-
-
-
+from app.core.roles import doctor_required, role_required, UserRole
 
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
@@ -23,12 +21,17 @@ dashboard = Blueprint('dashboard', __name__, template_folder='templates')
 @dashboard.route('/user_home_page/<int:uid>')
 @login_required
 def dashboard_main_page(uid):
-    is_profile_setup = RegistrationModel.query.get(uid).profile_info
+    user = RegistrationModel.query.get(uid)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for('home.home_page'))
 
+    is_profile_setup = user.profile_info
 
     form = SearchForm()
 
     context={
+        'user': user,
         'setup_exists': is_profile_setup,
         'form': form,
     }
@@ -50,6 +53,7 @@ def dashboard_main_page(uid):
 # setup page
 @dashboard.route('/setup/<int:uid>', methods=['GET', 'POST'])
 @login_required
+@doctor_required
 def setup_page(uid):
     
     form = ProfileSetUpForm()
@@ -130,9 +134,14 @@ def setup_page(uid):
 
 @dashboard.route('/update_info/<int:uid>', methods=['GET', 'POST'])
 @login_required
+@doctor_required
 def update_profile_info(uid):
     # getting user data    
     get_info = ProfileSetupModel.query.filter_by(user_id=uid).first()
+    if not get_info:
+        flash("Profile information not found. Please set up your profile.", "error")
+        return redirect(url_for('dashboard.setup_page', uid=uid))
+
     # form
     form = UpdateProfileSetUpForm(obj=get_info)
 
@@ -154,7 +163,7 @@ def update_profile_info(uid):
 
             sign = form.signature.data
 
-            if sign != get_info.signature:
+            if sign and hasattr(sign, 'filename') and sign.filename:
                 signature_image_name = secure_filename(sign.filename)
                 timestamp = int(time.time())
                 unique_filename = f"{timestamp}_{signature_image_name}"
@@ -169,7 +178,7 @@ def update_profile_info(uid):
             except IntegrityError:
                 db.session.rollback()
                 flash("Something Went Wrong", "error")
-                return redirect(url_for('home.update_profile_info', uid=current_user.uid)) 
+                return redirect(url_for('dashboard.update_profile_info', uid=current_user.uid)) 
 
             flash('Profile Information Updated successfully!', 'success')
             return redirect(url_for('dashboard.profile_page', uid=current_user.uid))
@@ -191,9 +200,15 @@ def update_profile_info(uid):
 @login_required
 def profile_page(uid):
 
+    get_user = RegistrationModel.query.get(uid)
+    if not get_user:
+        flash("User not found.", "error")
+        return redirect(url_for('home.home_page'))
+
     get_user_info = ProfileSetupModel.query.filter_by(user_id=uid).first()
 
     context = {
+        'user': get_user,
         'info': get_user_info,
     }
     return render_template('dashboard/profile.html', **context)
@@ -211,10 +226,24 @@ def history_page(uid):
     # Number of items per page
     per_page = 25 
 
-    paged_history = PrescriptionModel.query.filter_by(doc_id=uid).order_by(PrescriptionModel.created_at.desc()).paginate(page=get_page, per_page=per_page, error_out=False)
-    is_history = RegistrationModel.query.get(uid).prescription
+    user = RegistrationModel.query.get(uid)
+    if not user:
+        flash("User not found.", "error")
+        return redirect(url_for('home.home_page'))
+
+    # If doctor/admin, filter by doc_id. If patient, filter by patient_name or patient prescriptions
+    if getattr(user, 'role', 'patient') == 'doctor' or user.is_admin:
+        paged_history = PrescriptionModel.query.filter_by(doc_id=uid).order_by(PrescriptionModel.created_at.desc()).paginate(page=get_page, per_page=per_page, error_out=False)
+        is_history = user.prescription
+    else:
+        # Patient sees prescriptions addressed to their username/name
+        paged_history = PrescriptionModel.query.filter(
+            PrescriptionModel.patient_name.ilike(f"%{user.username}%")
+        ).order_by(PrescriptionModel.created_at.desc()).paginate(page=get_page, per_page=per_page, error_out=False)
+        is_history = paged_history.items
     
     context = {
+        'user': user,
         'info': paged_history,
         'history_exists': is_history,
     }
@@ -230,6 +259,7 @@ def history_page(uid):
 
 @dashboard.route('/template/<int:uid>')
 @login_required
+@doctor_required
 def pdf_template_preview(uid):
 
     get_doctor_info = RegistrationModel.query.get(uid).profile_info
@@ -239,6 +269,7 @@ def pdf_template_preview(uid):
     }
 
     return render_template('dashboard/preview.html', **context)
+
 
 
 

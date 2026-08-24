@@ -36,9 +36,13 @@ def get_medicine_data():
     return _medicine_cache
 
 
+from app.core.roles import doctor_required, role_required, UserRole
+
+
 # Live Medicine Search (HTMX)
 @pdf_generator.route('/search-medicines', methods=['GET', 'POST'])
 @login_required
+@doctor_required
 def search_medicines():
     query = (request.args.get('search') or request.form.get('search') or '').strip().lower()
     matches = []
@@ -59,6 +63,7 @@ def search_medicines():
 # Live Prescription Preview (HTMX)
 @pdf_generator.route('/preview-live', methods=['POST'])
 @login_required
+@doctor_required
 def preview_live():
     return render_template(
         'pdf/_prescription_live_preview.html',
@@ -78,6 +83,7 @@ def preview_live():
 
 @pdf_generator.route('/prescription', methods=['GET', 'POST'])
 @login_required
+@doctor_required
 def document_page():
 
     form = PrescriptionForm()
@@ -134,6 +140,7 @@ def document_page():
         'form': form,
     }
     return render_template('pdf/prescription.html', **context)
+
 
 
 

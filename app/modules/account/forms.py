@@ -3,6 +3,7 @@ from wtforms import StringField, PasswordField, SubmitField, SelectField, Boolea
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional
 from werkzeug.security import generate_password_hash
 from flask_admin.contrib.sqla import ModelView
+from app.core.roles import UserRole
 
 
 ######## Front End #########
@@ -16,8 +17,11 @@ class RegistrationForm(FlaskForm):
         ('male', 'Male'),
         ('female', 'Female'),
         ('other', 'Other')
-    ])
-    validators=[DataRequired(message="Please select your gender.")]
+    ], validators=[DataRequired(message="Please select your gender.")])
+    role = SelectField('role', choices=[
+        (UserRole.PATIENT, 'Patient'),
+        (UserRole.DOCTOR, 'Doctor')
+    ], default=UserRole.PATIENT, validators=[DataRequired(message="Please select your role.")])
 
     submit = SubmitField('Register')
 
@@ -43,8 +47,7 @@ class UpdateRegistrationForm(FlaskForm):
         ('male', 'Male'),
         ('female', 'Female'),
         ('other', 'Other')
-    ])
-    validators=[DataRequired(message="Please select your gender.")]
+    ], validators=[DataRequired(message="Please select your gender.")])
 
     # is_active = BooleanField('is_active')
 
@@ -62,19 +65,19 @@ class AdminPanelRegistration(FlaskForm):
     username = StringField('username', validators=[DataRequired(), Length(min=2, max=60)])
     email = StringField('email', validators=[DataRequired(), Email()])
     
-    new_password = PasswordField('new_password', validators=[DataRequired(), Length(min=6)])
-    confirm_password = PasswordField('confirm_password', validators=[DataRequired(), EqualTo('new_password',  message='Passwords must match')]) # checking both password matched
+    new_password = PasswordField('new_password', validators=[Optional(), Length(min=6)])
+    confirm_password = PasswordField('confirm_password', validators=[Optional(), EqualTo('new_password',  message='Passwords must match')]) # checking both password matched
     gender = SelectField('gender', choices=[
         ('male', 'Male'),
         ('female', 'Female'),
         ('other', 'Other')
-    ])
-    validators=[DataRequired(message="Please select your gender.")]
+    ], validators=[DataRequired(message="Please select your gender.")])
+    role = SelectField('role', choices=UserRole.CHOICES, default=UserRole.PATIENT, validators=[DataRequired()])
 
-    is_active = BooleanField('is_active')
-    is_admin = BooleanField('is_active')
+    is_active = BooleanField('is_active', default=True)
+    is_admin = BooleanField('is_admin', default=False)
 
-    update = SubmitField('ADD')
+    update = SubmitField('Save')
 
 
 
@@ -84,15 +87,19 @@ class RegistrationAdminForm(ModelView):
 
     form = AdminPanelRegistration
     # columns show in admin panel  
-    column_list = ['username', 'email', 'gender', 'is_active', 'is_admin']
-    # column to fill
-    form_columns = ['username', 'email', 'password', 'confirm_password', 'gender' ]
+    column_list = ['username', 'email', 'role', 'gender', 'is_active', 'is_admin', 'created_at']
+    # column filters
+    column_filters = ['role', 'is_active', 'is_admin', 'gender']
+    # column to fill in admin form
+    form_columns = ['username', 'email', 'new_password', 'confirm_password', 'role', 'gender', 'is_active', 'is_admin']
 
     column_searchable_list = ['username', 'email']
 
-
     def on_model_change(self, form, model, is_created):
-        """Hash password before storing it in the database"""
+        """Hash password before storing it in the database and sync is_admin with role"""
         if form.new_password.data: 
-            model.new_password = generate_password_hash(form.new_password.data)
-        
+            model.password = generate_password_hash(form.new_password.data)
+        if form.role.data == UserRole.ADMIN:
+            model.is_admin = True
+        elif form.is_admin.data:
+            model.role = UserRole.ADMIN

@@ -7,6 +7,7 @@ from app.modules.account.models import RegistrationModel
 from app.modules.pdf.forms import PrescriptionForm
 from app.modules.search.forms import SearchForm
 from sqlalchemy import or_
+from app.core.roles import doctor_required
 
 
 user_search = Blueprint('user_search', __name__, template_folder='templates')
@@ -14,6 +15,7 @@ user_search = Blueprint('user_search', __name__, template_folder='templates')
 
 @user_search.route('<int:uid>/live', methods=['GET', 'POST'])
 @login_required
+@doctor_required
 def live_search(uid):
     query = request.args.get('search', '').strip() or request.form.get('search', '').strip()
     results = []
@@ -31,6 +33,7 @@ def live_search(uid):
 
 @user_search.route('<int:uid>/results', methods=['GET', 'POST'])
 @login_required
+@doctor_required
 def search_result_page(uid):
     form = SearchForm()
     query = ""

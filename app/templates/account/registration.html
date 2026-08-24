@@ -608,6 +608,24 @@
                     {% endfor %}
                 </div>
 
+                <!-- Role Selection -->
+                <div class="form-group-custom">
+                    <label for="role" class="form-label-custom">Account Type / Role</label>
+                    <div class="input-wrapper">
+                        <i class="fa-solid fa-user-tag input-icon"></i>
+                        {{ form.role(class="input-custom", required=True) }}
+                    </div>
+                    <small class="text-muted mt-1 d-block" style="font-size: 0.76rem;">
+                        Default is <strong>Patient</strong>. Choose <strong>Doctor</strong> to create prescriptions.
+                    </small>
+
+                    {% for error in form.role.errors %}
+                        <div class="field-error-text">
+                            <i class="fa-solid fa-circle-xmark"></i> {{ error }}
+                        </div>
+                    {% endfor %}
+                </div>
+
                 <!-- Gender -->
                 <div class="form-group-custom">
                     <label for="gender" class="form-label-custom">Gender</label>
@@ -627,6 +645,7 @@
                 <button type="submit" class="btn-docmed-submit w-100">
                     <i class="fa-solid fa-user-plus"></i> Create Account
                 </button>
+
             </form>
 
             <p class="auth-footer-text">

@@ -7,7 +7,10 @@ from app.extensions import admin, db
 
 class AdminPanel(AdminIndexView):
     def is_accessible(self):
-        return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+        return current_user.is_authenticated and (
+            getattr(current_user, 'is_admin', False) or 
+            getattr(current_user, 'role', '') == 'admin'
+        )
 
     def inaccessible_callback(self, name, **kwargs):
         return redirect(url_for("accounts.login_page"))
