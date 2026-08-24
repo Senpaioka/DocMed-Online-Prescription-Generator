@@ -27,11 +27,17 @@ class RegistrationModel(UserMixin, db.Model):
     # admin
     is_admin = db.Column(db.Boolean(), default=False, nullable=False)
     is_active = db.Column(db.Boolean(), default=True, nullable=False)
+    is_verified = db.Column(db.Boolean(), default=False, nullable=False)
+    otp_code = db.Column(db.String(6), nullable=True)
+    otp_expiry = db.Column(db.DateTime(), nullable=True)
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         if not self.role:
             self.role = 'patient'
+        if 'is_verified' not in kwargs:
+            self.is_verified = False
+
 
     def __repr__(self):
         return f"{self.username} ({self.role})"

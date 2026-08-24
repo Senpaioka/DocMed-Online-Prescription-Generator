@@ -1,0 +1,344 @@
+{% extends 'base.html' %}
+
+{% block title %} Verify Your Email | DocMed {% endblock %}
+
+{% block content %}
+
+<style>
+    :root {
+        --docmed-primary: #0d9488;
+        --docmed-primary-dark: #0f766e;
+        --docmed-primary-light: #ccfbf1;
+        --docmed-navy: #092e3b;
+        --docmed-surface: #ffffff;
+        --docmed-border: #e2e8f0;
+        --docmed-text-main: #1e293b;
+        --docmed-text-muted: #64748b;
+    }
+
+    body {
+        background-color: #f1f5f9;
+        color: var(--docmed-text-main);
+    }
+
+    .auth-wrapper {
+        min-height: calc(100vh - 120px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 15px;
+    }
+
+    .auth-card {
+        background: var(--docmed-surface);
+        border-radius: 24px;
+        box-shadow: 0 20px 50px -10px rgba(15, 23, 42, 0.12), 0 0 0 1px rgba(226, 232, 240, 0.8);
+        overflow: hidden;
+        width: 100%;
+        max-width: 540px;
+        margin: 0 auto;
+    }
+
+    .verify-header {
+        background: linear-gradient(145deg, #092e3b 0%, #0d5257 60%, #0f766e 100%);
+        color: #ffffff;
+        padding: 38px 32px 30px;
+        text-align: center;
+        position: relative;
+    }
+
+    .verify-icon-box {
+        width: 68px;
+        height: 68px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.25);
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        color: #5eead4;
+        margin-bottom: 16px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .verify-title {
+        font-size: 1.6rem;
+        font-weight: 800;
+        margin-bottom: 6px;
+        letter-spacing: -0.02em;
+    }
+
+    .verify-subtitle {
+        color: #ccfbf1;
+        font-size: 0.9rem;
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .verify-email-pill {
+        display: inline-block;
+        background: rgba(255, 255, 255, 0.2);
+        padding: 3px 12px;
+        border-radius: 999px;
+        font-weight: 600;
+        color: #ffffff;
+        margin-top: 6px;
+        font-size: 0.86rem;
+        word-break: break-all;
+    }
+
+    .verify-body {
+        padding: 36px 32px;
+    }
+
+    /* OTP Inputs Group */
+    .otp-inputs-container {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin: 24px 0;
+    }
+
+    .otp-digit-input {
+        width: 48px;
+        height: 58px;
+        text-align: center;
+        font-size: 1.6rem;
+        font-weight: 700;
+        font-family: 'Courier New', Courier, monospace;
+        border: 2px solid var(--docmed-border);
+        border-radius: 12px;
+        background-color: #f8fafc;
+        color: var(--docmed-navy);
+        transition: all 0.2s ease;
+    }
+
+    .otp-digit-input:focus {
+        outline: none;
+        border-color: var(--docmed-primary);
+        background-color: #ffffff;
+        box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .btn-verify-submit {
+        background: linear-gradient(135deg, var(--docmed-primary) 0%, var(--docmed-primary-dark) 100%);
+        color: #ffffff;
+        font-weight: 700;
+        font-size: 0.95rem;
+        padding: 13px 20px;
+        border-radius: 12px;
+        border: none;
+        box-shadow: 0 6px 20px rgba(13, 148, 136, 0.35);
+        transition: all 0.25s ease;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .btn-verify-submit:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(13, 148, 136, 0.45);
+        color: #ffffff;
+    }
+
+    .alert-docmed {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        font-weight: 500;
+        margin-bottom: 18px;
+    }
+
+    .alert-docmed-error {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        color: #991b1b;
+    }
+
+    .alert-docmed-success {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        color: #166534;
+    }
+
+    .resend-section {
+        border-top: 1px dashed var(--docmed-border);
+        padding-top: 20px;
+        margin-top: 24px;
+        text-align: center;
+    }
+
+    .btn-resend {
+        background: none;
+        border: none;
+        color: var(--docmed-primary);
+        font-weight: 700;
+        font-size: 0.88rem;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 8px;
+        transition: all 0.2s ease;
+        text-decoration: none;
+    }
+
+    .btn-resend:hover:not(:disabled) {
+        background: var(--docmed-primary-light);
+        color: var(--docmed-primary-dark);
+    }
+
+    .btn-resend:disabled {
+        color: var(--docmed-text-muted);
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+</style>
+
+<div class="auth-wrapper">
+    <div class="auth-card" x-data="{
+        digits: ['', '', '', '', '', ''],
+        get fullOtp() {
+            return this.digits.join('');
+        },
+        handleInput(index, event) {
+            const val = event.target.value;
+            // Only keep the last entered numeric character
+            if (val.length > 0) {
+                const numeric = val.replace(/[^0-9]/g, '');
+                this.digits[index] = numeric ? numeric.slice(-1) : '';
+                if (this.digits[index] && index < 5) {
+                    this.$refs['digit' + (index + 1)].focus();
+                }
+            }
+        },
+        handleKeydown(index, event) {
+            if (event.key === 'Backspace' && !this.digits[index] && index > 0) {
+                this.$refs['digit' + (index - 1)].focus();
+            }
+        },
+        handlePaste(event) {
+            event.preventDefault();
+            const pasteData = (event.clipboardData || window.clipboardData).getData('text').trim();
+            const numeric = pasteData.replace(/[^0-9]/g, '').slice(0, 6);
+            for (let i = 0; i < 6; i++) {
+                this.digits[i] = numeric[i] || '';
+            }
+            if (numeric.length === 6) {
+                this.$refs['digit5'].focus();
+            } else if (numeric.length > 0) {
+                this.$refs['digit' + Math.min(numeric.length, 5)].focus();
+            }
+        }
+    }">
+
+        <!-- Header -->
+        <div class="verify-header">
+            <div class="verify-icon-box">
+                <i class="fa-solid fa-envelope-circle-check"></i>
+            </div>
+            <h1 class="verify-title">Verify Your Email</h1>
+            <p class="verify-subtitle">
+                We've sent a 6-digit OTP code to<br>
+                <span class="verify-email-pill"><i class="fa-solid fa-envelope me-1"></i> {{ user.email }}</span>
+            </p>
+        </div>
+
+        <!-- Body -->
+        <div class="verify-body">
+            
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=True) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert-docmed {{ 'alert-docmed-error' if category == 'error' or category == 'danger' else 'alert-docmed-success' }}">
+                            <i class="{{ 'fa-solid fa-circle-exclamation' if category == 'error' or category == 'danger' else 'fa-solid fa-circle-check' }}"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('accounts.verify_otp', user_id=user.uid) }}" @submit="if(fullOtp.length === 6) $refs.hiddenOtp.value = fullOtp">
+                {{ verify_form.hidden_tag() }}
+                
+                <!-- Hidden WTForms field bound to fullOtp -->
+                <input type="hidden" name="otp" x-ref="hiddenOtp" :value="fullOtp">
+
+                <label class="d-block text-center text-muted small fw-bold text-uppercase mb-2" style="letter-spacing: 0.5px;">
+                    Enter 6-Digit OTP Code
+                </label>
+
+                <!-- 6 Digit Input Boxes -->
+                <div class="otp-inputs-container" @paste="handlePaste($event)">
+                    <template x-for="(digit, i) in digits" :key="i">
+                        <input 
+                            type="text" 
+                            maxlength="1" 
+                            inputmode="numeric"
+                            pattern="[0-9]*"
+                            autocomplete="one-time-code"
+                            class="otp-digit-input"
+                            :x-ref="'digit' + i"
+                            x-model="digits[i]"
+                            @input="handleInput(i, $event)"
+                            @keydown="handleKeydown(i, $event)"
+                            required
+                        >
+                    </template>
+                </div>
+
+                <div class="text-center text-muted small mb-3">
+                    <i class="fa-regular fa-clock me-1"></i> Code expires in 10 minutes
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-verify-submit w-100" :disabled="fullOtp.length !== 6">
+                    <i class="fa-solid fa-circle-check"></i> Verify & Continue
+                </button>
+            </form>
+
+            <!-- Resend Section -->
+            <div class="resend-section" x-data="{
+                countdown: 60,
+                canResend: false,
+                init() {
+                    let timer = setInterval(() => {
+                        if (this.countdown > 0) {
+                            this.countdown--;
+                        } else {
+                            this.canResend = true;
+                            clearInterval(timer);
+                        }
+                    }, 1000);
+                }
+            }">
+                <p class="text-muted small mb-2">Didn't receive the email code?</p>
+                <form method="POST" action="{{ url_for('accounts.resend_otp', user_id=user.uid) }}">
+                    {{ resend_form.hidden_tag() }}
+                    <button type="submit" class="btn-resend" :disabled="!canResend">
+                        <i class="fa-solid fa-rotate-right me-1"></i>
+                        <span x-show="!canResend">Resend OTP in <strong x-text="countdown"></strong>s</span>
+                        <span x-show="canResend">Resend OTP Code</span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Back to Login -->
+            <div class="text-center mt-3">
+                <a href="{{ url_for('accounts.login_page') }}" class="text-muted small text-decoration-none">
+                    <i class="fa-solid fa-arrow-left me-1"></i> Back to Login
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

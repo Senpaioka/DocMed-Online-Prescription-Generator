@@ -1,7 +1,15 @@
+from datetime import datetime
 from flask import request, render_template, redirect, url_for, flash, Blueprint
 from app.extensions import db
-from app.modules.account.forms import RegistrationForm, LoginForm, UpdateRegistrationForm 
+from app.modules.account.forms import (
+    RegistrationForm,
+    LoginForm,
+    UpdateRegistrationForm,
+    VerifyOtpForm,
+    ResendOtpForm
+)
 from app.modules.account.models import RegistrationModel
+from app.core.email_service import send_verification_otp
 from werkzeug.security import generate_password_hash, check_password_hash
 from email_validator import validate_email
 from sqlalchemy.exc import IntegrityError
@@ -43,17 +51,22 @@ def registration_page():
             email_info = validate_email(email, check_deliverability=True)
             safe_email = email_info.normalized
 
+            # Check if email is already registered
+            existing_email = RegistrationModel.query.filter_by(email=safe_email).first()
+            if existing_email:
+                if not existing_email.is_verified:
+                    # User started registration earlier but did not verify
+                    send_verification_otp(existing_email)
+                    flash('An unverified account with this email exists. A new OTP has been sent!', 'info')
+                    return redirect(url_for('accounts.verify_otp', user_id=existing_email.uid))
+                else:
+                    flash('Email address is already in use. Please sign in or use another email.', 'error')
+                    return redirect(url_for('accounts.registration_page'))
+
             password = form.password.data
             gender = form.gender.data
             role = getattr(form, 'role', None)
             selected_role = role.data if role and role.data else 'patient'
-
-            # alternative:
-            # username = request.form.get('username')
-            # email = request.form.get('email')
-            # password = request.form.get('password')
-            # confirm_password = request.form.get('confirm_password')
-            # gender = request.form.get('gender')
 
             hashed_password = generate_password_hash(password)
 
@@ -66,6 +79,7 @@ def registration_page():
             )
 
             new_user.is_active = True
+            new_user.is_verified = False
             new_user.is_admin = (selected_role == 'admin')
 
             db.session.add(new_user)
@@ -77,11 +91,17 @@ def registration_page():
                 flash("Username already exists. Please choose a different one.", "error")
                 return redirect(url_for('accounts.registration_page')) 
 
-            flash('Account created successfully! Please login.', 'success')
-            return redirect(url_for('accounts.login_page'))
+            # Send OTP verification email
+            email_sent = send_verification_otp(new_user)
+            if email_sent:
+                flash('Account created! A 6-digit OTP verification code was sent to your email.', 'success')
+            else:
+                flash('Account created, but we could not deliver the verification email right now. You can request a resend.', 'error')
+
+            return redirect(url_for('accounts.verify_otp', user_id=new_user.uid))
 
         else:
-            flash('Something went wrong!', 'error')
+            flash('Please correct the errors in the form.', 'error')
         
 
     context = {
@@ -91,8 +111,68 @@ def registration_page():
     return render_template('account/registration.html', **context)
 
 
+# OTP Verification Page
+@accounts.route('/verify-otp/<int:user_id>', methods=['GET', 'POST'])
+def verify_otp(user_id):
+    user = RegistrationModel.query.get_or_404(user_id)
+
+    if user.is_verified:
+        flash('Your email is already verified! Please sign in.', 'info')
+        return redirect(url_for('accounts.login_page'))
+
+    verify_form = VerifyOtpForm()
+    resend_form = ResendOtpForm()
+
+    if verify_form.validate_on_submit():
+        submitted_otp = verify_form.otp.data.strip()
+
+        if not user.otp_code:
+            flash('No verification code active. Please request a new one.', 'error')
+            return redirect(url_for('accounts.verify_otp', user_id=user.uid))
+
+        if user.otp_expiry and datetime.now() > user.otp_expiry:
+            flash('Verification code has expired. Please request a new OTP.', 'error')
+            return redirect(url_for('accounts.verify_otp', user_id=user.uid))
+
+        if user.otp_code == submitted_otp:
+            user.is_verified = True
+            user.otp_code = None
+            user.otp_expiry = None
+            db.session.commit()
+
+            # Automatically log the user in after successful verification
+            login_user(user)
+            flash('Email verified successfully! Welcome to DocMed.', 'success')
+            return redirect(url_for('dashboard.dashboard_main_page', uid=user.uid))
+        else:
+            flash('Invalid OTP code. Please check your email and try again.', 'error')
+
+    context = {
+        'user': user,
+        'verify_form': verify_form,
+        'resend_form': resend_form
+    }
+    return render_template('account/verify_otp.html', **context)
 
 
+# Resend OTP route
+@accounts.route('/resend-otp/<int:user_id>', methods=['POST'])
+def resend_otp(user_id):
+    user = RegistrationModel.query.get_or_404(user_id)
+
+    if user.is_verified:
+        flash('Your email is already verified. Please sign in.', 'info')
+        return redirect(url_for('accounts.login_page'))
+
+    resend_form = ResendOtpForm()
+    if resend_form.validate_on_submit():
+        sent = send_verification_otp(user)
+        if sent:
+            flash('A fresh OTP code has been sent to your email!', 'success')
+        else:
+            flash('Failed to resend email. Please check your network or try again later.', 'error')
+    
+    return redirect(url_for('accounts.verify_otp', user_id=user.uid))
 
 
 # login page
@@ -109,6 +189,12 @@ def login_page():
             # getting user
             user = RegistrationModel.query.filter_by(username=username).first()
             if user and check_password_hash(user.password, password):
+                if not getattr(user, 'is_verified', True):
+                    # Send a fresh OTP and redirect to verification page
+                    send_verification_otp(user)
+                    flash('Your email is not verified yet. A new verification OTP was sent to your email.', 'error')
+                    return redirect(url_for('accounts.verify_otp', user_id=user.uid))
+
                 login_user(user)
                 flash('Login Successful', 'success')
                 return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid ))
@@ -121,6 +207,7 @@ def login_page():
         'form': form,
     }    
     return render_template('account/login.html', **context)
+
 
 
 

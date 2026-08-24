@@ -59,6 +59,18 @@ class UpdateRegistrationForm(FlaskForm):
 
 
 
+class VerifyOtpForm(FlaskForm):
+    otp = StringField('Verification Code', validators=[
+        DataRequired(message='Please enter the 6-digit code.'),
+        Length(min=6, max=6, message='OTP must be exactly 6 digits.')
+    ])
+    submit = SubmitField('Verify Code')
+
+
+class ResendOtpForm(FlaskForm):
+    submit = SubmitField('Resend Verification Code')
+
+
 ######## Admin Panel #########
 class AdminPanelRegistration(FlaskForm):
 
@@ -74,6 +86,7 @@ class AdminPanelRegistration(FlaskForm):
     ], validators=[DataRequired(message="Please select your gender.")])
     role = SelectField('role', choices=UserRole.CHOICES, default=UserRole.PATIENT, validators=[DataRequired()])
 
+    is_verified = BooleanField('is_verified', default=True)
     is_active = BooleanField('is_active', default=True)
     is_admin = BooleanField('is_admin', default=False)
 
@@ -87,11 +100,11 @@ class RegistrationAdminForm(ModelView):
 
     form = AdminPanelRegistration
     # columns show in admin panel  
-    column_list = ['username', 'email', 'role', 'gender', 'is_active', 'is_admin', 'created_at']
+    column_list = ['username', 'email', 'role', 'gender', 'is_verified', 'is_active', 'is_admin', 'created_at']
     # column filters
-    column_filters = ['role', 'is_active', 'is_admin', 'gender']
+    column_filters = ['role', 'is_verified', 'is_active', 'is_admin', 'gender']
     # column to fill in admin form
-    form_columns = ['username', 'email', 'new_password', 'confirm_password', 'role', 'gender', 'is_active', 'is_admin']
+    form_columns = ['username', 'email', 'new_password', 'confirm_password', 'role', 'gender', 'is_verified', 'is_active', 'is_admin']
 
     column_searchable_list = ['username', 'email']
 
@@ -102,4 +115,5 @@ class RegistrationAdminForm(ModelView):
         if form.role.data == UserRole.ADMIN:
             model.is_admin = True
         elif form.is_admin.data:
-            model.role = UserRole.ADMIN
+            model.role = UserRole.ADMIN
+

@@ -1,7 +1,7 @@
 import os
 from flask import Flask
 from app.config import config_by_name, DevelopmentConfig
-from app.extensions import db, migrate, login_manager
+from app.extensions import db, migrate, login_manager, mail
 from app.core.admin import init_admin
 
 
@@ -25,8 +25,10 @@ def create_app(config_name_or_class=None):
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+    mail.init_app(app)
     login_manager.init_app(app)
     login_manager.login_view = 'accounts.login_page'
+
 
     # User loader
     from app.modules.account.models import RegistrationModel
