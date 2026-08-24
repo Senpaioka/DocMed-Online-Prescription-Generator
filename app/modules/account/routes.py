@@ -6,10 +6,12 @@ from app.modules.account.forms import (
     LoginForm,
     UpdateRegistrationForm,
     VerifyOtpForm,
-    ResendOtpForm
+    ResendOtpForm,
+    ForgotPasswordForm,
+    ResetPasswordForm
 )
 from app.modules.account.models import RegistrationModel
-from app.core.email_service import send_verification_otp, send_welcome_email
+from app.core.email_service import send_verification_otp, send_welcome_email, send_password_reset_email
 from werkzeug.security import generate_password_hash, check_password_hash
 from email_validator import validate_email
 from sqlalchemy.exc import IntegrityError
@@ -17,6 +19,7 @@ from flask_login import login_user, login_required, logout_user, current_user
 
 
 accounts = Blueprint('accounts', __name__, template_folder='templates')
+
 
 
 
@@ -223,14 +226,60 @@ def login_page():
     return render_template('account/login.html', **context)
 
 
+# forgot password
+@accounts.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
+
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip()
+        user = RegistrationModel.query.filter(RegistrationModel.email.ilike(email)).first()
+        if user:
+            token = user.get_reset_password_token(expires_sec=1800)
+            reset_url = url_for('accounts.reset_password', token=token, _external=True)
+            sent = send_password_reset_email(user, reset_url=reset_url, expiry_minutes=30)
+            if sent:
+                flash('Password reset instructions have been sent to your email address.', 'success')
+            else:
+                flash('Failed to deliver password reset email. Please try again later.', 'error')
+        else:
+            flash('If an account exists with this email, you will receive password reset instructions shortly.', 'info')
+        return redirect(url_for('accounts.login_page'))
+
+    context = {
+        'form': form
+    }
+    return render_template('account/forgot_password.html', **context)
 
 
+# reset password with token
+@accounts.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
 
+    user = RegistrationModel.verify_reset_password_token(token, expires_sec=1800)
+    if not user:
+        flash('The password reset link is invalid or has expired. Please request a new one.', 'error')
+        return redirect(url_for('accounts.forgot_password'))
 
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        new_password = form.password.data
+        user.password = generate_password_hash(new_password)
+        user.is_verified = True
+        db.session.commit()
 
+        flash('Your password has been reset successfully! You can now sign in with your new password.', 'success')
+        return redirect(url_for('accounts.login_page'))
 
-
-
+    context = {
+        'form': form,
+        'user': user
+    }
+    return render_template('account/reset_password.html', **context)
 
 
 # logout

@@ -486,7 +486,12 @@
 
                 <!-- Password -->
                 <div class="form-group-custom">
-                    <label for="password" class="form-label-custom">Password</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label for="password" class="form-label-custom mb-0">Password</label>
+                        <a href="{{ url_for('accounts.forgot_password') }}" class="small text-decoration-none fw-bold" style="color: var(--docmed-primary); font-size: 0.8rem;">
+                            Forgot Password?
+                        </a>
+                    </div>
                     <div class="input-wrapper">
                         <i class="fa-solid fa-lock input-icon"></i>
                         {{ form.password(class="input-custom", placeholder="Enter your password", required=True, **{':type': "showPass ? 'text' : 'password'"}) }}

@@ -86,3 +86,24 @@ def send_welcome_email(user, dashboard_url=None) -> bool:
         template_html=template_html,
         context=context
     )
+
+
+def send_password_reset_email(user, reset_url, expiry_minutes=30) -> bool:
+    """
+    Send secure password reset link to user.
+    """
+    context = {
+        'user': user,
+        'reset_url': reset_url,
+        'expiry_minutes': expiry_minutes,
+        'app_name': 'DocMed',
+        'current_year': datetime.now().year
+    }
+
+    return send_email(
+        subject='DocMed | Password Reset Request 🔒',
+        recipient=user.email,
+        template_html='emails/password_reset.html',
+        context=context
+    )
+

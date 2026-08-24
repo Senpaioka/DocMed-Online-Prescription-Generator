@@ -91,6 +91,28 @@ class ResendOtpForm(FlaskForm):
     submit = SubmitField('Resend Verification Code')
 
 
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email Address', validators=[
+        DataRequired(message='Please enter your email address.'),
+        Email(message='Please enter a valid email address.')
+    ])
+    submit = SubmitField('Send Reset Instructions')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[
+        DataRequired(message='Please enter a new password.'),
+        Length(min=8, message='Password must be at least 8 characters.'),
+        Regexp(PASSWORD_REGEX, message=PASSWORD_MESSAGE)
+    ])
+    confirm_password = PasswordField('Confirm New Password', validators=[
+        DataRequired(message='Please confirm your password.'),
+        EqualTo('password', message='Passwords must match.')
+    ])
+    submit = SubmitField('Reset Password')
+
+
+
 ######## Admin Panel #########
 class AdminPanelRegistration(FlaskForm):
 

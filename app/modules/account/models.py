@@ -57,3 +57,21 @@ class RegistrationModel(UserMixin, db.Model):
     def is_admin_role(self):
         return self.role == 'admin' or self.is_admin
 
+    def get_reset_password_token(self, expires_sec=1800):
+        from itsdangerous import URLSafeTimedSerializer
+        from flask import current_app
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        return s.dumps({'user_id': self.uid}, salt='password-reset-salt')
+
+    @staticmethod
+    def verify_reset_password_token(token, expires_sec=1800):
+        from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadSignature
+        from flask import current_app
+        s = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        try:
+            user_id = s.loads(token, salt='password-reset-salt', max_age=expires_sec)['user_id']
+        except (SignatureExpired, BadSignature, Exception):
+            return None
+        return RegistrationModel.query.get(user_id)
+
+
