@@ -219,6 +219,8 @@ def history_page(uid):
         'info': paged_history,
         'history_exists': is_history,
     }
+    if request.headers.get('HX-Request'):
+        return render_template('dashboard/_history_list.html', **context)
     return render_template('dashboard/history.html', **context)
 
 

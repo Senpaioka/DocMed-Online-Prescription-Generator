@@ -12,26 +12,53 @@ from sqlalchemy import or_
 user_search = Blueprint('user_search', __name__, template_folder='templates')
 
 
-@user_search.route('<int:uid>/results', methods=['POST'])
+@user_search.route('<int:uid>/live', methods=['GET', 'POST'])
+@login_required
+def live_search(uid):
+    query = request.args.get('search', '').strip() or request.form.get('search', '').strip()
+    results = []
+    if query:
+        results = PrescriptionModel.query.filter(
+            PrescriptionModel.doc_id == uid,
+            or_(
+                PrescriptionModel.patient_id.ilike(f"%{query}%"),
+                PrescriptionModel.patient_name.ilike(f"%{query}%"),
+            )
+        ).order_by(PrescriptionModel.created_at.desc()).limit(10).all()
+
+    return render_template('search/_search_results.html', search_result=results, query=query)
+
+
+@user_search.route('<int:uid>/results', methods=['GET', 'POST'])
 @login_required
 def search_result_page(uid):
     form = SearchForm()
+    query = ""
+    results = []
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            get_search_data = form.search.data
+            query = form.search.data.strip()
+    elif request.method == 'GET':
+        query = request.args.get('search', '').strip()
 
-            results = PrescriptionModel.query.filter(
-                PrescriptionModel.doc_id == uid,  # Move this inside filter()
-                or_(
-                    PrescriptionModel.patient_id.ilike(f"%{get_search_data}%"),
-                    PrescriptionModel.patient_name.ilike(f"%{get_search_data}%"),
-                )
-                ).all()
+    if query:
+        results = PrescriptionModel.query.filter(
+            PrescriptionModel.doc_id == uid,
+            or_(
+                PrescriptionModel.patient_id.ilike(f"%{query}%"),
+                PrescriptionModel.patient_name.ilike(f"%{query}%"),
+            )
+        ).order_by(PrescriptionModel.created_at.desc()).all()
 
+    # If request came via HTMX, return just the partial
+    if request.headers.get('HX-Request'):
+        return render_template('search/_search_results.html', search_result=results, query=query)
 
     context = {
         'search_result': results,
+        'query': query,
     }
     return render_template('search/search.html', **context)
+
 

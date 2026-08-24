@@ -1,0 +1,23 @@
+{% if search_result %}
+    <div class="list-group mt-2">
+        {% for data in search_result %}
+        <div class="card mb-2 text-start">
+            <div class="card-body py-2">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="card-title mb-1 text-primary fw-bold">#{{ data.patient_id }} - {{ data.patient_name }}</h6>
+                        <small class="text-muted"><i class="fa fa-calendar-alt me-1"></i> {{ data.created_at.strftime('%d-%m-%Y') }} | Age: {{ data.patient_age }} | {{ data.patient_sex | capitalize }}</small>
+                    </div>
+                    <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fa fa-file-pdf me-1"></i> View Prescription
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% elif query %}
+    <div class="alert alert-info mt-2 text-center py-2" role="alert">
+        <i class="fa fa-info-circle me-1"></i> No matching prescriptions found for "<strong>{{ query }}</strong>".
+    </div>
+{% endif %}

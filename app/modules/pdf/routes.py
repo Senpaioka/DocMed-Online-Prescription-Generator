@@ -20,6 +20,60 @@ def short_uuid(length: int = 8) -> str:
 
 pdf_generator = Blueprint('pdf_generator', __name__, template_folder='templates')
 
+import json
+
+_medicine_cache = None
+
+def get_medicine_data():
+    global _medicine_cache
+    if _medicine_cache is None:
+        json_path = os.path.join(current_app.root_path, 'static', 'data', 'data.json')
+        try:
+            with open(json_path, 'r', encoding='utf-8') as f:
+                _medicine_cache = json.load(f)
+        except Exception:
+            _medicine_cache = []
+    return _medicine_cache
+
+
+# Live Medicine Search (HTMX)
+@pdf_generator.route('/search-medicines', methods=['GET', 'POST'])
+@login_required
+def search_medicines():
+    query = (request.args.get('search') or request.form.get('search') or '').strip().lower()
+    matches = []
+    if query and len(query) >= 2:
+        all_meds = get_medicine_data()
+        for item in all_meds:
+            name = str(item.get('name', '')).lower()
+            generic = str(item.get('generic', '')).lower()
+            brand = str(item.get('brand', '')).lower()
+            if query in name or query in generic or query in brand:
+                matches.append(item)
+                if len(matches) >= 15:
+                    break
+
+    return render_template('pdf/_medicine_results.html', medicines=matches, query=query)
+
+
+# Live Prescription Preview (HTMX)
+@pdf_generator.route('/preview-live', methods=['POST'])
+@login_required
+def preview_live():
+    return render_template(
+        'pdf/_prescription_live_preview.html',
+        name=request.form.get('patient_name', ''),
+        age=request.form.get('patient_age', ''),
+        sex=request.form.get('patient_sex', ''),
+        cc=request.form.get('cc', ''),
+        bp=request.form.get('bp', ''),
+        pulse=request.form.get('pulse', ''),
+        temp=request.form.get('temp', ''),
+        spo=request.form.get('spo', ''),
+        inv=request.form.get('inv', ''),
+        rx=request.form.get('rx', ''),
+        advice=request.form.get('advice', '')
+    )
 
 
 @pdf_generator.route('/prescription', methods=['GET', 'POST'])
@@ -47,34 +101,33 @@ def document_page():
             rx = form.rx.data
             advice = form.advice.data
 
+            # creating model object
+            generate_prescription = PrescriptionModel(
+                patient_id = unique_id,
+                doc_id = doctor_id,
+                patient_name = name,
+                patient_age = age,
+                patient_sex = sex,
+                cc = cc,
+                bp = bp,
+                pulse = pulse,
+                temp = temp,
+                spo = spo,
+                inv = inv,
+                rx = rx,
+                advice = advice
+            )
 
-        # creating model object
-        generate_prescription = PrescriptionModel(
-            patient_id = unique_id,
-            doc_id = doctor_id,
-            patient_name = name,
-            patient_age = age,
-            patient_sex = sex,
-            cc = cc,
-            bp = bp,
-            pulse = pulse,
-            temp = temp,
-            spo = spo,
-            inv = inv,
-            rx = rx,
-            advice = advice
-        )
+            db.session.add(generate_prescription)
 
-        db.session.add(generate_prescription)
-
-        try:
-            db.session.commit()
-        except IntegrityError:
-            db.session.rollback()
-            flash("Something Went Wrong", "error")
-            return redirect(url_for('pdf_generator.document_page')) 
-        
-        return redirect(url_for('pdf_generator.pdf_prescription_preview', patient_id=unique_id))
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                flash("Something Went Wrong", "error")
+                return redirect(url_for('pdf_generator.document_page')) 
+            
+            return redirect(url_for('pdf_generator.pdf_prescription_preview', patient_id=unique_id))
         
 
     context = {

@@ -11,6 +11,21 @@ from flask_login import login_user, login_required, logout_user, current_user
 accounts = Blueprint('accounts', __name__, template_folder='templates')
 
 
+# check username availability (HTMX)
+@accounts.route('/check-username', methods=['POST'])
+def check_username():
+    username = request.form.get('username', '').strip()
+    if not username:
+        return ''
+    if len(username) < 2:
+        return '<span class="text-danger small"><i class="fa fa-times-circle"></i> Username must be at least 2 characters</span>'
+    
+    existing = RegistrationModel.query.filter_by(username=username).first()
+    if existing:
+        return '<span class="text-danger small"><i class="fa fa-times-circle"></i> Username is already taken</span>'
+    return '<span class="text-success small"><i class="fa fa-check-circle"></i> Username is available</span>'
+
+
 # registration page
 @accounts.route('/registration', methods=['GET', 'POST'])
 def registration_page():

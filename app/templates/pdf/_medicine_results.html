@@ -1,0 +1,17 @@
+{% if medicines %}
+    <div class="list-group shadow-sm" style="max-height: 250px; overflow-y: auto;">
+        {% for med in medicines %}
+        <button type="button" class="list-group-item list-group-item-action text-start py-2" onclick="insertMedicine('{{ med.name | escape }} ({{ med.dose | escape }}) - {{ med.generic | escape }}')">
+            <div class="d-flex w-100 justify-content-between">
+                <strong class="text-primary">{{ med.name }}</strong>
+                <small class="badge bg-light text-dark border">{{ med.dose }}</small>
+            </div>
+            <small class="text-muted d-block">Generic: {{ med.generic }} | Company: {{ med.brand }}</small>
+        </button>
+        {% endfor %}
+    </div>
+{% elif query %}
+    <div class="alert alert-light border text-center py-2 mb-0">
+        <small class="text-muted">No medicines found matching "<strong>{{ query }}</strong>"</small>
+    </div>
+{% endif %}

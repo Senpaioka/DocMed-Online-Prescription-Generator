@@ -64,14 +64,15 @@
 
         <div class="col-md-6">
 
-            <div class="card text-center mt-3 pt-5 pb-5">
-                <h5 class="mt-3">Search</h5>
-                <div class="mt-3">
-                    <form action="{{ url_for('user_search.search_result_page', uid=current_user.uid) }}" method="POST" class="d-flex">
+            <div class="card text-center mt-3 pt-4 pb-4 px-3">
+                <h5 class="mt-2">Live Search</h5>
+                <div class="mt-2">
+                    <form action="{{ url_for('user_search.search_result_page', uid=current_user.uid) }}" method="POST" class="d-flex position-relative">
                         {{ form.hidden_tag() }}
-                        {{ form.search (class="form-control me-3 ms-5", placeholder="Patient ID or Patient Name", size=30) }}
-                        {{ form.submit (class="btn btn-primary me-2 ms-2") }}
+                        {{ form.search (class="form-control me-2", placeholder="Type Patient ID or Name...", **{'hx-post': url_for('user_search.live_search', uid=current_user.uid), 'hx-trigger': 'keyup changed delay:300ms, search', 'hx-target': '#dashboard-search-results', 'hx-swap': 'innerHTML'}) }}
+                        {{ form.submit (class="btn btn-primary") }}
                     </form>
+                    <div id="dashboard-search-results" class="mt-2 text-start"></div>
                 </div>
             </div>
 

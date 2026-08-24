@@ -25,7 +25,8 @@
                      <!-- Username -->
                      <div class="mb-3">
                         <label for="name" class="form-label">Username</label>
-                        {{ form.username (class="form-control",placeholder='Unique Username' ,required=True) }}
+                        {{ form.username (class="form-control", placeholder='Unique Username', required=True, **{'hx-post': url_for('accounts.check_username'), 'hx-trigger': 'keyup changed delay:300ms', 'hx-target': '#username-check', 'hx-swap': 'innerHTML'}) }}
+                        <div id="username-check" class="mt-1"></div>
 
                         <!-- error handling -->
                         {% for error in form.username.errors %}
