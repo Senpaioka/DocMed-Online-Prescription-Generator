@@ -8,7 +8,7 @@
             <div class="register-container">
                 <h3 class="text-center mb-4">Register</h3>
                 <!-- flash message -->
-                <div class="mb-3" id="flash-messages">
+                <div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition:leave.duration.500ms>
                     {% with messages = get_flashed_messages(with_categories=True) %}
                         {% if messages %}
                             <ul class="flashes">
@@ -46,22 +46,22 @@
                     </div>
         
                     <!-- Password -->
-                    <div class="mb-3">
+                    <div class="mb-3" x-data="{ show: false }">
                         <label for="password" class="form-label">Password</label>
                         <div class="input-group">
-                            {{ form.password (class="form-control",placeholder='Create Password' ,required=True) }}
-                            <button class="btn btn-primary" type="button" id="togglePassword">
-                            <i class="fa-regular fa-eye-slash"></i>
+                            {{ form.password (class="form-control", placeholder='Create Password', required=True, **{':type': "show ? 'text' : 'password'"}) }}
+                            <button class="btn btn-primary" type="button" @click="show = !show" :title="show ? 'Hide Password' : 'Show Password'">
+                                <i :class="show ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash'"></i>
                             </button>
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Confirm Password</label>
+                    <div class="mb-3" x-data="{ show: false }">
+                        <label for="confirm_password" class="form-label">Confirm Password</label>
                         <div class="input-group">
-                            {{ form.confirm_password (class="form-control",placeholder='Confirm Password' ,required=True) }}
-                            <button class="btn btn-primary" type="button" id="togglePassword_extra">
-                            <i class="fa-regular fa-eye-slash"></i>
+                            {{ form.confirm_password (class="form-control", placeholder='Confirm Password', required=True, **{':type': "show ? 'text' : 'password'"}) }}
+                            <button class="btn btn-primary" type="button" @click="show = !show" :title="show ? 'Hide Password' : 'Show Password'">
+                                <i :class="show ? 'fa-regular fa-eye' : 'fa-regular fa-eye-slash'"></i>
                             </button>
                         </div>
                         <!-- error handling -->

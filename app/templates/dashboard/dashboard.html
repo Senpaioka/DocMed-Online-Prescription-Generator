@@ -64,15 +64,18 @@
 
         <div class="col-md-6">
 
-            <div class="card text-center mt-3 pt-4 pb-4 px-3">
+            <div class="card text-center mt-3 pt-4 pb-4 px-3" x-data="{ query: '' }">
                 <h5 class="mt-2">Live Search</h5>
                 <div class="mt-2">
                     <form action="{{ url_for('user_search.search_result_page', uid=current_user.uid) }}" method="POST" class="d-flex position-relative">
                         {{ form.hidden_tag() }}
-                        {{ form.search (class="form-control me-2", placeholder="Type Patient ID or Name...", **{'hx-post': url_for('user_search.live_search', uid=current_user.uid), 'hx-trigger': 'keyup changed delay:300ms, search', 'hx-target': '#dashboard-search-results', 'hx-swap': 'innerHTML'}) }}
+                        {{ form.search (class="form-control me-2", placeholder="Type Patient ID or Name...", **{'x-model': 'query', 'hx-post': url_for('user_search.live_search', uid=current_user.uid), 'hx-trigger': 'keyup changed delay:300ms, search', 'hx-target': '#dashboard-search-results', 'hx-swap': 'innerHTML'}) }}
+                        <button type="button" class="btn btn-outline-secondary me-2" x-show="query.length > 0" @click="query = ''; document.getElementById('dashboard-search-results').innerHTML = '';" title="Clear">
+                            <i class="fa fa-times"></i>
+                        </button>
                         {{ form.submit (class="btn btn-primary") }}
                     </form>
-                    <div id="dashboard-search-results" class="mt-2 text-start"></div>
+                    <div id="dashboard-search-results" class="mt-2 text-start" @click.outside="query = ''; $el.innerHTML = '';"></div>
                 </div>
             </div>
 

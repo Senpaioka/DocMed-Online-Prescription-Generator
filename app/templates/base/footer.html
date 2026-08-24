@@ -16,39 +16,7 @@
 		</footer>
 		<!-- End Footer Section -->	
 
-        <script>
-            // Password Visibility Toggle
-            document.getElementById("togglePassword").addEventListener("click", function () {
-                let passwordInput = document.getElementById("password");
-                if (passwordInput.type === "password") {
-                    passwordInput.type = "text";
-                } else {
-                    passwordInput.type = "password";
-                }
-            });
 
-
-			 // Confirm Password Visibility Toggle
-			 document.getElementById("togglePassword_extra").addEventListener("click", function () {
-                let passwordInput = document.getElementById("confirm_password");
-                if (passwordInput.type === "password") {
-                    passwordInput.type = "text";
-                } else {
-                    passwordInput.type = "password";
-                }
-            });
-        </script>
-
-		<script>
-			// Wait 10 seconds (10,000 milliseconds) then hide the flash message container
-			setTimeout(function() {
-				var flashContainer = document.getElementById('flash-messages');
-				if (flashContainer) {
-					// Option 1: Hide the element
-					flashContainer.style.display = 'none';
-				}
-			}, 10000);
-		</script>
 
 		<script src="{{ url_for('static', filename='js/bootstrap.bundle.min.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/tiny-slider.js') }}"></script>

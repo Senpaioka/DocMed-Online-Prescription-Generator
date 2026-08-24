@@ -17,10 +17,10 @@
 	}
 </style>
 
-<div class="container-fluid px-lg-5 mt-4 mb-5">
+<div class="container-fluid px-lg-5 mt-4 mb-5" x-data="prescriptionEditor()">
 
 	<!-- Flash message -->
-	<div class="mb-3" id="flash-messages">
+	<div class="mb-3" id="flash-messages" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 6000)" x-transition:leave.duration.500ms>
 		{% with messages = get_flashed_messages(with_categories=True) %}
 			{% if messages %}
 				<ul class="flashes">
@@ -38,13 +38,17 @@
 			<div class="card shadow-sm p-4 mb-4">
 				<h4 class="mb-3 text-primary fw-bold"><i class="fa-solid fa-file-prescription me-2"></i>New Prescription</h4>
 
-				<!-- Medicine Search (HTMX) -->
+				<!-- Medicine Search (HTMX + Alpine State) -->
 				<div class="position-relative mb-4">
-					<label class="form-label fw-bold text-dark"><i class="fa fa-search me-1"></i> Quick Medicine Search</label>
+					<div class="d-flex justify-content-between align-items-center mb-1">
+						<label class="form-label fw-bold text-dark mb-0"><i class="fa fa-search me-1"></i> Quick Medicine Search</label>
+						<span class="text-muted small" x-show="searchQuery.length > 0" x-text="'Searching: ' + searchQuery"></span>
+					</div>
 					<div class="input-group">
 						<input type="text"
 							   id="med-search-input"
 							   name="search"
+							   x-model="searchQuery"
 							   class="form-control"
 							   placeholder="Type medicine name, generic or brand..."
 							   autocomplete="off"
@@ -52,10 +56,12 @@
 							   hx-trigger="keyup changed delay:250ms, search"
 							   hx-target="#medicine-results"
 							   hx-swap="innerHTML">
-						<button class="btn btn-outline-secondary" type="button" onclick="clearMedSearch()">Clear</button>
+						<button class="btn btn-outline-secondary" type="button" @click="clearSearch()" x-show="searchQuery.length > 0">
+							<i class="fa fa-times"></i> Clear
+						</button>
 					</div>
-					<div id="medicine-results" class="mt-1"></div>
-					<small class="text-muted">Click any result to automatically insert it into the <strong>Rx</strong> box.</small>
+					<div id="medicine-results" class="mt-1" @click.outside="clearSearch(false)"></div>
+					<small class="text-muted">Click any search result to automatically insert it into the <strong>Rx</strong> box.</small>
 				</div>
 
 				<hr>
@@ -74,15 +80,15 @@
 					<h5 class="fw-bold mb-3 text-secondary">Patient Information</h5>
 					<div class="row mb-3">
 						<div class="col-12 col-sm-6 mb-2">
-							<label class="form-label text-dark fw-semibold" for="fname">Patient Name <span class="text-danger">*</span></label>
+							<label class="form-label text-dark fw-semibold" for="patient_name">Patient Name <span class="text-danger">*</span></label>
 							{{ form.patient_name(class="form-control", placeholder="e.g. John Doe", required=True, id="patient_name") }}
 						</div>
 						<div class="col-6 col-sm-3 mb-2">
-							<label class="form-label text-dark fw-semibold" for="age">Age <span class="text-danger">*</span></label>
+							<label class="form-label text-dark fw-semibold" for="patient_age">Age <span class="text-danger">*</span></label>
 							{{ form.patient_age(class="form-control", placeholder="Age", required=True, id="patient_age") }}
 						</div>
 						<div class="col-6 col-sm-3 mb-2">
-							<label class="form-label text-dark fw-semibold" for="gender">Sex <span class="text-danger">*</span></label>
+							<label class="form-label text-dark fw-semibold" for="patient_sex">Sex <span class="text-danger">*</span></label>
 							{{ form.patient_sex(class="form-select", id="patient_sex") }}
 						</div>
 					</div>
@@ -116,18 +122,40 @@
 						<div class="col-12 col-md-4 mb-2">
 							<label class="form-label text-dark fw-semibold" for="inv">Investigations (Inv)</label>
 							{{ form.inv(class="form-control", placeholder="e.g. CBC, Urine R/E", id="inv") }}
+							<div class="mt-1 d-flex flex-wrap gap-1">
+								<span class="badge bg-light text-dark border role-button" style="cursor:pointer;" @click="appendInvestigation('CBC')">+ CBC</span>
+								<span class="badge bg-light text-dark border role-button" style="cursor:pointer;" @click="appendInvestigation('Urine R/E')">+ Urine R/E</span>
+								<span class="badge bg-light text-dark border role-button" style="cursor:pointer;" @click="appendInvestigation('RBS')">+ RBS</span>
+								<span class="badge bg-light text-dark border role-button" style="cursor:pointer;" @click="appendInvestigation('Chest X-Ray')">+ X-Ray</span>
+							</div>
 						</div>
 					</div>
 
 					<!-- Rx & Advice -->
-					<h5 class="fw-bold mb-3 text-secondary">Prescription & Advice</h5>
+					<div class="d-flex justify-content-between align-items-center mb-2">
+						<h5 class="fw-bold text-secondary mb-0">Prescription & Advice</h5>
+						<!-- Quick Dosage Presets -->
+						<div class="btn-group btn-group-sm" role="group" aria-label="Dosage Presets">
+							<button type="button" class="btn btn-outline-primary btn-sm" @click="appendDosage(' - 1+0+1 (After meal) - 5 days')">+ 1+0+1 (5d)</button>
+							<button type="button" class="btn btn-outline-primary btn-sm" @click="appendDosage(' - 1+1+1 (After meal) - 7 days')">+ 1+1+1 (7d)</button>
+							<button type="button" class="btn btn-outline-primary btn-sm" @click="appendDosage(' - 0+0+1 (At bedtime) - 10 days')">+ 0+0+1 (10d)</button>
+						</div>
+					</div>
+
 					<div class="mb-3">
 						<label class="form-label text-dark fw-semibold" for="rx">Medications / Rx <span class="text-danger">*</span></label>
 						{{ form.rx(class="form-control", placeholder="1. Tab. Napa (500mg) - 1+0+1 (After meal) - 5 days&#10;2. ...", rows="8", required=True, id="rx") }}
 					</div>
 
 					<div class="mb-4">
-						<label class="form-label text-dark fw-semibold" for="advice">Doctor's Advice</label>
+						<div class="d-flex justify-content-between align-items-center mb-1">
+							<label class="form-label text-dark fw-semibold mb-0" for="advice">Doctor's Advice</label>
+							<div class="d-flex gap-1">
+								<span class="badge bg-light text-dark border" style="cursor:pointer;" @click="appendAdvice('Rest for 3 days.')">+ Rest</span>
+								<span class="badge bg-light text-dark border" style="cursor:pointer;" @click="appendAdvice('Drink plenty of fluids.')">+ Fluids</span>
+								<span class="badge bg-light text-dark border" style="cursor:pointer;" @click="appendAdvice('Avoid oily and spicy foods.')">+ Diet</span>
+							</div>
+						</div>
 						{{ form.advice(class="form-control", placeholder="e.g. Rest for 3 days, drink plenty of water", id="advice") }}
 					</div>
 
@@ -146,7 +174,7 @@
 			<div class="live-preview-box">
 				<div class="d-flex justify-content-between align-items-center mb-2">
 					<h5 class="fw-bold text-secondary mb-0"><i class="fa fa-eye me-1"></i> Real-Time Preview</h5>
-					<span class="badge bg-success"><i class="fa fa-bolt me-1"></i> HTMX Active</span>
+					<span class="badge bg-success"><i class="fa fa-bolt me-1"></i> HTMX & Alpine Active</span>
 				</div>
 				<div id="live-preview-container">
 					{% include 'pdf/_prescription_live_preview.html' %}
@@ -157,7 +185,57 @@
 </div>
 
 <script>
-	function insertMedicine(medText) {
+	function prescriptionEditor() {
+		return {
+			searchQuery: '',
+			clearSearch(clearInput = true) {
+				if (clearInput) this.searchQuery = '';
+				const resultsDiv = document.getElementById('medicine-results');
+				if (resultsDiv) resultsDiv.innerHTML = '';
+				const searchInput = document.getElementById('med-search-input');
+				if (searchInput && clearInput) searchInput.value = '';
+			},
+			insertMedicine(medText) {
+				const rxArea = document.getElementById('rx');
+				if (rxArea) {
+					const currentVal = rxArea.value.trim();
+					if (currentVal.length > 0) {
+						rxArea.value = currentVal + '\n' + medText + ' - 1+0+1 (After meal) - 5 days';
+					} else {
+						rxArea.value = medText + ' - 1+0+1 (After meal) - 5 days';
+					}
+					rxArea.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+				this.clearSearch(true);
+			},
+			appendDosage(dosageStr) {
+				const rxArea = document.getElementById('rx');
+				if (rxArea) {
+					rxArea.value = (rxArea.value || '').trim() + dosageStr;
+					rxArea.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			},
+			appendAdvice(adviceStr) {
+				const adviceArea = document.getElementById('advice');
+				if (adviceArea) {
+					const current = (adviceArea.value || '').trim();
+					adviceArea.value = current ? current + ' ' + adviceStr : adviceStr;
+					adviceArea.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			},
+			appendInvestigation(invStr) {
+				const invArea = document.getElementById('inv');
+				if (invArea) {
+					const current = (invArea.value || '').trim();
+					invArea.value = current ? current + ', ' + invStr : invStr;
+					invArea.dispatchEvent(new Event('input', { bubbles: true }));
+				}
+			}
+		}
+	}
+
+	// Legacy global proxy to ensure backward compatibility with HTMX partials
+	window.insertMedicine = function(medText) {
 		const rxArea = document.getElementById('rx');
 		if (rxArea) {
 			const currentVal = rxArea.value.trim();
@@ -166,26 +244,20 @@
 			} else {
 				rxArea.value = medText + ' - 1+0+1 (After meal) - 5 days';
 			}
-			// Trigger HTMX change on rx
 			rxArea.dispatchEvent(new Event('input', { bubbles: true }));
 		}
-		// Clear medicine search dropdown
 		const resultsDiv = document.getElementById('medicine-results');
-		if (resultsDiv) {
-			resultsDiv.innerHTML = '';
-		}
+		if (resultsDiv) resultsDiv.innerHTML = '';
 		const searchInput = document.getElementById('med-search-input');
-		if (searchInput) {
-			searchInput.value = '';
-		}
-	}
+		if (searchInput) searchInput.value = '';
+	};
 
-	function clearMedSearch() {
+	window.clearMedSearch = function() {
 		const searchInput = document.getElementById('med-search-input');
 		const resultsDiv = document.getElementById('medicine-results');
 		if (searchInput) searchInput.value = '';
 		if (resultsDiv) resultsDiv.innerHTML = '';
-	}
+	};
 </script>
 
 {% endblock %}
