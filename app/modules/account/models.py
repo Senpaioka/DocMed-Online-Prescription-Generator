@@ -47,7 +47,7 @@ class RegistrationModel(UserMixin, db.Model):
 
     @property
     def is_doctor(self):
-        return self.role == 'doctor' or self.is_admin
+        return self.role == 'doctor'
 
     @property
     def is_patient(self):

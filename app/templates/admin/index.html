@@ -1,0 +1,237 @@
+{% extends 'admin/master.html' %}
+
+{% block body %}
+<div class="container-fluid" style="padding-top: 10px;">
+  
+  <!-- Welcome Hero Banner -->
+  <div style="background: linear-gradient(135deg, #092e3b 0%, #0d5257 60%, #0f766e 100%); border-radius: 18px; padding: 34px 38px; color: #ffffff; margin-bottom: 26px; box-shadow: 0 10px 30px rgba(9, 46, 59, 0.2); position: relative; overflow: hidden;">
+    <div style="position: absolute; right: -30px; top: -30px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(94, 234, 212, 0.15) 0%, rgba(13, 148, 136, 0) 70%); border-radius: 50%; pointer-events: none;"></div>
+    
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.15); padding: 6px 14px; border-radius: 9999px; font-size: 0.85rem; font-weight: 700; color: #5eead4; border: 1px solid rgba(255, 255, 255, 0.2); margin-bottom: 12px;">
+          <i class="fa-solid fa-shield-halved"></i> System Administration
+        </div>
+        <h1 style="font-size: 2.1rem; font-weight: 800; margin: 0 0 8px 0; letter-spacing: -0.02em; color: #ffffff;">DocMed Control Center</h1>
+        <p style="font-size: 0.98rem; color: #e2e8f0; margin: 0; max-width: 640px; line-height: 1.55;">
+          Welcome back, <strong>{{ current_user.username }}</strong>. Real-time platform management, user verification, doctor profile governance, and system-wide audit.
+        </p>
+      </div>
+      <div class="col-md-4 text-right" style="padding-top: 10px;">
+        <span style="background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 12px; padding: 10px 18px; display: inline-block; text-align: left;">
+          <div style="font-size: 0.78rem; color: #cbd5e1; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; margin-bottom: 2px;">Admin Access</div>
+          <div style="font-size: 1.05rem; font-weight: 800; color: #5eead4;">
+            <i class="fa-solid fa-circle-check text-success"></i> Superuser Active
+          </div>
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Key Metrics Row -->
+  <div class="row" style="margin-bottom: 26px;">
+    <!-- Metric 1: Total Users -->
+    <div class="col-md-3 col-sm-6" style="margin-bottom: 15px;">
+      <div style="background: #ffffff; border-radius: 16px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04); height: 100%; display: flex; align-items: center; gap: 16px;">
+        <div style="width: 50px; height: 50px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">Total Accounts</div>
+          <div style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{{ total_users }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metric 2: Doctors -->
+    <div class="col-md-3 col-sm-6" style="margin-bottom: 15px;">
+      <div style="background: #ffffff; border-radius: 16px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04); height: 100%; display: flex; align-items: center; gap: 16px;">
+        <div style="width: 50px; height: 50px; border-radius: 12px; background: #ccfbf1; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+          <i class="fa-solid fa-user-doctor"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">Doctors</div>
+          <div style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{{ total_doctors }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metric 3: Patients -->
+    <div class="col-md-3 col-sm-6" style="margin-bottom: 15px;">
+      <div style="background: #ffffff; border-radius: 16px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04); height: 100%; display: flex; align-items: center; gap: 16px;">
+        <div style="width: 50px; height: 50px; border-radius: 12px; background: #ede9fe; color: #7c3aed; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+          <i class="fa-solid fa-hospital-user"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">Patients</div>
+          <div style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{{ total_patients }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Metric 4: Prescriptions Generated -->
+    <div class="col-md-3 col-sm-6" style="margin-bottom: 15px;">
+      <div style="background: #ffffff; border-radius: 16px; padding: 22px; border: 1px solid #e2e8f0; box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04); height: 100%; display: flex; align-items: center; gap: 16px;">
+        <div style="width: 50px; height: 50px; border-radius: 12px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+          <i class="fa-solid fa-file-prescription"></i>
+        </div>
+        <div>
+          <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">Prescriptions</div>
+          <div style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{{ total_prescriptions }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Management Quick Access Cards -->
+  <div class="row" style="margin-bottom: 26px;">
+    
+    <!-- User Accounts Card -->
+    <div class="col-md-4" style="margin-bottom: 18px;">
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 26px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04); height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #e0f2fe; color: #0284c7; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              <i class="fa-solid fa-user-gear"></i>
+            </div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #0284c7; background: #f0f9ff; padding: 4px 11px; border-radius: 9999px; border: 1px solid #bae6fd;">
+              {{ total_users }} Registered
+            </span>
+          </div>
+          <h3 style="font-size: 1.22rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">User Accounts</h3>
+          <p style="font-size: 0.92rem; color: #64748b; line-height: 1.55; margin-bottom: 20px;">
+            Manage user roles, verify emails manually, update credentials, and activate/deactivate practitioners or patient accounts.
+          </p>
+        </div>
+        <a href="{{ url_for('registrationmodel.index_view') }}" class="btn btn-primary btn-block" style="padding: 10px 16px;">
+          <i class="fa-solid fa-users-gear"></i> Open Accounts View
+        </a>
+      </div>
+    </div>
+
+    <!-- Doctor Profiles Card -->
+    <div class="col-md-4" style="margin-bottom: 18px;">
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 26px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04); height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #ccfbf1; color: #0d9488; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              <i class="fa-solid fa-id-card-clip"></i>
+            </div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #0d9488; background: #f0fdfa; padding: 4px 11px; border-radius: 9999px; border: 1px solid #99f6e4;">
+              {{ total_doctor_profiles }} Profiles
+            </span>
+          </div>
+          <h3 style="font-size: 1.22rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">Doctor Profiles</h3>
+          <p style="font-size: 0.92rem; color: #64748b; line-height: 1.55; margin-bottom: 20px;">
+            Audit practitioner details, qualifications, degrees, hospital affiliations, BMDC/Govt registrations, and digital signatures.
+          </p>
+        </div>
+        <a href="{{ url_for('profilesetupmodel.index_view') }}" class="btn btn-primary btn-block" style="padding: 10px 16px;">
+          <i class="fa-solid fa-stethoscope"></i> Manage Doctor Profiles
+        </a>
+      </div>
+    </div>
+
+    <!-- Prescriptions Card -->
+    <div class="col-md-4" style="margin-bottom: 18px;">
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 26px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04); height: 100%; display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #fef3c7; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+              <i class="fa-solid fa-receipt"></i>
+            </div>
+            <span style="font-size: 0.82rem; font-weight: 700; color: #d97706; background: #fffbeb; padding: 4px 11px; border-radius: 9999px; border: 1px solid #fde68a;">
+              {{ total_prescriptions }} Issued
+            </span>
+          </div>
+          <h3 style="font-size: 1.22rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">Prescriptions Archive</h3>
+          <p style="font-size: 0.92rem; color: #64748b; line-height: 1.55; margin-bottom: 20px;">
+            Review issued patient prescriptions, clinical diagnosis summaries, drug formulations, vitals records, and generated QR codes.
+          </p>
+        </div>
+        <a href="{{ url_for('prescriptionmodel.index_view') }}" class="btn btn-primary btn-block" style="padding: 10px 16px;">
+          <i class="fa-solid fa-file-medical"></i> View Prescriptions
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recent Users Overview Table -->
+  <div class="row" style="margin-bottom: 30px;">
+    <div class="col-md-12">
+      <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 24px 28px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <div>
+            <h3 style="font-weight: 800; color: #0f172a; margin: 0 0 4px 0; font-size: 1.25rem;">Latest Registered Users</h3>
+            <p style="font-size: 0.88rem; color: #64748b; margin: 0;">Recent accounts registered on the DocMed platform.</p>
+          </div>
+          <a href="{{ url_for('registrationmodel.index_view') }}" class="btn btn-default btn-sm">
+            View All Users <i class="fa-solid fa-arrow-right fa-sm" style="margin-left: 4px;"></i>
+          </a>
+        </div>
+
+        <div class="table-responsive" style="border: none; box-shadow: none; margin-top: 0;">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>UID</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Verification</th>
+                <th>Status</th>
+                <th>Joined At</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in recent_users %}
+              <tr>
+                <td style="font-weight: 700; color: #64748b;">#{{ u.uid }}</td>
+                <td style="font-weight: 700; color: #0f172a;">{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>
+                  {% if u.role == 'doctor' %}
+                    <span class="badge-admin-role doctor"><i class="fa-solid fa-user-doctor"></i> Doctor</span>
+                  {% elif u.role == 'admin' or u.is_admin %}
+                    <span class="badge-admin-role admin"><i class="fa-solid fa-shield-halved"></i> Admin</span>
+                  {% else %}
+                    <span class="badge-admin-role patient"><i class="fa-solid fa-user"></i> Patient</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if u.is_verified %}
+                    <span class="badge-status active"><i class="fa-solid fa-check"></i> Verified</span>
+                  {% else %}
+                    <span class="badge-status inactive"><i class="fa-solid fa-clock"></i> Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if u.is_active %}
+                    <span class="badge-status active">Active</span>
+                  {% else %}
+                    <span class="badge-status inactive">Suspended</span>
+                  {% endif %}
+                </td>
+                <td style="color: #64748b; font-size: 0.88rem;">
+                  {{ u.created_at.strftime('%b %d, %Y - %H:%M') if u.created_at else 'N/A' }}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" class="text-center" style="padding: 30px; color: #94a3b8; font-size: 0.95rem;">
+                  <i class="fa-regular fa-folder-open fa-2x mb-2"></i><br>
+                  No registered users found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

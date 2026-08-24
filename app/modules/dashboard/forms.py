@@ -63,6 +63,8 @@ class UpdateProfileSetUpForm(FlaskForm):
 
 
 
+from markupsafe import Markup
+
 ####### Admin Panel ########
 
 class ProfileSetUpAdminForm(ModelView):
@@ -70,11 +72,19 @@ class ProfileSetUpAdminForm(ModelView):
     form = ProfileSetUpForm
 
     # columns show in admin panel  
-    column_list = ['full_name', 'achievement', 'current_position', 'govt_reg', 'sex']
+    column_list = ['full_name', 'govt_reg', 'current_position', 'college', 'sex', 'phone']
+    column_labels = {
+        'full_name': 'Doctor Name',
+        'govt_reg': 'BMDC / Reg No.',
+        'current_position': 'Designation & Workplace',
+        'college': 'Medical College',
+        'sex': 'Gender',
+        'phone': 'Contact Number'
+    }
     # disabling create update profile info
     can_create = False
-
-    column_searchable_list = ['full_name']
+    column_searchable_list = ['full_name', 'govt_reg', 'college']
+    column_filters = ['sex']
 
     # sign saving method from admin-panel
     # def on_model_change(self, form, model, is_created):

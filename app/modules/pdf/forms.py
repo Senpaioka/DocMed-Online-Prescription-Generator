@@ -34,9 +34,21 @@ class PrescriptionForm(FlaskForm):
 
 class PrescriptionAdminForm(ModelView):
     # display info
-    column_list = ['doc_id', 'patient_id', 'patient_name', 'patient_age', 'patient_sex', 'created_at']
+    column_list = ['patient_id', 'patient_name', 'patient_age', 'patient_sex', 'doc_id', 'created_at']
+    column_labels = {
+        'patient_id': 'Patient ID',
+        'patient_name': 'Patient Name',
+        'patient_age': 'Age',
+        'patient_sex': 'Gender',
+        'doc_id': 'Doctor UID',
+        'created_at': 'Prescribed At'
+    }
+    column_searchable_list = ['patient_id', 'patient_name']
+    column_filters = ['patient_sex', 'created_at']
+    column_default_sort = ('created_at', True)
     can_create = False
     can_edit = False
+    can_view_details = True
 
 
 

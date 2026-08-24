@@ -1,0 +1,566 @@
+{% extends 'admin/base.html' %}
+
+{% block head_meta %}
+  {{ super() }}
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+{% endblock %}
+
+{% block head_css %}
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- SweetAlert2 CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  
+  {{ super() }}
+
+  <style>
+    :root {
+      --admin-primary: #0d9488;
+      --admin-primary-dark: #0f766e;
+      --admin-primary-light: #ccfbf1;
+      --admin-accent: #0ea5e9;
+      --admin-navy: #092e3b;
+      --admin-dark: #0f172a;
+      --admin-bg: #f8fafc;
+      --admin-card-bg: #ffffff;
+      --admin-border: #e2e8f0;
+      --admin-text-main: #1e293b;
+      --admin-text-muted: #64748b;
+    }
+
+    html, body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      background-color: var(--admin-bg) !important;
+      color: var(--admin-text-main) !important;
+      font-size: 15px !important;
+      line-height: 1.55 !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Top Navigation Styling */
+    .navbar-default, .navbar-inverse, .navbar-static-top, .navbar {
+      background: linear-gradient(135deg, #092e3b 0%, #0d5257 50%, #0f766e 100%) !important;
+      border: none !important;
+      box-shadow: 0 4px 20px rgba(9, 46, 59, 0.25) !important;
+      padding: 6px 18px !important;
+      border-radius: 0 !important;
+      margin-bottom: 25px !important;
+    }
+
+    .navbar-brand {
+      color: #ffffff !important;
+      font-weight: 800 !important;
+      font-size: 1.35rem !important;
+      letter-spacing: -0.02em !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: 10px !important;
+      padding: 12px 16px !important;
+      height: auto !important;
+    }
+
+    .navbar-brand::before {
+      content: "\f48e";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      color: #5eead4;
+      font-size: 1.3rem;
+    }
+
+    .navbar-nav > li > a {
+      color: #e2e8f0 !important;
+      font-weight: 600 !important;
+      font-size: 0.98rem !important;
+      padding: 12px 16px !important;
+      transition: all 0.2s ease !important;
+      border-radius: 8px !important;
+      margin: 3px 2px !important;
+    }
+
+    .navbar-nav > li > a:hover,
+    .navbar-nav > li > a:focus,
+    .navbar-nav > .active > a,
+    .navbar-nav > .active > a:hover,
+    .navbar-nav > .active > a:focus {
+      color: #ffffff !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      backdrop-filter: blur(8px);
+    }
+
+    .navbar-nav > .dropdown > a .caret {
+      border-top-color: #cbd5e1 !important;
+      border-bottom-color: #cbd5e1 !important;
+    }
+
+    .dropdown-menu {
+      border-radius: 12px !important;
+      border: 1px solid var(--admin-border) !important;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12) !important;
+      padding: 6px !important;
+      font-size: 0.95rem !important;
+    }
+
+    .dropdown-menu > li > a {
+      border-radius: 6px !important;
+      padding: 8px 14px !important;
+      font-size: 0.95rem !important;
+      font-weight: 600 !important;
+      color: var(--admin-text-main) !important;
+    }
+
+    .dropdown-menu > li > a:hover {
+      background-color: var(--admin-primary-light) !important;
+      color: var(--admin-primary-dark) !important;
+    }
+
+    /* Container Styling */
+    .container, .container-fluid {
+      max-width: 1360px !important;
+      padding-left: 18px !important;
+      padding-right: 18px !important;
+    }
+
+    /* Page Headers */
+    h1, .page-header h1 {
+      font-size: 1.85rem !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+      margin-top: 8px !important;
+      margin-bottom: 18px !important;
+    }
+
+    h2 {
+      font-size: 1.5rem !important;
+      font-weight: 800 !important;
+    }
+
+    h3 {
+      font-size: 1.25rem !important;
+      font-weight: 700 !important;
+    }
+
+    /* Model View Subnav & Actions toolbar */
+    .nav-tabs {
+      border-bottom: 2px solid var(--admin-border) !important;
+      margin-bottom: 20px !important;
+    }
+
+    .nav-tabs > li > a {
+      font-size: 0.98rem !important;
+      font-weight: 700 !important;
+      padding: 10px 18px !important;
+      border-radius: 8px 8px 0 0 !important;
+      color: #475569 !important;
+    }
+
+    .nav-tabs > li.active > a, 
+    .nav-tabs > li.active > a:hover, 
+    .nav-tabs > li.active > a:focus {
+      color: var(--admin-primary-dark) !important;
+      border: 2px solid var(--admin-border) !important;
+      border-bottom-color: #ffffff !important;
+      background-color: #ffffff !important;
+    }
+
+    /* Action bar / Search bar / Filter bar */
+    .admin-filter-bar, .filters, .search-form, .btn-toolbar, .actions-nav {
+      font-size: 0.95rem !important;
+      margin-bottom: 15px !important;
+    }
+
+    /* Cards, Panels & Containers */
+    .panel, .card, .well {
+      background: #ffffff !important;
+      border: 1px solid var(--admin-border) !important;
+      border-radius: 16px !important;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.05) !important;
+      padding: 24px !important;
+      font-size: 0.95rem !important;
+    }
+
+    /* ========================================================
+       BALANCED TABLE & RECORDS STYLING (CLEAN & COMFORTABLE)
+       ======================================================== */
+    .table-responsive {
+      border-radius: 14px !important;
+      border: 1px solid var(--admin-border) !important;
+      background: #ffffff !important;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04) !important;
+      overflow: hidden !important;
+      margin-top: 16px !important;
+      margin-bottom: 20px !important;
+    }
+
+    table.table, .table {
+      margin-bottom: 0 !important;
+      background: #ffffff !important;
+      font-size: 0.95rem !important;
+      width: 100% !important;
+    }
+
+    table.table > thead > tr > th, 
+    .table > thead > tr > th,
+    .model-list > thead > tr > th {
+      background-color: #f8fafc !important;
+      color: #334155 !important;
+      font-weight: 700 !important;
+      font-size: 0.86rem !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.04em !important;
+      border-bottom: 2px solid var(--admin-border) !important;
+      padding: 13px 15px !important;
+      vertical-align: middle !important;
+    }
+
+    table.table > thead > tr > th a,
+    .table > thead > tr > th a {
+      color: #1e293b !important;
+      font-weight: 700 !important;
+      text-decoration: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: 5px !important;
+    }
+
+    table.table > thead > tr > th a:hover,
+    .table > thead > tr > th a:hover {
+      color: var(--admin-primary) !important;
+    }
+
+    table.table > tbody > tr > td, 
+    .table > tbody > tr > td,
+    .model-list > tbody > tr > td {
+      padding: 12px 15px !important;
+      vertical-align: middle !important;
+      color: #1e293b !important;
+      font-size: 0.95rem !important;
+      font-weight: 500 !important;
+      border-top: 1px solid #f1f5f9 !important;
+    }
+
+    table.table > tbody > tr:hover, 
+    .table-hover > tbody > tr:hover,
+    .model-list > tbody > tr:hover {
+      background-color: #f8fafc !important;
+    }
+
+    /* Checkbox & Selection styling */
+    .action-checkbox, input[type="checkbox"] {
+      width: 16px !important;
+      height: 16px !important;
+      cursor: pointer !important;
+      accent-color: var(--admin-primary) !important;
+    }
+
+    /* Buttons Styling */
+    .btn {
+      font-family: inherit !important;
+      font-weight: 600 !important;
+      font-size: 0.92rem !important;
+      border-radius: 8px !important;
+      padding: 8px 16px !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .btn-sm, .btn-group-sm > .btn {
+      font-size: 0.85rem !important;
+      padding: 6px 12px !important;
+    }
+
+    .btn-lg, .btn-group-lg > .btn {
+      font-size: 1.1rem !important;
+      padding: 12px 22px !important;
+    }
+
+    .btn-primary, .btn-success {
+      background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%) !important;
+      border: none !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(13, 148, 136, 0.25) !important;
+    }
+
+    .btn-primary:hover, .btn-success:hover {
+      filter: brightness(1.08) !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 16px rgba(13, 148, 136, 0.35) !important;
+    }
+
+    .btn-default {
+      background: #ffffff !important;
+      border: 1.5px solid var(--admin-border) !important;
+      color: #334155 !important;
+    }
+
+    .btn-default:hover {
+      background: #f1f5f9 !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+
+    .btn-danger {
+      background: #ef4444 !important;
+      border: none !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25) !important;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626 !important;
+      transform: translateY(-1px) !important;
+    }
+
+    /* List Row Action Icons (Edit, View, Delete) */
+    .list-row-action, .icon {
+      font-size: 1rem !important;
+      padding: 5px 8px !important;
+      color: #475569 !important;
+      border-radius: 6px !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-decoration: none !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .list-row-action:hover, .icon:hover {
+      background-color: #f1f5f9 !important;
+      color: var(--admin-primary) !important;
+    }
+
+    /* Form Controls & Labels */
+    label, .control-label {
+      font-size: 0.95rem !important;
+      font-weight: 700 !important;
+      color: #1e293b !important;
+      margin-bottom: 6px !important;
+    }
+
+    .form-control {
+      border: 1.5px solid var(--admin-border) !important;
+      border-radius: 8px !important;
+      padding: 9px 14px !important;
+      font-size: 0.95rem !important;
+      height: auto !important;
+      box-shadow: none !important;
+      background-color: #ffffff !important;
+      color: var(--admin-text-main) !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .form-control:focus {
+      border-color: var(--admin-primary) !important;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15) !important;
+      outline: none !important;
+    }
+
+    .help-block {
+      font-size: 0.85rem !important;
+      color: #64748b !important;
+      margin-top: 5px !important;
+    }
+
+    /* Badges & Pills */
+    .badge-admin-role {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 0.84rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .badge-admin-role.doctor {
+      background-color: #e0f2fe;
+      color: #0369a1;
+      border: 1px solid #bae6fd;
+    }
+
+    .badge-admin-role.patient {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid #e2e8f0;
+    }
+
+    .badge-admin-role.admin {
+      background-color: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .badge-status.active {
+      background: #dcfce7;
+      color: #15803d;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-status.inactive {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    /* Pagination */
+    .pagination {
+      margin: 16px 0 !important;
+    }
+
+    .pagination > li > a, .pagination > li > span {
+      border-radius: 7px !important;
+      margin: 0 3px !important;
+      padding: 7px 14px !important;
+      color: #1e293b !important;
+      border: 1.5px solid var(--admin-border) !important;
+      font-size: 0.92rem !important;
+      font-weight: 600 !important;
+    }
+
+    .pagination > .active > a, .pagination > .active > span {
+      background: linear-gradient(135deg, var(--admin-primary) 0%, var(--admin-primary-dark) 100%) !important;
+      border-color: var(--admin-primary) !important;
+      color: #ffffff !important;
+    }
+
+    /* Flash Alerts */
+    .alert {
+      border-radius: 12px !important;
+      border: none !important;
+      font-size: 0.95rem !important;
+      font-weight: 500 !important;
+      padding: 14px 18px !important;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+    }
+
+    .alert-success {
+      background-color: #ecfdf5 !important;
+      color: #065f46 !important;
+      border-left: 5px solid #10b981 !important;
+    }
+
+    .alert-danger, .alert-error {
+      background-color: #fef2f2 !important;
+      color: #991b1b !important;
+      border-left: 5px solid #ef4444 !important;
+    }
+
+    .alert-info {
+      background-color: #f0f9ff !important;
+      color: #075985 !important;
+      border-left: 5px solid #0ea5e9 !important;
+    }
+
+    /* Custom Modern SweetAlert2 Styling */
+    .swal2-popup.docmed-swal-modal {
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      border-radius: 20px !important;
+      padding: 28px 24px !important;
+      box-shadow: 0 25px 60px -12px rgba(15, 23, 42, 0.25) !important;
+      border: 1px solid var(--admin-border) !important;
+    }
+
+    .swal2-title.docmed-swal-title {
+      font-size: 1.35rem !important;
+      font-weight: 800 !important;
+      color: #0f172a !important;
+      margin-bottom: 8px !important;
+    }
+
+    .swal2-html-container.docmed-swal-html {
+      font-size: 0.95rem !important;
+      color: #475569 !important;
+      line-height: 1.55 !important;
+    }
+
+    .swal2-confirm.docmed-swal-confirm {
+      border-radius: 8px !important;
+      padding: 10px 22px !important;
+      font-weight: 700 !important;
+      font-size: 0.95rem !important;
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%) !important;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35) !important;
+      border: none !important;
+    }
+
+    .swal2-cancel.docmed-swal-cancel {
+      border-radius: 8px !important;
+      padding: 10px 20px !important;
+      font-weight: 600 !important;
+      font-size: 0.95rem !important;
+      background: #f1f5f9 !important;
+      color: #334155 !important;
+      border: 1.5px solid #cbd5e1 !important;
+    }
+  </style>
+{% endblock %}
+
+{% block tail %}
+  {{ super() }}
+  <!-- SweetAlert2 JS -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Intercept delete forms across Flask-Admin
+      document.addEventListener('submit', function(e) {
+        var form = e.target;
+        var action = form.getAttribute('action') || '';
+        
+        // Check if form is a delete form
+        var isDeleteForm = form.classList.contains('icon') || 
+                           action.indexOf('delete') !== -1 || 
+                           form.querySelector('button[title*="Delete"], button[onclick*="delete"], input[value*="Delete"]');
+
+        if (isDeleteForm && !form.dataset.confirmed) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+
+          Swal.fire({
+            title: 'Delete this record?',
+            text: 'This action is irreversible and will permanently remove this record from the system.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: '<i class="fa-solid fa-trash-can"></i> Yes, Delete',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            focusCancel: true,
+            customClass: {
+              popup: 'docmed-swal-modal',
+              title: 'docmed-swal-title',
+              htmlContainer: 'docmed-swal-html',
+              confirmButton: 'docmed-swal-confirm',
+              cancelButton: 'docmed-swal-cancel'
+            },
+            buttonsStyling: false
+          }).then(function(result) {
+            if (result.isConfirmed) {
+              form.dataset.confirmed = 'true';
+              form.submit();
+            }
+          });
+        }
+      }, true);
+
+      // Also override window.confirm for any legacy click handlers
+      var nativeConfirm = window.confirm;
+      window.confirm = function(msg) {
+        return true;
+      };
+    });
+  </script>
+{% endblock %}

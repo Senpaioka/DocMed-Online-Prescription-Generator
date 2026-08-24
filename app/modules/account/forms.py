@@ -115,18 +115,54 @@ class AdminPanelRegistration(FlaskForm):
 
 
 
+from markupsafe import Markup
+
 # ModelForm for Admin Panel
 class RegistrationAdminForm(ModelView):
 
     form = AdminPanelRegistration
     # columns show in admin panel  
     column_list = ['username', 'email', 'role', 'gender', 'is_verified', 'is_active', 'is_admin', 'created_at']
+    column_labels = {
+        'username': 'Username',
+        'email': 'Email Address',
+        'role': 'Role',
+        'gender': 'Gender',
+        'is_verified': 'Verified',
+        'is_active': 'Active',
+        'is_admin': 'Admin Access',
+        'created_at': 'Joined Date'
+    }
     # column filters
     column_filters = ['role', 'is_verified', 'is_active', 'is_admin', 'gender']
     # column to fill in admin form
     form_columns = ['username', 'email', 'new_password', 'confirm_password', 'role', 'gender', 'is_verified', 'is_active', 'is_admin']
-
     column_searchable_list = ['username', 'email']
+    column_default_sort = ('created_at', True)
+
+    def _role_formatter(view, context, model, name):
+        role = model.role or 'patient'
+        if role == 'doctor':
+            return Markup(f'<span class="badge-admin-role doctor"><i class="fa-solid fa-user-doctor"></i> Doctor</span>')
+        elif role == 'admin' or model.is_admin:
+            return Markup(f'<span class="badge-admin-role admin"><i class="fa-solid fa-shield-halved"></i> Admin</span>')
+        return Markup(f'<span class="badge-admin-role patient"><i class="fa-solid fa-user"></i> Patient</span>')
+
+    def _verified_formatter(view, context, model, name):
+        if model.is_verified:
+            return Markup('<span class="badge-status active"><i class="fa-solid fa-check"></i> Yes</span>')
+        return Markup('<span class="badge-status inactive"><i class="fa-solid fa-clock"></i> No</span>')
+
+    def _active_formatter(view, context, model, name):
+        if model.is_active:
+            return Markup('<span class="badge-status active">Active</span>')
+        return Markup('<span class="badge-status inactive">Inactive</span>')
+
+    column_formatters = {
+        'role': _role_formatter,
+        'is_verified': _verified_formatter,
+        'is_active': _active_formatter
+    }
 
     def on_model_change(self, form, model, is_created):
         """Hash password before storing it in the database and sync is_admin with role"""

@@ -7,6 +7,6 @@ from flask_mailman import Mail
 db = SQLAlchemy()
 migrate = Migrate()
 login_manager = LoginManager()
-admin = Admin(name='DocMed-Admin-Panel')
+admin = Admin(name='DocMed Admin', base_template='admin/master.html', template_mode='bootstrap3')
 mail = Mail()
 

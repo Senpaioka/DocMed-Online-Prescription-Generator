@@ -466,7 +466,7 @@
                 {% endwith %}
             </div>
 
-            <form action="{{ url_for('accounts.login_page') }}" method="POST">
+            <form action="{{ url_for('accounts.login_page', **request.args) }}" method="POST">
                 {{ form.hidden_tag() }}
 
                 <!-- Username -->

@@ -203,11 +203,19 @@ def login_page():
 
                 login_user(user)
                 flash('Login Successful', 'success')
-                return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid ))
+                
+                next_page = request.args.get('next')
+                if next_page:
+                    return redirect(next_page)
+                
+                if getattr(user, 'is_admin', False) or getattr(user, 'role', '') == 'admin':
+                    return redirect(url_for('admin.index'))
+
+                return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
 
             else:
                 flash('Invalid username or password', 'error')
-                return redirect(url_for('accounts.login_page'))
+                return redirect(url_for('accounts.login_page', next=request.args.get('next')))
     
     context = {
         'form': form,
