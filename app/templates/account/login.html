@@ -449,7 +449,7 @@
             
             <div class="form-header">
                 <h2>Practitioner Sign In</h2>
-                <p>Enter your username and password to continue</p>
+                <p>Enter your email and password to continue</p>
             </div>
 
             <!-- Flash messages -->
@@ -469,15 +469,15 @@
             <form action="{{ url_for('accounts.login_page', **request.args) }}" method="POST">
                 {{ form.hidden_tag() }}
 
-                <!-- Username -->
+                <!-- Email -->
                 <div class="form-group-custom">
-                    <label for="username" class="form-label-custom">Username</label>
+                    <label for="email" class="form-label-custom">Email Address</label>
                     <div class="input-wrapper">
-                        <i class="fa-solid fa-user-doctor input-icon"></i>
-                        {{ form.username(class="input-custom", placeholder="Enter your username", required=True) }}
+                        <i class="fa-solid fa-envelope input-icon"></i>
+                        {{ form.email(class="input-custom", placeholder="doctor@clinic.com", required=True, type="email") }}
                     </div>
 
-                    {% for error in form.username.errors %}
+                    {% for error in form.email.errors %}
                         <div class="field-error-text">
                             <i class="fa-solid fa-circle-xmark"></i> {{ error }}
                         </div>

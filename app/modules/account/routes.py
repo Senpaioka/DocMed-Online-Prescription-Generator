@@ -56,7 +56,7 @@ def registration_page():
             safe_email = email_info.normalized
 
             # Check if email is already registered
-            existing_email = RegistrationModel.query.filter_by(email=safe_email).first()
+            existing_email = RegistrationModel.query.filter(RegistrationModel.email.ilike(safe_email)).first()
             if existing_email:
                 if not existing_email.is_verified:
                     # User started registration earlier but did not verify
@@ -66,6 +66,12 @@ def registration_page():
                 else:
                     flash('Email address is already in use. Please sign in or use another email.', 'error')
                     return redirect(url_for('accounts.registration_page'))
+
+            # Check if username is already registered
+            existing_user = RegistrationModel.query.filter_by(username=username).first()
+            if existing_user:
+                flash('Username is already taken. Please choose a different one.', 'error')
+                return redirect(url_for('accounts.registration_page'))
 
             password = form.password.data
             gender = form.gender.data
@@ -92,8 +98,9 @@ def registration_page():
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
-                flash("Username already exists. Please choose a different one.", "error")
+                flash("Username or Email already exists. Please choose a different one.", "error")
                 return redirect(url_for('accounts.registration_page')) 
+
 
             # Send OTP verification email
             email_sent = send_verification_otp(new_user)
@@ -192,11 +199,11 @@ def login_page():
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            username = form.username.data
+            email = form.email.data.strip()
             password = form.password.data
 
-            # getting user
-            user = RegistrationModel.query.filter_by(username=username).first()
+            # getting user by email (case-insensitive)
+            user = RegistrationModel.query.filter(RegistrationModel.email.ilike(email)).first()
             if user and check_password_hash(user.password, password):
                 if not getattr(user, 'is_verified', True):
                     # Send a fresh OTP and redirect to verification page
@@ -217,13 +224,14 @@ def login_page():
                 return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
 
             else:
-                flash('Invalid username or password', 'error')
+                flash('Invalid email or password', 'error')
                 return redirect(url_for('accounts.login_page', next=request.args.get('next')))
     
     context = {
         'form': form,
     }    
     return render_template('account/login.html', **context)
+
 
 
 # forgot password
@@ -323,6 +331,18 @@ def registration_update_page(uid):
             safe_email = email_info.normalized
             gender = form.gender.data
 
+            # Check if email is used by another user
+            duplicate_email = RegistrationModel.query.filter(RegistrationModel.email.ilike(safe_email), RegistrationModel.uid != uid).first()
+            if duplicate_email:
+                flash('Email address is already in use by another account.', 'error')
+                return redirect(url_for('accounts.registration_update_page', uid=current_user.uid))
+
+            # Check if username is used by another user
+            duplicate_user = RegistrationModel.query.filter(RegistrationModel.username == username, RegistrationModel.uid != uid).first()
+            if duplicate_user:
+                flash('Username is already taken by another account.', 'error')
+                return redirect(url_for('accounts.registration_update_page', uid=current_user.uid))
+
             # making password change optional
             if form.new_password.data:
                 password = form.new_password.data
@@ -333,19 +353,16 @@ def registration_update_page(uid):
             get_data.email = safe_email
             get_data.gender = gender
 
-            # alternative
-            # update_data = form.populate_obj(get_data)
-            # db.session.commit()
-
             try:
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
-                flash("Username already exists. Please choose a different one.", "error")
+                flash("Username or Email already exists. Please choose a different one.", "error")
                 return redirect(url_for('accounts.registration_update_page', uid=current_user.uid ))
 
             flash('Account Updated successfully!', 'success')
             return redirect(url_for('home.home_page'))
+
 
         else:
             flash('Something went wrong!', 'error')

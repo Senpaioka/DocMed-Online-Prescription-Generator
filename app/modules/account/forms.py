@@ -44,10 +44,15 @@ class RegistrationForm(FlaskForm):
 
 class LoginForm(FlaskForm):
 
-    username = StringField('username', validators=[DataRequired()])
-    password = PasswordField('password', validators=[DataRequired()])
+    email = StringField('Email Address', validators=[
+        DataRequired(message='Please enter your email address.'),
+        Email(message='Please enter a valid email address.')
+    ])
+    password = PasswordField('Password', validators=[
+        DataRequired(message='Please enter your password.')
+    ])
 
-    login = SubmitField('Login')
+    login = SubmitField('Sign In')
 
 
 class UpdateRegistrationForm(FlaskForm):
