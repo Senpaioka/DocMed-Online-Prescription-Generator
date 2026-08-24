@@ -26,13 +26,18 @@ def generate_pdf_bytes(template_name: str, context: dict, base_url: str = None) 
     Uses WeasyPrint for modern, beautiful CSS3 paged media rendering,
     with a graceful fallback to xhtml2pdf if WeasyPrint is unavailable.
     """
+    import pathlib
     html_content = render_template(template_name, **context)
 
     if _WEASYPRINT_AVAILABLE:
         try:
-            if base_url is None:
-                base_url = current_app.root_path
-            wp_doc = weasyprint.HTML(string=html_content, base_url=base_url)
+            # On Windows/local environments, convert web /static/ references to valid file:// URIs
+            # so WeasyPrint can reliably locate uploaded signatures, images, and backgrounds.
+            static_dir = os.path.join(current_app.root_path, 'static')
+            static_uri = pathlib.Path(static_dir).as_uri() + '/'
+            processed_html = html_content.replace('/static/', static_uri)
+
+            wp_doc = weasyprint.HTML(string=processed_html, base_url=base_url or static_uri)
             pdf_bytes = wp_doc.write_pdf()
             return pdf_bytes
         except Exception as e:
