@@ -53,27 +53,66 @@
 	}
 
 	.search-container-box {
-		background: linear-gradient(180deg, #f0fdfa 0%, #ffffff 100%);
-		border: 1.5px solid #99f6e4;
-		border-radius: 14px;
-		padding: 18px;
+		background: #f8fafc;
+		border: 1.5px solid #0d9488;
+		border-radius: 12px;
+		padding: 16px 18px;
 		margin-bottom: 24px;
 		position: relative;
 	}
 
+	.search-header-icon {
+		width: 30px;
+		height: 30px;
+		border-radius: 8px;
+		background: #ccfbf1;
+		color: #0d9488;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.88rem;
+	}
+
 	.search-input-field {
-		border: 1.5px solid #ccfbf1;
-		border-radius: 10px 0 0 10px;
-		padding: 12px 16px;
-		font-size: 0.95rem;
+		border: 1.5px solid #cbd5e1;
+		border-radius: 0;
+		padding: 10px 14px;
+		font-size: 0.93rem;
 		background-color: #ffffff;
 		transition: all 0.2s ease;
 	}
 
 	.search-input-field:focus {
 		border-color: #0d9488;
-		box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
 		background-color: #ffffff;
+		box-shadow: none;
+		outline: none;
+	}
+
+	.input-group:focus-within .input-group-text,
+	.input-group:focus-within .search-input-field,
+	.input-group:focus-within .search-clear-btn {
+		border-color: #0d9488;
+	}
+
+	.input-group:focus-within {
+		box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.15);
+		border-radius: 10px;
+	}
+
+	.search-clear-btn {
+		border: 1.5px solid #cbd5e1;
+		border-left: none;
+		border-radius: 0 10px 10px 0;
+		background: #ffffff;
+		color: #64748b;
+		padding: 0 14px;
+		transition: all 0.2s ease;
+	}
+
+	.search-clear-btn:hover {
+		background: #f1f5f9;
+		color: #0f172a;
 	}
 
 	#medicine-results {
@@ -83,8 +122,37 @@
 		max-height: 280px;
 		overflow-y: auto;
 		box-shadow: 0 12px 30px rgba(15, 23, 42, 0.15);
-		border-radius: 12px;
+		border-radius: 10px;
 		border: 1px solid #e2e8f0;
+		background: #ffffff;
+	}
+
+	.med-icon-badge {
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		background: #ccfbf1;
+		color: #0d9488;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 0.88rem;
+	}
+
+	.medicine-result-item {
+		transition: background-color 0.15s ease, transform 0.15s ease;
+		border-left: 3px solid transparent;
+	}
+
+	.medicine-result-item:hover {
+		background-color: #f0fdfa !important;
+		border-left: 3px solid #0d9488;
+	}
+
+	.medicine-result-item:hover .btn-add-rx {
+		background-color: #0d9488 !important;
+		color: #ffffff !important;
+		border-color: #0d9488 !important;
 	}
 
 	.clinical-input {
@@ -248,32 +316,43 @@
 				<!-- Medicine Search Box (HTMX + Alpine) -->
 				<div class="search-container-box">
 					<div class="d-flex justify-content-between align-items-center mb-2">
-						<label class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" style="font-size: 0.92rem;">
-							<i class="fa-solid fa-magnifying-glass" style="color: #0d9488;"></i> Quick Medication Search
-						</label>
-						<span class="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1" style="font-size: 0.75rem; background: #e6fffa; color: #0d9488;" x-show="searchQuery.length > 0" x-text="'Searching: ' + searchQuery"></span>
+						<div class="d-flex align-items-center gap-2">
+							<span class="search-header-icon">
+								<i class="fa-solid fa-magnifying-glass"></i>
+							</span>
+							<div>
+								<span class="fw-bold text-dark d-block" style="font-size: 0.92rem; line-height: 1.2;">Quick Medication Search</span>
+								<small class="text-muted" style="font-size: 0.76rem;">Instant database lookup & Rx auto-fill</small>
+							</div>
+						</div>
+						<span class="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-1 rounded-pill" style="font-size: 0.72rem; background: #e6fffa; color: #0d9488;" x-show="searchQuery.length > 0" x-text="'Searching: ' + searchQuery"></span>
 					</div>
 					
 					<div class="input-group">
+						<span class="input-group-text bg-white border-end-0 pe-0 text-muted" style="border-color: #cbd5e1; border-radius: 10px 0 0 10px;">
+							<i class="fa-solid fa-magnifying-glass" style="color: #0d9488;"></i>
+						</span>
 						<input type="text"
 							   id="med-search-input"
 							   name="search"
 							   x-model="searchQuery"
-							   class="form-control search-input-field"
+							   @keydown.escape="clearSearch()"
+							   class="form-control search-input-field border-start-0 ps-2"
 							   placeholder="Type brand name (e.g. Napa, Seclo, Ace) or generic..."
 							   autocomplete="off"
 							   hx-post="{{ url_for('pdf_generator.search_medicines') }}"
 							   hx-trigger="keyup changed delay:250ms, search"
 							   hx-target="#medicine-results"
 							   hx-swap="innerHTML">
-						<button class="btn btn-outline-secondary px-3" type="button" @click="clearSearch()" x-show="searchQuery.length > 0" style="border-radius: 0 10px 10px 0;">
+						<button class="btn search-clear-btn" type="button" @click="clearSearch()" x-show="searchQuery.length > 0" title="Clear search">
 							<i class="fa-solid fa-xmark"></i>
 						</button>
 					</div>
 
 					<div id="medicine-results" class="mt-2" @click.outside="clearSearch(false)"></div>
-					<div class="mt-2 d-flex align-items-center justify-content-between">
-						<small class="text-muted" style="font-size: 0.8rem;"><i class="fa-regular fa-lightbulb text-warning me-1"></i> Tip: Select any medicine result to auto-insert standard dosage directly into Rx.</small>
+					
+					<div class="mt-2 text-muted" style="font-size: 0.78rem;">
+						<i class="fa-regular fa-lightbulb text-warning me-1"></i> Tip: Select any medicine from the dropdown to auto-insert dosage directly into Rx.
 					</div>
 				</div>
 

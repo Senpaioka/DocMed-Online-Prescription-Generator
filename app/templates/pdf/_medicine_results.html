@@ -1,17 +1,36 @@
 {% if medicines %}
-    <div class="list-group shadow-sm" style="max-height: 250px; overflow-y: auto;">
+    <div class="list-group shadow-sm border-0 rounded-3 overflow-hidden" style="max-height: 280px; overflow-y: auto;">
         {% for med in medicines %}
-        <button type="button" class="list-group-item list-group-item-action text-start py-2" onclick="insertMedicine('{{ med.name | escape }} ({{ med.dose | escape }}) - {{ med.generic | escape }}')">
-            <div class="d-flex w-100 justify-content-between">
-                <strong class="text-primary">{{ med.name }}</strong>
-                <small class="badge bg-light text-dark border">{{ med.dose }}</small>
+        <button type="button" class="list-group-item list-group-item-action text-start p-2.5 border-bottom d-flex align-items-center justify-content-between gap-3 medicine-result-item" onclick="insertMedicine('{{ med.name | escape }} ({{ med.dose | escape }}) - {{ med.generic | escape }}')">
+            <div class="d-flex align-items-center gap-2.5 flex-grow-1 overflow-hidden">
+                <div class="med-icon-badge flex-shrink-0">
+                    <i class="fa-solid fa-pills"></i>
+                </div>
+                <div class="text-truncate">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-bold text-dark" style="font-size: 0.92rem;">{{ med.name }}</span>
+                        {% if med.dose %}
+                        <span class="badge bg-teal-subtle text-teal border border-teal-subtle px-2 py-0.5 rounded-pill" style="font-size: 0.72rem; background: #e6fffa; color: #0d9488;">{{ med.dose }}</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted d-block" style="font-size: 0.78rem;">
+                        <span class="fw-medium text-secondary">Generic:</span> {{ med.generic }} 
+                        {% if med.brand %}<span class="text-black-50 ms-1">• {{ med.brand }}</span>{% endif %}
+                    </small>
+                </div>
             </div>
-            <small class="text-muted d-block">Generic: {{ med.generic }} | Company: {{ med.brand }}</small>
+            <div class="flex-shrink-0">
+                <span class="btn btn-sm btn-outline-secondary btn-add-rx rounded-pill px-2.5 py-1" style="font-size: 0.75rem; border-color: #99f6e4; color: #0d9488;">
+                    <i class="fa-solid fa-plus me-1"></i> Add to Rx
+                </span>
+            </div>
         </button>
         {% endfor %}
     </div>
 {% elif query %}
-    <div class="alert alert-light border text-center py-2 mb-0">
-        <small class="text-muted">No medicines found matching "<strong>{{ query }}</strong>"</small>
+    <div class="p-3 text-center bg-white rounded-3">
+        <div class="text-muted mb-1" style="font-size: 1.3rem;"><i class="fa-solid fa-magnifying-glass-chart text-secondary opacity-50"></i></div>
+        <div class="fw-semibold text-dark small">No medicines found matching "<span class="text-teal" style="color: #0d9488;">{{ query }}</span>"</div>
+        <small class="text-muted d-block mt-1" style="font-size: 0.75rem;">Try searching generic names (e.g. Paracetamol, Omeprazole) or popular brands.</small>
     </div>
 {% endif %}

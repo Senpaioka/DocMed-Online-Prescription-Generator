@@ -47,14 +47,45 @@ def search_medicines():
     matches = []
     if query and len(query) >= 2:
         all_meds = get_medicine_data()
+        scored_matches = []
+        
         for item in all_meds:
-            name = str(item.get('name', '')).lower()
-            generic = str(item.get('generic', '')).lower()
-            brand = str(item.get('brand', '')).lower()
-            if query in name or query in generic or query in brand:
-                matches.append(item)
-                if len(matches) >= 15:
-                    break
+            name = str(item.get('name', '')).strip().lower()
+            generic = str(item.get('generic', '')).strip().lower()
+            brand = str(item.get('brand', '')).strip().lower()
+            
+            score = None
+            
+            # --- 1. MEDICINE NAME (Priority 1-4) ---
+            if name == query:
+                score = (0, len(name), name)
+            elif name.startswith(query):
+                score = (1, len(name), name)
+            elif any(w.startswith(query) for w in name.split()):
+                score = (2, len(name), name)
+            elif query in name:
+                score = (3, len(name), name)
+                
+            # --- 2. GENERIC NAME (Priority 5-8) ---
+            elif generic == query:
+                score = (4, len(generic), name)
+            elif generic.startswith(query):
+                score = (5, len(generic), name)
+            elif any(w.startswith(query) for w in generic.split()):
+                score = (6, len(generic), name)
+            elif query in generic:
+                score = (7, len(generic), name)
+                
+            # --- 3. BRAND / COMPANY (Priority 9) ---
+            elif query in brand:
+                score = (8, len(brand), name)
+                
+            if score is not None:
+                scored_matches.append((score, item))
+        
+        # Sort by relevance priority, length of matched text, and name
+        scored_matches.sort(key=lambda x: x[0])
+        matches = [item for _, item in scored_matches[:5]]
 
     return render_template('pdf/_medicine_results.html', medicines=matches, query=query)
 
