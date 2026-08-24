@@ -90,6 +90,7 @@ def registration_page():
 
             new_user.is_active = True
             new_user.is_verified = False
+            new_user.verified_doctor = (selected_role == 'admin')
             new_user.is_admin = (selected_role == 'admin')
 
             db.session.add(new_user)
@@ -157,7 +158,10 @@ def verify_otp(user_id):
 
             # Automatically log the user in after successful verification
             login_user(user)
-            flash('Email verified successfully! Welcome to DocMed.', 'success')
+            if user.role == 'doctor' and not user.verified_doctor:
+                flash('Email verified successfully! Welcome to DocMed. Note: Your doctor account is pending admin verification before clinical tools become available.', 'info')
+            else:
+                flash('Email verified successfully! Welcome to DocMed.', 'success')
             return redirect(url_for('dashboard.dashboard_main_page', uid=user.uid))
         else:
             flash('Invalid OTP code. Please check your email and try again.', 'error')

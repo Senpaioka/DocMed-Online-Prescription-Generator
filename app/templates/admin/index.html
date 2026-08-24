@@ -51,7 +51,12 @@
         </div>
         <div>
           <div style="font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: #64748b; letter-spacing: 0.04em;">Doctors</div>
-          <div style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{{ total_doctors }}</div>
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <span style="font-size: 1.65rem; font-weight: 800; color: #0f172a; line-height: 1.1;">{{ total_doctors }}</span>
+            {% if pending_doctors > 0 %}
+              <span class="badge bg-warning text-dark fw-bold px-2 py-1" style="font-size: 0.72rem; border-radius: 6px;">{{ pending_doctors }} Pending</span>
+            {% endif %}
+          </div>
         </div>
       </div>
     </div>
@@ -100,7 +105,7 @@
           </div>
           <h3 style="font-size: 1.22rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">User Accounts</h3>
           <p style="font-size: 0.92rem; color: #64748b; line-height: 1.55; margin-bottom: 20px;">
-            Manage user roles, verify emails manually, update credentials, and activate/deactivate practitioners or patient accounts.
+            Manage user roles, verify doctor accounts, update credentials, and activate/deactivate practitioners or patient accounts.
           </p>
         </div>
         <a href="{{ url_for('registrationmodel.index_view') }}" class="btn btn-primary btn-block" style="padding: 10px 16px;">
@@ -163,10 +168,10 @@
       <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 18px; padding: 24px 28px; box-shadow: 0 4px 18px rgba(15, 23, 42, 0.04);">
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
           <div>
-            <h3 style="font-weight: 800; color: #0f172a; margin: 0 0 4px 0; font-size: 1.25rem;">Latest Registered Users</h3>
-            <p style="font-size: 0.88rem; color: #64748b; margin: 0;">Recent accounts registered on the DocMed platform.</p>
+            <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0;">Recent User Registrations</h3>
+            <p style="font-size: 0.88rem; color: #64748b; margin: 3px 0 0 0;">Latest registered patients and medical practitioners awaiting or with active access.</p>
           </div>
-          <a href="{{ url_for('registrationmodel.index_view') }}" class="btn btn-default btn-sm">
+          <a href="{{ url_for('registrationmodel.index_view') }}" class="btn btn-outline-secondary btn-sm" style="font-weight: 600; border-radius: 8px; padding: 6px 14px;">
             View All Users <i class="fa-solid fa-arrow-right fa-sm" style="margin-left: 4px;"></i>
           </a>
         </div>
@@ -179,9 +184,10 @@
                 <th>Username</th>
                 <th>Email</th>
                 <th>Role</th>
-                <th>Verification</th>
+                <th>Email Verified</th>
+                <th>Doctor Status</th>
                 <th>Status</th>
-                <th>Joined At</th>
+                <th>Action</th>
               </tr>
             </thead>
             <tbody>
@@ -201,9 +207,22 @@
                 </td>
                 <td>
                   {% if u.is_verified %}
-                    <span class="badge-status active"><i class="fa-solid fa-check"></i> Verified</span>
+                    <span class="badge-status active"><i class="fa-solid fa-check"></i> Yes</span>
                   {% else %}
                     <span class="badge-status inactive"><i class="fa-solid fa-clock"></i> Pending</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if u.role == 'doctor' %}
+                    {% if u.verified_doctor %}
+                      <span class="badge-status active"><i class="fa-solid fa-circle-check"></i> Approved</span>
+                    {% else %}
+                      <span class="badge-status inactive" style="background:#fef3c7;color:#d97706;border:1px solid #fde68a;"><i class="fa-solid fa-hourglass-half"></i> Pending Review</span>
+                    {% endif %}
+                  {% elif u.is_admin or u.role == 'admin' %}
+                    <span class="badge-status active"><i class="fa-solid fa-shield-check"></i> Admin</span>
+                  {% else %}
+                    <span style="color: #94a3b8; font-size: 0.85rem;">—</span>
                   {% endif %}
                 </td>
                 <td>
@@ -213,13 +232,27 @@
                     <span class="badge-status inactive">Suspended</span>
                   {% endif %}
                 </td>
-                <td style="color: #64748b; font-size: 0.88rem;">
-                  {{ u.created_at.strftime('%b %d, %Y - %H:%M') if u.created_at else 'N/A' }}
+                <td>
+                  {% if u.role == 'doctor' %}
+                    {% if not u.verified_doctor %}
+                      <a href="{{ url_for('admin.verify_doctor', uid=u.uid) }}" class="btn btn-sm btn-success fw-bold px-2 py-1 rounded-2" style="font-size: 0.78rem;" title="Approve Doctor">
+                        <i class="fa-solid fa-user-check"></i> Approve
+                      </a>
+                    {% else %}
+                      <a href="{{ url_for('admin.revoke_doctor', uid=u.uid) }}" class="btn btn-sm btn-outline-secondary fw-bold px-2 py-1 rounded-2" style="font-size: 0.78rem;" title="Revoke Approval" onclick="return confirm('Are you sure you want to revoke verification for Dr. {{ u.username }}?');">
+                        <i class="fa-solid fa-user-xmark text-warning"></i> Revoke
+                      </a>
+                    {% endif %}
+                  {% else %}
+                    <a href="{{ url_for('registrationmodel.edit_view', id=u.uid) }}" class="btn btn-sm btn-outline-primary fw-bold px-2 py-1 rounded-2" style="font-size: 0.78rem;">
+                      <i class="fa-solid fa-pen"></i> Edit
+                    </a>
+                  {% endif %}
                 </td>
               </tr>
               {% else %}
               <tr>
-                <td colspan="7" class="text-center" style="padding: 30px; color: #94a3b8; font-size: 0.95rem;">
+                <td colspan="8" class="text-center" style="padding: 30px; color: #94a3b8; font-size: 0.95rem;">
                   <i class="fa-regular fa-folder-open fa-2x mb-2"></i><br>
                   No registered users found.
                 </td>

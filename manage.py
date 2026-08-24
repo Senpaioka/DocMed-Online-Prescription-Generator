@@ -40,6 +40,7 @@ def createsuperuser(username, email, password, gender):
             is_admin=True,
             is_active=True,
             is_verified=True,
+            verified_doctor=True,
         )
 
         db.session.add(superuser)

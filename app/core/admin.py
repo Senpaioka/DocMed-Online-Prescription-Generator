@@ -26,20 +26,58 @@ class AdminPanel(AdminIndexView):
 
         total_users = RegistrationModel.query.count()
         total_doctors = RegistrationModel.query.filter_by(role='doctor').count()
+        pending_doctors = RegistrationModel.query.filter_by(role='doctor', verified_doctor=False).count()
         total_patients = RegistrationModel.query.filter_by(role='patient').count()
         total_doctor_profiles = ProfileSetupModel.query.count()
         total_prescriptions = PrescriptionModel.query.count()
-        recent_users = RegistrationModel.query.order_by(RegistrationModel.created_at.desc()).limit(8).all()
+        recent_users = RegistrationModel.query.order_by(RegistrationModel.created_at.desc()).limit(10).all()
 
         return self.render(
             'admin/index.html',
             total_users=total_users,
             total_doctors=total_doctors,
+            pending_doctors=pending_doctors,
             total_patients=total_patients,
             total_doctor_profiles=total_doctor_profiles,
             total_prescriptions=total_prescriptions,
             recent_users=recent_users
         )
+
+    @expose('/verify-doctor/<int:uid>', methods=['POST', 'GET'])
+    def verify_doctor(self, uid):
+        if not self.is_accessible():
+            return self.inaccessible_callback(name='verify_doctor')
+
+        from flask import flash, request
+        from app.modules.account.models import RegistrationModel
+        from app.core.email_service import send_doctor_approval_email
+
+        doctor = RegistrationModel.query.get_or_404(uid)
+        doctor.verified_doctor = True
+        db.session.commit()
+
+        # Send congratulations email to doctor
+        dashboard_url = url_for('dashboard.dashboard_main_page', uid=doctor.uid, _external=True)
+        email_sent = send_doctor_approval_email(doctor, dashboard_url=dashboard_url)
+        if email_sent:
+            flash(f"Doctor '{doctor.username}' has been successfully verified! A congratulations email was sent to {doctor.email}.", "success")
+        else:
+            flash(f"Doctor '{doctor.username}' has been successfully verified, but email notification could not be delivered.", "warning")
+        return redirect(request.referrer or url_for('admin.index'))
+
+    @expose('/revoke-doctor/<int:uid>', methods=['POST', 'GET'])
+    def revoke_doctor(self, uid):
+        if not self.is_accessible():
+            return self.inaccessible_callback(name='revoke_doctor')
+
+        from flask import flash, request
+        from app.modules.account.models import RegistrationModel
+
+        doctor = RegistrationModel.query.get_or_404(uid)
+        doctor.verified_doctor = False
+        db.session.commit()
+        flash(f"Doctor '{doctor.username}' verification has been revoked.", "info")
+        return redirect(request.referrer or url_for('admin.index'))
 
 
 def init_admin(app):

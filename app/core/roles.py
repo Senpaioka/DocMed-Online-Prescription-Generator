@@ -46,8 +46,32 @@ def role_required(*allowed_roles):
 
 
 def doctor_required(func):
-    """Allows doctors and admins."""
-    return role_required(UserRole.DOCTOR, UserRole.ADMIN)(func)
+    """Allows verified doctors and admins only."""
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        if not current_user.is_authenticated:
+            flash('Please log in to access this page.', 'error')
+            return redirect(url_for('accounts.login_page', next=request.url))
+
+        user_role = getattr(current_user, 'role', UserRole.PATIENT)
+        is_admin = getattr(current_user, 'is_admin', False) or user_role == UserRole.ADMIN
+
+        # Admins always bypass
+        if is_admin:
+            return func(*args, **kwargs)
+
+        if user_role == UserRole.DOCTOR:
+            # Check if doctor is verified by admin
+            if getattr(current_user, 'verified_doctor', False):
+                return func(*args, **kwargs)
+            else:
+                flash('Your doctor account is pending admin verification. Clinical services will be unlocked once approved.', 'error')
+                return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
+
+        flash('Access denied. This service is restricted to verified doctors.', 'error')
+        return redirect(url_for('dashboard.dashboard_main_page', uid=current_user.uid))
+
+    return wrapper
 
 
 def admin_required(func):

@@ -149,7 +149,11 @@
         </div>
         <div class="mt-2 mt-md-0">
             {% if current_user.role == 'doctor' or (current_user.is_doctor and not current_user.is_admin) %}
-                <span class="role-badge-chip role-doctor"><i class="fa-solid fa-stethoscope"></i> Doctor Account</span>
+                {% if current_user.verified_doctor %}
+                    <span class="role-badge-chip role-doctor"><i class="fa-solid fa-stethoscope"></i> Verified Doctor</span>
+                {% else %}
+                    <span class="role-badge-chip" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a;"><i class="fa-solid fa-hourglass-half"></i> Pending Verification</span>
+                {% endif %}
             {% elif current_user.role == 'admin' or current_user.is_admin %}
                 <span class="role-badge-chip role-admin"><i class="fa-solid fa-shield-halved"></i> Super Admin</span>
             {% else %}
@@ -172,6 +176,21 @@
             {% endif %}
         {% endwith %}
     </div>
+
+    {% if (current_user.role == 'doctor' or current_user.is_doctor) and not current_user.verified_doctor and not current_user.is_admin %}
+    <!-- Doctor Verification Pending Banner -->
+    <div class="alert alert-warning border-0 shadow-sm rounded-4 p-4 mb-4 d-flex align-items-start gap-3" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border: 1px solid #fde68a !important;">
+        <div class="p-3 rounded-circle d-flex align-items-center justify-content-center text-warning-emphasis bg-white shadow-sm flex-shrink-0" style="width: 48px; height: 48px;">
+            <i class="fa-solid fa-user-clock fs-4" style="color: #d97706;"></i>
+        </div>
+        <div>
+            <h5 class="fw-bold mb-1" style="color: #92400e;">Doctor Account Under Admin Review</h5>
+            <p class="mb-0 small" style="color: #78350f; line-height: 1.55;">
+                Thank you for registering as a medical practitioner on DocMed. Your account is currently pending manual verification by our medical administration team. For patient safety, clinical tools such as <strong>Prescription Generator</strong>, <strong>Patient Search</strong>, and <strong>Profile Setup</strong> will be enabled as soon as your account is approved.
+            </p>
+        </div>
+    </div>
+    {% endif %}
 
     <div class="row g-4">
         <!-- Sidebar Navigation -->
@@ -208,26 +227,33 @@
                     {% endif %}
 
                     <!-- Doctor Links -->
-                    {% if current_user.role == 'doctor' or current_user.is_doctor %}
-                        {% if setup_exists %}
-                        <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="sidebar-link">
-                            <i class="fa-solid fa-id-card"></i> Doctor Profile
-                        </a>
-                        <a href="{{ url_for('dashboard.pdf_template_preview', uid=current_user.uid) }}" class="sidebar-link">
-                            <i class="fa-solid fa-file-invoice"></i> Prescription Template
-                        </a>
-                        <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="sidebar-link">
-                            <i class="fa-solid fa-user-pen"></i> Update Doctor Info
-                        </a>
+                    {% if (current_user.role == 'doctor' or current_user.is_doctor) %}
+                        {% if current_user.verified_doctor or current_user.is_admin %}
+                            {% if setup_exists %}
+                            <a href="{{ url_for('dashboard.profile_page', uid=current_user.uid) }}" class="sidebar-link">
+                                <i class="fa-solid fa-id-card"></i> Doctor Profile
+                            </a>
+                            <a href="{{ url_for('dashboard.pdf_template_preview', uid=current_user.uid) }}" class="sidebar-link">
+                                <i class="fa-solid fa-file-invoice"></i> Prescription Template
+                            </a>
+                            <a href="{{ url_for('dashboard.update_profile_info', uid=current_user.uid) }}" class="sidebar-link">
+                                <i class="fa-solid fa-user-pen"></i> Update Doctor Info
+                            </a>
+                            {% else %}
+                            <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="sidebar-link text-primary fw-bold">
+                                <i class="fa-solid fa-plus-circle text-primary"></i> Setup Doctor Profile
+                            </a>
+                            {% endif %}
+                            
+                            <a href="{{ url_for('pdf_generator.document_page') }}" class="sidebar-link">
+                                <i class="fa-solid fa-file-prescription"></i> Generate Prescription
+                            </a>
                         {% else %}
-                        <a href="{{ url_for('dashboard.setup_page', uid=current_user.uid) }}" class="sidebar-link text-primary fw-bold">
-                            <i class="fa-solid fa-plus-circle text-primary"></i> Setup Doctor Profile
-                        </a>
+                            <div class="px-3 py-2 my-1 rounded-2 bg-light text-muted small d-flex align-items-center justify-content-between">
+                                <span><i class="fa-solid fa-lock me-2 text-warning"></i> Clinical Tools</span>
+                                <span class="badge bg-warning text-dark" style="font-size: 0.68rem;">Pending Approval</span>
+                            </div>
                         {% endif %}
-                        
-                        <a href="{{ url_for('pdf_generator.document_page') }}" class="sidebar-link">
-                            <i class="fa-solid fa-file-prescription"></i> Generate Prescription
-                        </a>
                     {% endif %}
 
                     <!-- Shared & Patient Links -->
@@ -257,7 +283,7 @@
         <div class="col-lg-8 col-md-7">
             
             <!-- DOCTOR & ADMIN ROLE: Live Search & Rx Generator -->
-            {% if current_user.role == 'doctor' or current_user.is_doctor or current_user.role == 'admin' %}
+            {% if (current_user.role == 'doctor' or current_user.is_doctor or current_user.role == 'admin') and (current_user.verified_doctor or current_user.is_admin) %}
                 
                 <!-- Live Search Card -->
                 <div class="dash-action-card" x-data="{ query: '' }">
@@ -300,6 +326,23 @@
                             Setup Profile First
                         </a>
                     {% endif %}
+                </div>
+
+            {% elif (current_user.role == 'doctor' or current_user.is_doctor) and not current_user.verified_doctor and not current_user.is_admin %}
+                <!-- UNVERIFIED DOCTOR VIEW -->
+                <div class="dash-action-card text-center py-5">
+                    <div class="mb-3">
+                        <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle" style="width: 70px; height: 70px; background: #fff7ed; color: #ea580c;">
+                            <i class="fa-solid fa-shield-halved fs-2"></i>
+                        </div>
+                    </div>
+                    <h4 class="fw-bold mb-2 text-dark">Clinical Services Locked</h4>
+                    <p class="text-muted small mx-auto mb-4" style="max-width: 480px;">
+                        Your medical credentials and doctor registration are currently under review by an administrator. Once approved, the Prescription Generator, Clinical Template Customizer, and Patient Records will become automatically available.
+                    </p>
+                    <div class="d-inline-flex align-items-center gap-2 px-3 py-2 rounded-pill bg-light text-secondary small fw-semibold">
+                        <i class="fa-solid fa-circle-notch fa-spin text-warning"></i> Status: Awaiting Admin Verification
+                    </div>
                 </div>
 
             {% else %}

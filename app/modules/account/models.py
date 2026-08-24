@@ -28,6 +28,7 @@ class RegistrationModel(UserMixin, db.Model):
     is_admin = db.Column(db.Boolean(), default=False, nullable=False)
     is_active = db.Column(db.Boolean(), default=True, nullable=False)
     is_verified = db.Column(db.Boolean(), default=False, nullable=False)
+    verified_doctor = db.Column(db.Boolean(), default=False, nullable=False)
     otp_code = db.Column(db.String(6), nullable=True)
     otp_expiry = db.Column(db.DateTime(), nullable=True)
 
@@ -37,6 +38,8 @@ class RegistrationModel(UserMixin, db.Model):
             self.role = 'patient'
         if 'is_verified' not in kwargs:
             self.is_verified = False
+        if 'verified_doctor' not in kwargs:
+            self.verified_doctor = False
 
 
     def __repr__(self):
@@ -48,6 +51,10 @@ class RegistrationModel(UserMixin, db.Model):
     @property
     def is_doctor(self):
         return self.role == 'doctor'
+
+    @property
+    def is_verified_doctor(self):
+        return self.role == 'doctor' and bool(self.verified_doctor)
 
     @property
     def is_patient(self):

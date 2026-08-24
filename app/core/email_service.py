@@ -107,3 +107,23 @@ def send_password_reset_email(user, reset_url, expiry_minutes=30) -> bool:
         context=context
     )
 
+
+def send_doctor_approval_email(user, dashboard_url=None) -> bool:
+    """
+    Send congratulations email to doctor after being verified/approved by an admin.
+    """
+    context = {
+        'user': user,
+        'dashboard_url': dashboard_url,
+        'app_name': 'DocMed',
+        'current_year': datetime.now().year
+    }
+
+    return send_email(
+        subject='Congratulations! Your Doctor Account is Approved 🩺🎉 | DocMed',
+        recipient=user.email,
+        template_html='emails/doctor_approved.html',
+        context=context
+    )
+
+

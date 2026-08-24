@@ -3,6 +3,7 @@ from wtforms import StringField, PasswordField, SubmitField, SelectField, Boolea
 from wtforms.validators import DataRequired, Email, EqualTo, Length, Optional, Regexp
 from werkzeug.security import generate_password_hash
 from flask_admin.contrib.sqla import ModelView
+from app.extensions import db
 from app.core.roles import UserRole
 
 # Password complexity regex: at least 8 characters, 1 uppercase, 1 lowercase, 1 digit, 1 special character
@@ -133,7 +134,8 @@ class AdminPanelRegistration(FlaskForm):
     ], validators=[DataRequired(message="Please select your gender.")])
     role = SelectField('role', choices=UserRole.CHOICES, default=UserRole.PATIENT, validators=[DataRequired()])
 
-    is_verified = BooleanField('is_verified', default=True)
+    is_verified = BooleanField('Email Verified', default=True)
+    verified_doctor = BooleanField('Verified Doctor (Admin Approved)', default=False)
     is_active = BooleanField('is_active', default=True)
     is_admin = BooleanField('is_admin', default=False)
 
@@ -149,21 +151,22 @@ class RegistrationAdminForm(ModelView):
 
     form = AdminPanelRegistration
     # columns show in admin panel  
-    column_list = ['username', 'email', 'role', 'gender', 'is_verified', 'is_active', 'is_admin', 'created_at']
+    column_list = ['username', 'email', 'role', 'gender', 'is_verified', 'verified_doctor', 'is_active', 'is_admin', 'created_at']
     column_labels = {
         'username': 'Username',
         'email': 'Email Address',
         'role': 'Role',
         'gender': 'Gender',
-        'is_verified': 'Verified',
+        'is_verified': 'Email Verified',
+        'verified_doctor': 'Doctor Approved',
         'is_active': 'Active',
         'is_admin': 'Admin Access',
         'created_at': 'Joined Date'
     }
     # column filters
-    column_filters = ['role', 'is_verified', 'is_active', 'is_admin', 'gender']
+    column_filters = ['role', 'is_verified', 'verified_doctor', 'is_active', 'is_admin', 'gender']
     # column to fill in admin form
-    form_columns = ['username', 'email', 'new_password', 'confirm_password', 'role', 'gender', 'is_verified', 'is_active', 'is_admin']
+    form_columns = ['username', 'email', 'new_password', 'confirm_password', 'role', 'gender', 'is_verified', 'verified_doctor', 'is_active', 'is_admin']
     column_searchable_list = ['username', 'email']
     column_default_sort = ('created_at', True)
 
@@ -180,6 +183,15 @@ class RegistrationAdminForm(ModelView):
             return Markup('<span class="badge-status active"><i class="fa-solid fa-check"></i> Yes</span>')
         return Markup('<span class="badge-status inactive"><i class="fa-solid fa-clock"></i> No</span>')
 
+    def _verified_doctor_formatter(view, context, model, name):
+        if model.role == 'doctor':
+            if model.verified_doctor:
+                return Markup('<span class="badge-status active"><i class="fa-solid fa-circle-check"></i> Approved</span>')
+            return Markup('<span class="badge-status inactive" style="background:#fef3c7;color:#d97706;border:1px solid #fde68a;"><i class="fa-solid fa-hourglass-half"></i> Pending</span>')
+        elif model.is_admin or model.role == 'admin':
+            return Markup('<span class="badge-status active"><i class="fa-solid fa-shield-check"></i> N/A (Admin)</span>')
+        return Markup('<span style="color:#94a3b8;font-size:0.85rem;">—</span>')
+
     def _active_formatter(view, context, model, name):
         if model.is_active:
             return Markup('<span class="badge-status active">Active</span>')
@@ -188,15 +200,36 @@ class RegistrationAdminForm(ModelView):
     column_formatters = {
         'role': _role_formatter,
         'is_verified': _verified_formatter,
+        'verified_doctor': _verified_doctor_formatter,
         'is_active': _active_formatter
     }
 
     def on_model_change(self, form, model, is_created):
-        """Hash password before storing it in the database and sync is_admin with role"""
+        """Hash password before storing it in the database, sync is_admin with role, and notify doctor if approved"""
+        was_verified = False
+        if not is_created and model.uid:
+            from app.modules.account.models import RegistrationModel
+            prev_instance = db.session.get(RegistrationModel, model.uid)
+            if prev_instance:
+                was_verified = bool(prev_instance.verified_doctor)
+
         if form.new_password.data: 
             model.password = generate_password_hash(form.new_password.data)
         if form.role.data == UserRole.ADMIN:
             model.is_admin = True
+            model.verified_doctor = True
         elif form.is_admin.data:
             model.role = UserRole.ADMIN
+            model.verified_doctor = True
+
+        # If doctor became verified via admin edit form
+        if model.role == 'doctor' and model.verified_doctor and not was_verified and not is_created:
+            try:
+                from flask import url_for
+                from app.core.email_service import send_doctor_approval_email
+                dashboard_url = url_for('dashboard.dashboard_main_page', uid=model.uid, _external=True)
+                send_doctor_approval_email(model, dashboard_url=dashboard_url)
+            except Exception:
+                pass
+
 
