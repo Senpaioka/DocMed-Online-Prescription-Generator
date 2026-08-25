@@ -8,6 +8,8 @@
 
 **DocMed** is a full-featured, AI-powered healthcare management web application built with **Flask**, **SQLAlchemy**, **WeasyPrint**, and **Google Gemini AI**. It connects doctors and patients into a seamless ecosystem for appointments, automated billing, verified digital prescriptions, and intelligent medical assistance.
 
+Preview: https://docmed-online-prescription-generator.onrender.com
+
 ---
 
 ## 🌟 Key Features
@@ -53,6 +55,23 @@
 - **Payment Processing**: SSLCommerz Payment Gateway (Sandbox & Live)
 - **Email Service**: Flask-Mailman (SMTP / Gmail integration)
 - **Packaging & Environment**: `uv` package manager, Gunicorn, Docker
+
+---
+
+## 👤 Login Credentials (Preview)
+
+- **Doctor**:
+``` txt
+Email: gifav30453@kolsea.com
+Password: Test@Doctor?1234
+``` 
+
+- **Patient**:
+
+``` txt
+Email: lidorif133@prodbits.com
+Password: Test@Patient?1234
+``` 
 
 ---
 
