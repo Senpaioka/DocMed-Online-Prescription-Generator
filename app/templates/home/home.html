@@ -1,261 +1,904 @@
 {% extends 'base.html' %}
 
-{% block title %} Home {% endblock %}
+{% block title %} DocMed — Next-Gen AI Prescription & Telehealth Management {% endblock %}
 
 {% block content %}
 
+<!-- Custom Styles for Landing Page -->
 <style>
-@import url('https://fonts.googleapis.com/css?family=Lato:300,900');
+  :root {
+    --hero-gradient: linear-gradient(135deg, #092e3b 0%, #0c3e4f 50%, #084c61 100%);
+    --teal-glow: rgba(13, 148, 136, 0.25);
+    --card-hover-shadow: 0 20px 40px -15px rgba(9, 46, 59, 0.12), 0 0 0 1px rgba(13, 148, 136, 0.15);
+  }
 
-$transition-ease-in-out: all .25s ease-in-out 0s;
-$transition-cubic-bezier : all 0.75s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-$animation-offset: 80px;
+  /* Hero Section */
+  .hero-section {
+    background: var(--hero-gradient);
+    position: relative;
+    overflow: hidden;
+    padding: 90px 0 120px 0;
+    color: #ffffff;
+  }
 
-*, :after, :before {
-    box-sizing: border-box;
-}
-html, body {
-	height: 100%;
-}
-body {
-	font-family: "Lato", sans-serif;
-	animation: fade-in 3s ease-in-out forwards;
-}
-.row {
-    padding-top: 100px;
-    padding-bottom: 100px;
-}
-strong {
-	font-weight: 900;
-    padding: 15px;
-}
-.canvas-wrapper {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	height: 100%;
-	
-	.canvas + .canvas {
-		margin-left: 40px;
-	}
-}
-.canvas {
-	position: relative;
-	display: block;
-	width: 500px;
-	height: 600px;
-	padding: 20px;
-	color: inherit;
-	text-decoration: none;
-}
-.canvas_border {
-	position: absolute;
-	top: 40px;
-	left: -40px;
-	height: 100%;
-	width: 100%;
-	z-index: 0;
+  .hero-blob-1 {
+    position: absolute;
+    width: 600px;
+    height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(13, 148, 136, 0.25) 0%, rgba(13, 148, 136, 0) 70%);
+    top: -150px;
+    right: -100px;
+    pointer-events: none;
+    z-index: 1;
+  }
 
-	svg {
-		height: 100%;
-		width: 100%;
-	}
-}
-.rect-gradient {
-	stroke-dasharray: 2000;
-	stroke-dashoffset: 2000;
-	animation: erase-line 1s ease-in-out forwards;
-}
-.canvas_img-wrapper {
-	position: absolute;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	width: 100%;
-	height: 100%;
-	top: 0;
-	left: 0;
-	transform: rotate(-10deg) skew(-10deg);
-	overflow: hidden;
-	background: white;
-}
-.canvas_img {
-	transform: scale3d(.9,.9,.9);
-	opacity: .7;
-	max-width: 400px;
-	max-height: 500px;
-}
-.canvas_copy {
-	position: absolute;
-	bottom: 0;
-	left: 85%;
-	text-transform: uppercase;
-	color: #dac527;
-	z-index: 100;
-}
-.canvas_copy--left {
-	left: -25%;
-}
-.canvas_copy_title {
-	font-size: 62px;
-	display: block;
-	transform: translateX(-#{$animation-offset});
-		transition: $transition-cubic-bezier 0s;
-		color: black;
+  .hero-blob-2 {
+    position: absolute;
+    width: 450px;
+    height: 450px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(94, 234, 212, 0.15) 0%, rgba(94, 234, 212, 0) 70%);
+    bottom: -100px;
+    left: -50px;
+    pointer-events: none;
+    z-index: 1;
+  }
 
-		&:nth-child(1) {
-			transition-delay: 0.1s;
-			}
-		&:nth-child(2) {
-			transition-delay: 0.2s;
-			}
-}
-.canvas_copy_subtitle {
-	display: block;
-	transform: rotate(270deg) translateY(-100%) translateX(calc(-100% - #{$animation-offset}));
-	transform-origin: top left;
-	position: absolute;
-	left: 0;
-	top: 8px; //This needs to change with font size. It's an offset for the line-height of the "hellow world"
-	font-size: 24px;
-	font-weight: 900;
-	transition: all 0.75s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.35s;
-}
-.canvas_copy_details {
-	display: block;
-	transition: $transition-cubic-bezier 0.14s;
-	transform: translateX(-#{$animation-offset});
-		}
-.canvas_border, .canvas_img-wrapper, .canvas_img  {
-	transition: $transition-ease-in-out;	
-}
-.canvas_border, .canvas_img-wrapper {
-	transform: rotate(-10deg) skew(-10deg);	
-}
-.canvas_copy_title, .canvas_copy_subtitle, .canvas_copy_details {
-	opacity: 0;
-}
-.canvas:hover {
-	.canvas_copy_title, .canvas_copy_subtitle, .canvas_copy_details, .canvas_img {
-		opacity: 1;
-	}
-	.canvas_border, .canvas_img-wrapper {
-		transform: rotate(-14deg) skew(-14deg) scale(0.96);
-	}
-	.canvas_img {
-		transform: scale3d(1,1,1);
-	}
-	.canvas_copy_title, .canvas_copy_details {
-		transform: translateX(0);
-	}
-	.canvas_copy_subtitle {
-		transform: rotate(270deg) translateY(-100%) translateX(-100%);
-	}
-	.rect-gradient {
-		animation: draw-line 3s cubic-bezier(0.19, 1, 0.22, 1) forwards;
-	}
-}
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(13, 148, 136, 0.2);
+    border: 1px solid rgba(94, 234, 212, 0.35);
+    color: #5eead4;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
 
-@keyframes draw-line {
-	from {
-		stroke-dashoffset: 2000;		
-	}
-	to {
-		stroke-dashoffset: 0;
-	}
-}
-@keyframes erase-line {
-	from {
-		stroke-dashoffset: 0;
-	}
-	to {
-		stroke-dashoffset: 2000;		
-	}
-}
-@keyframes fade-in {
-	from {
-		opacity: 0;
-	}
-	to {
-		opacity: 1;
-	}
-}
+  .hero-title {
+    font-size: 3.25rem;
+    font-weight: 800;
+    line-height: 1.18;
+    letter-spacing: -0.03em;
+    margin-bottom: 22px;
+  }
 
-.div_one {
-    padding-top:100px;
-}
+  .hero-title span {
+    background: linear-gradient(135deg, #5eead4 0%, #2dd4bf 50%, #99f6e4 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .hero-subtitle {
+    font-size: 1.18rem;
+    color: #cbd5e1;
+    line-height: 1.65;
+    margin-bottom: 36px;
+    max-width: 580px;
+  }
+
+  /* Interactive Preview Card */
+  .preview-card {
+    background: #ffffff;
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    color: #1e293b;
+    position: relative;
+    z-index: 2;
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
+  }
+
+  .preview-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.45);
+  }
+
+  .preview-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px dashed #e2e8f0;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .preview-stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #059669;
+  }
+
+  .rx-badge {
+    font-family: serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: #0d9488;
+    line-height: 1;
+  }
+
+  .medicine-chip {
+    background: #f8fafc;
+    border-left: 4px solid #0d9488;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    border-top: 1px solid #f1f5f9;
+    border-right: 1px solid #f1f5f9;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  /* Feature Cards */
+  .feature-box {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 32px 28px;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-box:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--card-hover-shadow);
+    border-color: #99f6e4;
+  }
+
+  .feature-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 22px;
+    transition: transform 0.3s ease;
+  }
+
+  .feature-box:hover .feature-icon-wrapper {
+    transform: scale(1.08) rotate(3deg);
+  }
+
+  .icon-teal {
+    background: #ccfbf1;
+    color: #0d9488;
+  }
+
+  .icon-blue {
+    background: #e0f2fe;
+    color: #0284c7;
+  }
+
+  .icon-purple {
+    background: #f3e8ff;
+    color: #9333ea;
+  }
+
+  .icon-amber {
+    background: #fef3c7;
+    color: #d97706;
+  }
+
+  .icon-rose {
+    background: #ffe4e6;
+    color: #e11d48;
+  }
+
+  .icon-emerald {
+    background: #d1fae5;
+    color: #059669;
+  }
+
+  .feature-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 12px;
+  }
+
+  .feature-text {
+    font-size: 0.94rem;
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+
+  /* Roles Section Tab Cards */
+  .role-card {
+    background: #ffffff;
+    border-radius: 24px;
+    border: 1px solid #e2e8f0;
+    padding: 36px;
+    height: 100%;
+    box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
+    transition: all 0.3s ease;
+  }
+
+  .role-card:hover {
+    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
+  }
+
+  .role-header-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: #0d9488;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+  }
+
+  .role-feature-list {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 24px;
+    margin-bottom: 28px;
+  }
+
+  .role-feature-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 14px;
+    font-size: 0.95rem;
+    color: #334155;
+  }
+
+  .role-feature-list li i {
+    color: #0d9488;
+    margin-top: 3px;
+    font-size: 1rem;
+  }
+
+  /* CTA Buttons */
+  .btn-hero-primary {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff !important;
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding: 14px 32px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(13, 148, 136, 0.4);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .btn-hero-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(13, 148, 136, 0.55);
+    filter: brightness(1.08);
+  }
+
+  .btn-hero-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    font-weight: 600;
+    font-size: 1.05rem;
+    padding: 14px 28px;
+    border-radius: 12px;
+    backdrop-filter: blur(8px);
+    transition: all 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  .btn-hero-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+    transform: translateY(-2px);
+  }
+
+  /* Stat Counter Items */
+  .stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-number {
+    font-size: 1.85rem;
+    font-weight: 800;
+    color: #5eead4;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 0.82rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0;
+  }
+
+  /* Step Flow Card */
+  .step-item {
+    text-align: center;
+    position: relative;
+    padding: 20px;
+  }
+
+  .step-badge {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #092e3b;
+    color: #5eead4;
+    font-weight: 800;
+    font-size: 1.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 15px rgba(9, 46, 59, 0.2);
+    border: 2px solid #5eead4;
+  }
+
+  /* AI Callout Banner */
+  .ai-banner {
+    background: linear-gradient(135deg, #092e3b 0%, #04202c 100%);
+    border-radius: 28px;
+    padding: 48px;
+    border: 1px solid rgba(94, 234, 212, 0.25);
+    position: relative;
+    overflow: hidden;
+    color: #ffffff;
+    box-shadow: 0 20px 45px -10px rgba(9, 46, 59, 0.35);
+  }
+
+  .ai-badge {
+    background: linear-gradient(90deg, #9333ea 0%, #0d9488 100%);
+    color: #ffffff;
+    font-size: 0.8rem;
+    font-weight: 800;
+    padding: 6px 14px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 991px) {
+    .hero-title {
+      font-size: 2.5rem;
+    }
+    .hero-section {
+      padding: 60px 0 80px 0;
+    }
+    .ai-banner {
+      padding: 32px 24px;
+    }
+  }
 </style>
 
-    <!-- Features Section -->
-    <section class="container features text-center">
-        <div class="row mt-5 mb-5">
-            <div class="col-md-6 pb-5">
-                <div class="canvas-wrapper">
-
-                    <a href="#" class="canvas">
-                        <div class="canvas_border">
-                            <svg>
-                                <defs><linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(253,137,68);stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(153,75,23);stop-opacity:1"></stop></linearGradient><linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#D34F48"></stop><stop offset="100%" stop-color="#772522"></stop></linearGradient></defs>
-                                <rect id="rect-grad" class="rect-gradient" fill="none" stroke="url(#grad-orange)" stroke-linecap="square" stroke-width="4" stroke-miterlimit="30" width="100%" height="100%"></rect>
-                            </svg>
-                        </div>
-                        <div class="canvas_img-wrapper">
-                            <img class="canvas_img" src="{{ url_for('static', filename='img/doc.png') }}">
-                        </div>
-                        <div class="canvas_copy canvas_copy--left">
-                            <strong class="canvas_copy_title">Online</strong>
-                            <strong class="canvas_copy_title">Prescription</strong>
-                            <strong class="canvas_copy_title">Generator</strong>
-                        </div>
-                    </a>
-    
-                  <!--  <a href="#" class="canvas">
-                        <div class="canvas_border">
-                            <svg>
-                                <defs><linearGradient id="grad-orange" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:rgb(253,137,68);stop-opacity:1"></stop><stop offset="100%" style="stop-color:rgb(153,75,23);stop-opacity:1"></stop></linearGradient><linearGradient id="grad-red" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#D34F48"></stop><stop offset="100%" stop-color="#772522"></stop></linearGradient></defs>
-                                <rect id="rect-grad" class="rect-gradient" fill="none" stroke="url(#grad-orange)" stroke-linecap="square" stroke-width="4" stroke-miterlimit="30" width="100%" height="100%"></rect>
-                            </svg>
-                        </div>
-                        <div class="canvas_img-wrapper">
-                            <img class="canvas_img" src="https://s3-us-west-2.amazonaws.com/s.cdpn.io/249772/Twitter_Logo_Blue.png" alt="">
-                        </div>
-                        <div class="canvas_copy">
-                            <span class="canvas_copy_subtitle">Heading</span>
-                            <strong class="canvas_copy_title">Hello</strong>
-                            <strong class="canvas_copy_title">World</strong>
-                            <span class="canvas_copy_details">Details and stuff</span>
-                        </div>
-                    </a>-->
-    
-                </div>
-            </div>
-            <div class="col-md-6 pt-5">
-                <h1><strong>DocMed.</strong></h1>
-                <h3>Generate Online Prescription</h3>
-                <p>(PDF Format)</p>
-
-
-				{% if current_user.is_authenticated %}
-
-				<div>
-					<h5>Welcome {{ current_user.profile_info.full_name }}. </h5>
-					<h6>You are currently LoggedIn. go to <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}">Dashboard</a></h6>
-				</div>
-
-				{% else %}
-
-                <div class="div_one">
-                    <p>Interested? You can register <a href="{{ url_for('accounts.registration_page') }}"> Here</a></p>
-                </div>
-
-                <div>
-                    <p>Already have an account? <a href="{{ url_for('accounts.login_page') }}">Login</a></p>
-                </div>
-
-				{% endif %}
-
-            </div>
+<!-- Hero Section -->
+<section class="hero-section">
+  <div class="hero-blob-1"></div>
+  <div class="hero-blob-2"></div>
+  
+  <div class="container position-relative" style="z-index: 2;">
+    <div class="row align-items-center gy-5">
+      
+      <!-- Left Hero Content -->
+      <div class="col-lg-6">
+        <div class="hero-badge">
+          <i class="fa-solid fa-sparkles"></i> AI-Powered Healthcare Suite
         </div>
-    </section>
+        
+        <h1 class="hero-title">
+          Smart Online Prescription & <span>Practice Management</span>
+        </h1>
+        
+        <p class="hero-subtitle">
+          DocMed unifies instant digital prescription generation, secure online appointments, payment processing with SSLCommerz, and Google Gemini AI clinical assistance into one connected platform.
+        </p>
 
-{% endblock %}
+        <!-- CTA Buttons -->
+        <div class="d-flex flex-wrap align-items-center gap-3 mb-5">
+          {% if current_user.is_authenticated %}
+            <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn-hero-primary">
+              <i class="fa-solid fa-gauge-high"></i> Go to Your Dashboard
+            </a>
+            {% if current_user.role == 'doctor' and current_user.profile_info %}
+              <a href="{{ url_for('pdf_generator.document_page') }}" class="btn-hero-secondary">
+                <i class="fa-solid fa-file-prescription"></i> Create Prescription
+              </a>
+            {% endif %}
+          {% else %}
+            <a href="{{ url_for('accounts.registration_page') }}" class="btn-hero-primary">
+              <i class="fa-solid fa-user-plus"></i> Get Started Free
+            </a>
+            <a href="{{ url_for('accounts.login_page') }}" class="btn-hero-secondary">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In to Account
+            </a>
+          {% endif %}
+        </div>
+
+        <!-- Metric Badges -->
+        <div class="row g-3">
+          <div class="col-4">
+            <div class="stat-card">
+              <div class="stat-number">100%</div>
+              <p class="stat-label">Digital & PDF</p>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat-card">
+              <div class="stat-number">AI 2.5</div>
+              <p class="stat-label">Gemini Powered</p>
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="stat-card">
+              <div class="stat-number">Instant</div>
+              <p class="stat-label">Live Notifications</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Interactive Mockup -->
+      <div class="col-lg-6">
+        <div class="preview-card">
+          <!-- Card Top Bar -->
+          <div class="preview-header">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-dark px-2 py-1">DocMed Rx</span>
+                <span class="preview-stamp">
+                  <i class="fa-solid fa-shield-check"></i> QR Verified
+                </span>
+              </div>
+              <h5 class="fw-bold mb-0 text-dark">Dr. Sarah Jenkins, MD</h5>
+              <small class="text-muted">Cardiologist • Reg #BMDC-98421</small>
+            </div>
+            <div class="text-end">
+              <span class="rx-badge">℞</span>
+              <div class="small text-muted">ID: #DM-9042</div>
+            </div>
+          </div>
+
+          <!-- Patient Bar -->
+          <div class="bg-light p-2 rounded-3 mb-3 d-flex justify-content-between align-items-center small">
+            <div><strong>Patient:</strong> Alexander Vance (Age: 38, Male)</div>
+            <div><strong>BP:</strong> 120/80 mmHg | <strong>SpO2:</strong> 98%</div>
+          </div>
+
+          <!-- Structured Medication Lines -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="text-uppercase fw-bold text-muted small" style="font-size: 0.75rem; letter-spacing: 0.05em;">Prescribed Regimen</span>
+              <span class="badge bg-teal-subtle text-teal" style="background:#ccfbf1; color:#0f766e; font-size:0.75rem;">Structured Rx</span>
+            </div>
+
+            <div class="medicine-chip">
+              <div class="d-flex justify-content-between">
+                <strong class="text-dark">Tab. Rosuvastatin 10mg</strong>
+                <span class="text-muted small">0 + 0 + 1 (Night)</span>
+              </div>
+              <small class="text-muted">Duration: 30 Days — After dinner</small>
+            </div>
+
+            <div class="medicine-chip">
+              <div class="d-flex justify-content-between">
+                <strong class="text-dark">Tab. Telmisartan 40mg</strong>
+                <span class="text-muted small">1 + 0 + 0 (Morning)</span>
+              </div>
+              <small class="text-muted">Duration: 60 Days — Before meal</small>
+            </div>
+          </div>
+
+          <!-- Advice & Signature Footer -->
+          <div class="pt-2 border-top d-flex justify-content-between align-items-end">
+            <div>
+              <span class="fw-bold small text-dark d-block">Special Advice:</span>
+              <small class="text-muted">Low salt diet, 30 min brisk walk daily.</small>
+            </div>
+            <div class="text-center">
+              <div style="font-family: 'Brush Script MT', cursive; font-size: 1.4rem; color: #0d9488; line-height: 1;">
+                Dr. Sarah Jenkins
+              </div>
+              <small class="text-muted d-block" style="font-size: 0.7rem;">Verified Digital Signature</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- Core Functionality & Features Section -->
+<section class="py-5 bg-white">
+  <div class="container py-4">
+    
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-teal mb-2" style="background: #ccfbf1; color: #0f766e; font-size: 0.85rem;">
+        Complete Digital Ecosystem
+      </span>
+      <h2 class="fw-extrabold text-dark display-6 mb-3" style="font-weight: 800;">
+        Everything You Need for Modern Healthcare
+      </h2>
+      <p class="text-muted lead fs-6">
+        DocMed bridges the gap between clinicians and patients with automated clinical workflows, instant PDF exports, real-time alerts, and Gemini AI assistance.
+      </p>
+    </div>
+
+    <!-- 6 Primary Pillars Grid -->
+    <div class="row g-4">
+      
+      <!-- Feature 1 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper icon-teal">
+            <i class="fa-solid fa-file-pdf"></i>
+          </div>
+          <h3 class="feature-title">High-Fidelity PDF Generator</h3>
+          <p class="feature-text">
+            Generate clean, branded, and print-ready digital prescriptions with auto-filled patient vitals, clinical complaints, test investigations, advice, and digital signature stamps rendered via WeasyPrint.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 2 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper icon-purple">
+            <i class="fa-solid fa-robot"></i>
+          </div>
+          <h3 class="feature-title">Google Gemini AI Copilot</h3>
+          <p class="feature-text">
+            Equipped with Gemini 2.5 models featuring multi-key rotation and function calling. Provides clinical differential suggestions, drug safety checks for doctors, and symptom guidance for patients.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 3 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper icon-blue">
+            <i class="fa-solid fa-calendar-check"></i>
+          </div>
+          <h3 class="feature-title">Smart Appointment Hub</h3>
+          <p class="feature-text">
+            Effortless booking system allowing patients to schedule consultations and doctors to review, accept, reschedule, or complete appointments with chamber specifications.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 4 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper icon-amber">
+            <i class="fa-solid fa-credit-card"></i>
+          </div>
+          <h3 class="feature-title">SSLCommerz Payment Gateway</h3>
+          <p class="feature-text">
+            Seamlessly pay consultation fees using Credit/Debit cards, bKash, Nagad, Rocket, or Internet Banking. Complete with automated transaction logging and verification.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 5 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper icon-rose">
+            <i class="fa-solid fa-bell"></i>
+          </div>
+          <h3 class="feature-title">Real-Time SSE Notifications</h3>
+          <p class="feature-text">
+            Stay in sync with Server-Sent Events (SSE). Instant in-app audio-visual toasts when appointments are booked, accepted, rescheduled, or when payments are confirmed.
+          </p>
+        </div>
+      </div>
+
+      <!-- Feature 6 -->
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-box">
+          <div class="feature-icon-wrapper icon-emerald">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 class="feature-title">Verified Doctors & Admin Control</h3>
+          <p class="feature-text">
+            Comprehensive admin verification workflow ensuring only licensed medical practitioners with valid credentials can issue prescriptions and accept consultations.
+          </p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- Dual Workflow Comparison (Doctors & Patients) -->
+<section class="py-5" style="background-color: #f1f5f9;">
+  <div class="container py-4">
+    
+    <div class="text-center mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-dark mb-2" style="background: #e2e8f0; font-size: 0.85rem;">
+        Tailored Workspaces
+      </span>
+      <h2 class="fw-extrabold text-dark display-6" style="font-weight: 800;">
+        Built Specifically for Doctors & Patients
+      </h2>
+      <p class="text-muted">Dedicated dashboards and customized tools engineered for each user role.</p>
+    </div>
+
+    <div class="row g-4">
+      
+      <!-- Doctor Card -->
+      <div class="col-lg-6">
+        <div class="role-card border-top border-4" style="border-top-color: #0d9488 !important;">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="role-header-icon">
+              <i class="fa-solid fa-user-doctor"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold text-dark fs-4 mb-0">For Medical Practitioners</h3>
+              <small class="text-muted">Streamline your clinic & digital practice</small>
+            </div>
+          </div>
+
+          <p class="text-muted">
+            DocMed gives clinicians a modern, time-saving cockpit to create verified prescriptions in seconds and manage day-to-day patient flows.
+          </p>
+
+          <ul class="role-feature-list">
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Custom Professional Profile:</strong> Showcase degrees, specialties, chamber timings, consultation fees, and signatures.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Rapid Prescription Builder:</strong> Dynamic form with smart auto-completions, vitals logging, and custom dosage instructions.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Appointment Management:</strong> Accept, reject, or reschedule appointments with instant patient updates.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check"></i>
+              <span><strong>Earnings Analytics:</strong> Track total earnings, consultation counts, and transaction summaries in real time.</span>
+            </li>
+          </ul>
+
+          <div class="pt-3 border-top">
+            {% if current_user.is_authenticated and current_user.role == 'doctor' %}
+              <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn btn-outline-primary w-100 fw-bold py-2 rounded-3" style="color: #0d9488; border-color: #0d9488;">
+                <i class="fa-solid fa-gauge"></i> Open Doctor Dashboard
+              </a>
+            {% else %}
+              <a href="{{ url_for('accounts.registration_page') }}" class="btn btn-outline-primary w-100 fw-bold py-2 rounded-3" style="color: #0d9488; border-color: #0d9488;">
+                <i class="fa-solid fa-stethoscope"></i> Register as a Doctor
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Patient Card -->
+      <div class="col-lg-6">
+        <div class="role-card border-top border-4" style="border-top-color: #0284c7 !important;">
+          <div class="d-flex align-items-center gap-3 mb-3">
+            <div class="role-header-icon" style="background: #0284c7;">
+              <i class="fa-solid fa-hospital-user"></i>
+            </div>
+            <div>
+              <h3 class="fw-bold text-dark fs-4 mb-0">For Patients</h3>
+              <small class="text-muted">Simplified, accessible healthcare on demand</small>
+            </div>
+          </div>
+
+          <p class="text-muted">
+            Access verified specialists, schedule consultations seamlessly, and keep all your historical medical records safely in one place.
+          </p>
+
+          <ul class="role-feature-list">
+            <li>
+              <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
+              <span><strong>Doctor Discovery:</strong> Search verified doctors by specialty, institution, degrees, and consultation fees.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
+              <span><strong>Easy Consultation Booking:</strong> Pick your preferred appointment date and describe your health concerns.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
+              <span><strong>Secure Payment Checkout:</strong> Instant payment processing via cards, bKash, and mobile banking.</span>
+            </li>
+            <li>
+              <i class="fa-solid fa-circle-check" style="color: #0284c7;"></i>
+              <span><strong>Prescription Archive:</strong> Download PDF copies of all past prescriptions anytime from your portal.</span>
+            </li>
+          </ul>
+
+          <div class="pt-3 border-top">
+            {% if current_user.is_authenticated and current_user.role == 'patient' %}
+              <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn btn-outline-info w-100 fw-bold py-2 rounded-3" style="color: #0284c7; border-color: #0284c7;">
+                <i class="fa-solid fa-gauge"></i> Open Patient Portal
+              </a>
+            {% else %}
+              <a href="{{ url_for('accounts.registration_page') }}" class="btn btn-outline-info w-100 fw-bold py-2 rounded-3" style="color: #0284c7; border-color: #0284c7;">
+                <i class="fa-solid fa-user-plus"></i> Register as a Patient
+              </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- How It Works Section -->
+<section class="py-5 bg-white">
+  <div class="container py-4">
+    
+    <div class="text-center max-w-700 mx-auto mb-5">
+      <span class="badge px-3 py-2 rounded-pill fw-bold text-teal mb-2" style="background: #ccfbf1; color: #0f766e; font-size: 0.85rem;">
+        Simple 4-Step Process
+      </span>
+      <h2 class="fw-extrabold text-dark display-6 mb-3" style="font-weight: 800;">
+        How DocMed Works
+      </h2>
+      <p class="text-muted lead fs-6">
+        From doctor discovery to PDF prescription download, experience seamless end-to-end healthcare.
+      </p>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-3">
+        <div class="step-item">
+          <div class="step-badge">1</div>
+          <h4 class="fw-bold text-dark fs-5 mb-2">Create Account</h4>
+          <p class="text-muted small">Sign up in seconds with email verification and set up your personalized medical profile.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-item">
+          <div class="step-badge">2</div>
+          <h4 class="fw-bold text-dark fs-5 mb-2">Book Consultation</h4>
+          <p class="text-muted small">Find verified specialists and schedule an appointment with secure SSLCommerz fee payment.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-item">
+          <div class="step-badge">3</div>
+          <h4 class="fw-bold text-dark fs-5 mb-2">Clinical Review</h4>
+          <p class="text-muted small">Doctor consults with patient, leveraging Gemini AI assistant for clinical references and diagnosis drafting.</p>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-lg-3">
+        <div class="step-item">
+          <div class="step-badge">4</div>
+          <h4 class="fw-bold text-dark fs-5 mb-2">Get PDF Prescription</h4>
+          <p class="text-muted small">Instant generation of digital prescription with QR code verification, accessible anytime.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- AI & Technology Showcase Banner -->
+<section class="py-5" style="background: #f8fafc;">
+  <div class="container">
+    <div class="ai-banner">
+      <div class="row align-items-center gy-4">
+        <div class="col-lg-7">
+          <div class="ai-badge">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> Intelligent GenAI Assistant
+          </div>
+          <h2 class="display-6 fw-bold text-white mb-3">
+            Intelligent Clinical & Patient Copilot Powered by Google Gemini
+          </h2>
+          <p class="text-light opacity-75 mb-4" style="line-height: 1.65; font-size: 1.05rem;">
+            DocMed integrates Google's cutting-edge Gemini 2.5 Flash model with multi-key fallback architecture and role-aware function calling. Doctors get rapid medical reference checks and prescription suggestions, while patients receive 24/7 symptom guidance and medication advice.
+          </p>
+
+          <div class="d-flex flex-wrap gap-3">
+            <span class="badge p-2 px-3 bg-white text-dark rounded-pill fw-semibold">
+              <i class="fa-solid fa-check text-success"></i> Drug Interaction Alerts
+            </span>
+            <span class="badge p-2 px-3 bg-white text-dark rounded-pill fw-semibold">
+              <i class="fa-solid fa-check text-success"></i> Differential Diagnosis Support
+            </span>
+            <span class="badge p-2 px-3 bg-white text-dark rounded-pill fw-semibold">
+              <i class="fa-solid fa-check text-success"></i> 24/7 Symptom Advisor
+            </span>
+          </div>
+        </div>
+
+        <div class="col-lg-5 text-center">
+          <div class="bg-dark p-4 rounded-4 border border-secondary shadow-lg text-start" style="background: rgba(15, 23, 42, 0.8) !important; backdrop-filter: blur(10px);">
+            <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom border-secondary">
+              <div class="rounded-circle bg-teal p-2 text-white" style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: #0d9488;">
+                <i class="fa-solid fa-robot fa-sm"></i>
+              </div>
+              <span class="fw-bold text-white small">DocMed AI Assistant</span>
+              <span class="badge bg-success ms-auto" style="font-size: 0.7rem;">Active</span>
+            </div>
+            
+            <div class="bg-secondary bg-opacity-25 p-3 rounded-3 mb-2 small text-light border border-secondary border-opacity-25">
+              <i class="fa-solid fa-user me-1 text-info"></i> <strong>User:</strong> "What are the common contraindications for prescribing Rosuvastatin?"
+            </div>
+
+            <div class="p-3 rounded-3 small text-white" style="background: rgba(13, 148, 136, 0.15); border: 1px solid rgba(94, 234, 212, 0.3);">
+              <i class="fa-solid fa-wand-sparkles text-teal me-1" style="color: #5eead4;"></i> <strong>Gemini AI:</strong> Active liver disease, unexplained persistent elevations of hepatic transaminases, severe renal impairment, and pregnancy/lactation.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Ready to Get Started Bottom Banner -->
+<section class="py-5 text-center bg-white">
+  <div class="container py-4">
+    <h2 class="fw-extrabold text-dark display-6 mb-3" style="font-weight: 800;">
+      Ready to Modernize Your Medical Workflow?
+    </h2>
+    <p class="text-muted lead fs-6 max-w-700 mx-auto mb-4">
+      Join healthcare professionals and patients using DocMed for secure, automated, and intelligent digital healthcare.
+    </p>
+
+    <div class="d-flex justify-content-center flex-wrap gap-3">
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn-hero-primary">
+          <i class="fa-solid fa-gauge-high"></i> Go to Your Dashboard
+        </a>
+      {% else %}
+        <a href="{{ url_for('accounts.registration_page') }}" class="btn-hero-primary">
+          <i class="fa-solid fa-rocket"></i> Create Your Free Account
+        </a>
+        <a href="{{ url_for('accounts.login_page') }}" class="btn btn-outline-secondary px-4 py-3 rounded-3 fw-bold" style="border-radius: 12px; padding: 14px 28px;">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i> Sign In
+        </a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% endblock %}
