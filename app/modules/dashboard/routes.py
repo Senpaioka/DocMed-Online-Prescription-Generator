@@ -4,21 +4,24 @@ from werkzeug.utils import secure_filename
 import os
 import queue
 from app.modules.dashboard.forms import ProfileSetUpForm, UpdateProfileSetUpForm
-from app.modules.dashboard.models import ProfileSetupModel, AppointmentModel, NotificationModel
+from app.modules.dashboard.models import ProfileSetupModel, AppointmentModel, NotificationModel, PaymentTransactionModel
 from app.modules.account.models import RegistrationModel
 from app.modules.pdf.models import PrescriptionModel
 from app.modules.search.forms import SearchForm
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, login_user
 from sqlalchemy.exc import IntegrityError
 import time
+from datetime import datetime
 from app.core.roles import doctor_required, role_required, UserRole
 from app.core.sse import sse_manager
 from app.core.notification_service import (
     notify_patient_appointment_confirmed,
     notify_patient_appointment_rejected,
     notify_patient_appointment_cancelled,
-    notify_doctor_new_appointment
+    notify_doctor_new_appointment,
+    notify_payment_success
 )
+from app.core.sslcommerz import initiate_sslcommerz_payment, validate_sslcommerz_payment
 
 
 dashboard = Blueprint('dashboard', __name__, template_folder='templates')
@@ -193,13 +196,18 @@ def request_appointment(doctor_id):
         flash("Please provide your contact phone number to request an appointment.", "error")
         return redirect(url_for('dashboard.verified_doctors_page', uid=current_user.uid))
 
+    doc_fee = 1000.0
+    if doctor.profile_info and doctor.profile_info.consultation_fee:
+        doc_fee = float(doctor.profile_info.consultation_fee)
+
     new_appointment = AppointmentModel(
         patient_id=current_user.uid,
         doctor_id=doctor.uid,
         status='pending',
         patient_name=patient_name,
         patient_email=patient_email,
-        patient_phone=patient_phone
+        patient_phone=patient_phone,
+        fee_amount=doc_fee
     )
 
     try:
@@ -285,6 +293,7 @@ def confirm_appointment(appointment_id):
     scheduled_date_str = request.form.get('scheduled_date', '').strip()
     scheduled_time = request.form.get('scheduled_time', '').strip()
     doctor_notes = request.form.get('doctor_notes', '').strip()
+    fee_amount_str = request.form.get('fee_amount', '').strip()
 
     if not scheduled_date_str or not scheduled_time:
         flash("Please specify both a confirmed appointment date and time.", "error")
@@ -301,6 +310,11 @@ def confirm_appointment(appointment_id):
     appointment.scheduled_date = scheduled_date
     appointment.scheduled_time = scheduled_time
     appointment.doctor_notes = doctor_notes
+    if fee_amount_str:
+        try:
+            appointment.fee_amount = max(0.0, float(fee_amount_str))
+        except ValueError:
+            pass
     db.session.commit()
 
     # Dispatch real-time SSE notification to patient
@@ -409,6 +423,241 @@ def cancel_appointment(appointment_id):
     return redirect(url_for('dashboard.doctor_appointments_page', uid=current_user.uid))
 
 
+# ==========================================
+# SSLCOMMERZ PAYMENT GATEWAY ROUTES
+# ==========================================
+
+# Patient: Initiate SSLCommerz payment for an approved appointment
+@dashboard.route('/appointment/pay/<int:appointment_id>', methods=['POST'])
+@login_required
+def pay_appointment_fee(appointment_id):
+    appointment = AppointmentModel.query.get_or_404(appointment_id)
+
+    if appointment.patient_id != current_user.uid and not current_user.is_admin:
+        flash("Unauthorized access to this appointment payment.", "error")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=current_user.uid))
+
+    if appointment.status not in ['confirmed', 'completed']:
+        flash("Payment can only be initiated for confirmed or completed appointments.", "warning")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=current_user.uid))
+
+    if appointment.payment_status == 'paid':
+        flash("This consultation fee has already been paid.", "info")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=current_user.uid))
+
+    # Fee amount: patient can specify or use appointment's fee_amount
+    custom_amount_str = request.form.get('amount', '').strip()
+    amount = 0.0
+    if custom_amount_str:
+        try:
+            amount = float(custom_amount_str)
+        except ValueError:
+            amount = 0.0
+
+    if amount <= 0:
+        amount = appointment.fee_amount if (appointment.fee_amount and appointment.fee_amount > 0) else 1000.00
+
+    # Save the fee amount to the appointment record
+    appointment.fee_amount = amount
+    db.session.commit()
+
+    patient = RegistrationModel.query.get(appointment.patient_id)
+    doctor = RegistrationModel.query.get(appointment.doctor_id)
+
+    # Initiate session via SSLCommerz V4 API
+    result = initiate_sslcommerz_payment(
+        appointment=appointment,
+        amount=amount,
+        patient=patient,
+        doctor=doctor
+    )
+
+    if result.get('status') == 'SUCCESS' and result.get('gateway_url'):
+        return redirect(result['gateway_url'])
+    else:
+        error_msg = result.get('message', 'Failed to connect to SSLCommerz payment gateway.')
+        flash(f"Payment gateway error: {error_msg}", "error")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=current_user.uid))
+
+
+# SSLCommerz Payment Success Callback
+@dashboard.route('/payment/success', methods=['GET', 'POST'])
+def sslcommerz_success():
+    data = request.form.to_dict() if request.method == 'POST' else request.args.to_dict()
+    current_app.logger.info(f"SSLCommerz Success Callback received: {data}")
+
+    val_id = data.get('val_id')
+    tran_id = data.get('tran_id')
+    amount_str = data.get('amount') or data.get('value_d') or '0.00'
+    appointment_id_str = data.get('value_a')
+    card_type = data.get('card_type', 'SSLCommerz')
+    bank_tran_id = data.get('bank_tran_id', '')
+    card_brand = data.get('card_brand', '')
+    card_issuer = data.get('card_issuer', '')
+
+    appointment = None
+    if appointment_id_str:
+        try:
+            appointment = AppointmentModel.query.get(int(appointment_id_str))
+        except (ValueError, TypeError):
+            pass
+
+    if not appointment and tran_id:
+        appointment = AppointmentModel.query.filter_by(transaction_id=tran_id).first()
+
+    # Validate transaction with SSLCommerz API
+    validation_result = {}
+    if val_id:
+        validation_result = validate_sslcommerz_payment(val_id)
+        current_app.logger.info(f"SSLCommerz Validation Result for val_id {val_id}: {validation_result}")
+
+    if appointment:
+        try:
+            amount_val = float(validation_result.get('amount') or amount_str or appointment.fee_amount or 1000.0)
+        except ValueError:
+            amount_val = float(appointment.fee_amount or 1000.0)
+
+        appointment.payment_status = 'paid'
+        appointment.payment_amount = amount_val
+        appointment.payment_method = card_type or validation_result.get('card_type', 'SSLCommerz')
+        appointment.transaction_id = tran_id or validation_result.get('tran_id', appointment.transaction_id)
+        appointment.bank_tran_id = bank_tran_id or validation_result.get('bank_tran_id', '')
+        appointment.payment_date = datetime.now()
+
+        # Update transaction record if exists
+        txn = PaymentTransactionModel.query.filter_by(tran_id=appointment.transaction_id).first()
+        if txn:
+            txn.status = 'success'
+            txn.val_id = val_id
+            txn.amount = amount_val
+            txn.card_type = appointment.payment_method
+            txn.bank_tran_id = appointment.bank_tran_id
+            txn.card_brand = card_brand
+            txn.card_issuer = card_issuer
+            import json
+            txn.raw_response = json.dumps(validation_result or data)
+
+        db.session.commit()
+
+        # Re-authenticate patient session in case cross-origin POST from SSLCommerz dropped the session cookie
+        patient = RegistrationModel.query.get(appointment.patient_id)
+        if patient:
+            login_user(patient, remember=True)
+
+        # Dispatch real-time SSE notifications
+        notify_payment_success(appointment, amount_val, appointment.transaction_id)
+
+        flash(f"Payment of ৳{amount_val:.2f} for Appointment #{appointment.id} was completed successfully via {appointment.payment_method}!", "success")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=appointment.patient_id))
+
+    flash("Payment processed successfully. Please check your appointments list.", "info")
+    return redirect(url_for('dashboard.patient_appointments_page', uid=current_user.uid if current_user.is_authenticated else 1))
+
+
+# SSLCommerz Payment Fail Callback
+@dashboard.route('/payment/fail', methods=['GET', 'POST'])
+def sslcommerz_fail():
+    data = request.form.to_dict() if request.method == 'POST' else request.args.to_dict()
+    current_app.logger.warning(f"SSLCommerz Fail Callback received: {data}")
+
+    tran_id = data.get('tran_id')
+    appointment_id_str = data.get('value_a')
+    failed_reason = data.get('error', 'Payment transaction failed or was declined.')
+
+    appointment = None
+    if appointment_id_str:
+        try:
+            appointment = AppointmentModel.query.get(int(appointment_id_str))
+        except (ValueError, TypeError):
+            pass
+    if not appointment and tran_id:
+        appointment = AppointmentModel.query.filter_by(transaction_id=tran_id).first()
+
+    if appointment:
+        appointment.payment_status = 'failed'
+        txn = PaymentTransactionModel.query.filter_by(tran_id=tran_id).first()
+        if txn:
+            txn.status = 'failed'
+            import json
+            txn.raw_response = json.dumps(data)
+        db.session.commit()
+
+        # Re-authenticate patient session
+        patient = RegistrationModel.query.get(appointment.patient_id)
+        if patient:
+            login_user(patient, remember=True)
+
+        flash(f"Payment failed: {failed_reason}. You can retry payment anytime from your dashboard.", "error")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=appointment.patient_id))
+
+    flash(f"Payment failed: {failed_reason}.", "error")
+    return redirect(url_for('home.home_page'))
+
+
+# SSLCommerz Payment Cancel Callback
+@dashboard.route('/payment/cancel', methods=['GET', 'POST'])
+def sslcommerz_cancel():
+    data = request.form.to_dict() if request.method == 'POST' else request.args.to_dict()
+    current_app.logger.info(f"SSLCommerz Cancel Callback received: {data}")
+
+    tran_id = data.get('tran_id')
+    appointment_id_str = data.get('value_a')
+
+    appointment = None
+    if appointment_id_str:
+        try:
+            appointment = AppointmentModel.query.get(int(appointment_id_str))
+        except (ValueError, TypeError):
+            pass
+    if not appointment and tran_id:
+        appointment = AppointmentModel.query.filter_by(transaction_id=tran_id).first()
+
+    if appointment:
+        appointment.payment_status = 'unpaid'
+        txn = PaymentTransactionModel.query.filter_by(tran_id=tran_id).first()
+        if txn:
+            txn.status = 'cancelled'
+            import json
+            txn.raw_response = json.dumps(data)
+        db.session.commit()
+
+        # Re-authenticate patient session
+        patient = RegistrationModel.query.get(appointment.patient_id)
+        if patient:
+            login_user(patient, remember=True)
+
+        flash("Payment was cancelled. You can choose to pay the consultation fee later.", "info")
+        return redirect(url_for('dashboard.patient_appointments_page', uid=appointment.patient_id))
+
+    flash("Payment transaction was cancelled.", "info")
+    return redirect(url_for('home.home_page'))
+
+
+# SSLCommerz Instant Payment Notification (IPN) Webhook
+@dashboard.route('/payment/ipn', methods=['POST'])
+def sslcommerz_ipn():
+    data = request.form.to_dict()
+    val_id = data.get('val_id')
+    tran_id = data.get('tran_id')
+    current_app.logger.info(f"SSLCommerz IPN received: val_id={val_id}, tran_id={tran_id}")
+
+    if val_id and tran_id:
+        validation_result = validate_sslcommerz_payment(val_id)
+        if validation_result.get('status') in ['VALID', 'VALIDATED']:
+            appointment = AppointmentModel.query.filter_by(transaction_id=tran_id).first()
+            if appointment and appointment.payment_status != 'paid':
+                amount_val = float(validation_result.get('amount', appointment.fee_amount or 0.0))
+                appointment.payment_status = 'paid'
+                appointment.payment_amount = amount_val
+                appointment.payment_method = validation_result.get('card_type', 'SSLCommerz')
+                appointment.bank_tran_id = validation_result.get('bank_tran_id', '')
+                appointment.payment_date = datetime.now()
+                db.session.commit()
+                notify_payment_success(appointment, amount_val, tran_id)
+
+    return jsonify({'status': 'IPN received'}), 200
+
+
 
 
 
@@ -452,6 +701,7 @@ def setup_page(uid):
             govt_reg = form.govt_reg.data
             sign = form.signature.data
             office = form.office.data
+            fee_data = form.consultation_fee.data if form.consultation_fee.data is not None else 1000.0
 
             # image processing
             if sign:
@@ -479,6 +729,7 @@ def setup_page(uid):
                 current_position = position,
                 govt_reg = govt_reg,
                 office = office,
+                consultation_fee = fee_data,
                 # saving img only name
                 signature = unique_filename,
             )
@@ -535,6 +786,8 @@ def update_profile_info(uid):
             get_info.current_position = form.current_position.data
             get_info.govt_reg = form.govt_reg.data
             get_info.office = form.office.data
+            if form.consultation_fee.data is not None:
+                get_info.consultation_fee = float(form.consultation_fee.data)
 
             sign = form.signature.data
 

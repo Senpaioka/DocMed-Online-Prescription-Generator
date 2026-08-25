@@ -458,13 +458,23 @@
               </div>
             </div>
 
-            <div class="col-12">
+            <div class="col-12 col-md-6">
               <div class="form-group">
                 <label class="form-label-custom" for="{{ form.office.id }}">
                   <span>Chamber / Hospital Address</span>
                   <span class="optional-tag">Optional</span>
                 </label>
                 {{ form.office(class="form-control custom-input", placeholder='e.g. Room 402, Square Hospital, Panthapath, Dhaka') }}
+              </div>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <div class="form-group">
+                <label class="form-label-custom" for="{{ form.consultation_fee.id }}">
+                  <span>Consultation Fee (BDT)</span>
+                  <span class="optional-tag">Default: ৳1000.00</span>
+                </label>
+                {{ form.consultation_fee(class="form-control custom-input", placeholder='1000.00', type='number', step='0.01', min='0') }}
               </div>
             </div>
 

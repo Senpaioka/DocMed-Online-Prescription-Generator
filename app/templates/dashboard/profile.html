@@ -271,26 +271,7 @@
 </style>
 
 <!-- Top Fixed Toast Messages (Alpine-powered) -->
-<div class="toast-banner-container" x-data="{
-  toasts: [],
-  init() {
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          this.addToast({{ message | tojson }}, {{ category | tojson }});
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  },
-  addToast(msg, cat) {
-    const id = Date.now() + Math.random();
-    this.toasts.push({ id, message: msg, category: cat });
-    setTimeout(() => this.removeToast(id), 6000);
-  },
-  removeToast(id) {
-    this.toasts = this.toasts.filter(t => t.id !== id);
-  }
-}">
+<div class="toast-banner-container" x-data="toastBanner()">
   <template x-for="toast in toasts" :key="toast.id">
     <div class="modern-toast" :class="toast.category" x-transition:enter="animate__animated animate__fadeInDown" x-transition:leave="animate__animated animate__fadeOutRight">
       <div class="d-flex align-items-center gap-2">
@@ -349,6 +330,9 @@
               <span class="credential-chip font-monospace">
                 <i class="fa-solid fa-id-card text-info"></i> BMDC: {{ info.govt_reg }}
               </span>
+              <span class="credential-chip">
+                <i class="fa-solid fa-money-bill-wave text-success"></i> Consultation Fee: ৳{{ "%.2f"|format(info.consultation_fee or 1000.0) }}
+              </span>
             </div>
           </div>
         </div>
@@ -370,7 +354,7 @@
                 class="btn-action-primary"
                 style="padding: 10px 22px; font-size: 0.9rem; border-radius: 10px; font-weight: 700;"
               >
-                <i class="fa-solid fa-calendar-plus me-1"></i> Book Appointment
+                <i class="fa-solid fa-calendar-plus me-1"></i> Book Appointment (৳{{ "%.2f"|format(info.consultation_fee or 1000.0) }})
               </button>
             {% endif %}
             <a href="{{ url_for('dashboard.verified_doctors_page', uid=current_user.uid) }}" class="btn-edit-doctor">
@@ -481,6 +465,11 @@
           </div>
 
           <div class="detail-row">
+            <p class="detail-label">Consultation Fee</p>
+            <p class="detail-value fw-bold text-teal fs-6" style="color: #0d9488;">৳{{ "%.2f"|format(info.consultation_fee or 1000.0) }} BDT</p>
+          </div>
+
+          <div class="detail-row">
             <p class="detail-label">Chamber / Address</p>
             <p class="detail-value">{{ info.office or 'Not specified' }}</p>
           </div>
@@ -583,5 +572,38 @@
   </div>
 </div>
 {% endif %}
+
+<script id="flash-messages-data" type="application/json">
+  {{ get_flashed_messages(with_categories=True) | tojson }}
+</script>
+<script>
+function toastBanner() {
+  const dataEl = document.getElementById('flash-messages-data');
+  const initialMessages = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+  return {
+    toasts: [],
+    init() {
+      if (Array.isArray(initialMessages)) {
+        initialMessages.forEach(([category, message]) => {
+          this.addToast(message, category);
+        });
+      }
+    },
+    addToast(msg, cat) {
+      const id = Date.now() + Math.random();
+      this.toasts.push({ id: id, message: msg, category: cat });
+      const self = this;
+      setTimeout(function() {
+        self.removeToast(id);
+      }, 6000);
+    },
+    removeToast(id) {
+      this.toasts = this.toasts.filter(function(t) {
+        return t.id !== id;
+      });
+    }
+  };
+}
+</script>
 
 {% endblock %}

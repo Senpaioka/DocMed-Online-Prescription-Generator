@@ -297,10 +297,14 @@
                                                     </div>
                                                 {% endif %}
                                                 {% if p_info and p_info.office %}
-                                                    <div class="text-truncate text-secondary">
+                                                    <div class="text-truncate text-secondary mb-1">
                                                         <i class="fa-solid fa-location-dot text-muted me-1"></i> <strong>Chamber:</strong> {{ p_info.office }}
                                                     </div>
                                                 {% endif %}
+                                                <div class="text-truncate text-secondary">
+                                                    <i class="fa-solid fa-money-bill-wave text-success me-1"></i> <strong>Consultation Fee:</strong> 
+                                                    <span class="fw-bold text-teal" style="color: #0d9488;">৳{{ "%.2f"|format(p_info.consultation_fee or 1000.0) if p_info else '1000.00' }}</span>
+                                                </div>
                                             </div>
                                         </div>
 
@@ -317,7 +321,8 @@
                                                     id: '{{ doc.uid }}',
                                                     name: '{{ p_info.full_name if p_info and p_info.full_name else 'Dr. ' ~ doc.username }}',
                                                     specialty: '{{ p_info.current_position if p_info and p_info.current_position else 'Medical Practitioner' }}',
-                                                    chamber: '{{ p_info.office if p_info and p_info.office else 'DocMed Chamber' }}'
+                                                    chamber: '{{ p_info.office if p_info and p_info.office else 'DocMed Chamber' }}',
+                                                    fee: '{{ "%.2f"|format(p_info.consultation_fee or 1000.0) if p_info else '1000.00' }}'
                                                 })"
                                                 class="btn btn-sm btn-teal text-white fw-bold rounded-pill px-3 ms-auto"
                                                 style="background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%); font-size: 0.8rem;"
@@ -368,9 +373,14 @@
                             <div class="modal-body p-4">
                                 <template x-if="selectedDoctor">
                                     <div class="p-3 mb-3 rounded-3" style="background: #f0fdfa; border: 1px solid #ccfbf1;">
-                                        <h6 class="fw-bold text-dark mb-1" x-text="selectedDoctor.name"></h6>
-                                        <small class="text-teal d-block fw-semibold" style="color: #0d9488;" x-text="selectedDoctor.specialty"></small>
-                                        <small class="text-muted" x-text="'Chamber: ' + selectedDoctor.chamber"></small>
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <h6 class="fw-bold text-dark mb-1" x-text="selectedDoctor.name"></h6>
+                                                <small class="text-teal d-block fw-semibold" style="color: #0d9488;" x-text="selectedDoctor.specialty"></small>
+                                                <small class="text-muted" x-text="'Chamber: ' + selectedDoctor.chamber"></small>
+                                            </div>
+                                            <span class="badge rounded-pill fw-bold" style="background: #ccfbf1; color: #0f766e; font-size: 0.8rem;" x-text="'Fee: ৳' + selectedDoctor.fee"></span>
+                                        </div>
                                     </div>
                                 </template>
 

@@ -246,11 +246,16 @@ def document_page():
 @pdf_generator.route('/preview/<patient_id>')
 @login_required
 def pdf_prescription_preview(patient_id):
+    get_patient = PrescriptionModel.query.filter_by(patient_id=patient_id).first_or_404()
     
-    get_patient = PrescriptionModel.query.filter_by(patient_id=patient_id).first()
+    # Retrieve the prescribing doctor
+    doctor = RegistrationModel.query.get(get_patient.doc_id) if get_patient.doc_id else None
+    if not doctor:
+        doctor = current_user
 
     context = {
         'patient': get_patient,
+        'doctor': doctor,
     }
 
     return render_template('pdf/pdf_preview.html', **context)
@@ -270,7 +275,11 @@ def pdf_generator_page(uid, patient_id):
     - ?download=true or ?dl=1: force download attachment
     """
     get_patient = PrescriptionModel.query.filter_by(patient_id=patient_id).first_or_404()
-    get_doctor = RegistrationModel.query.get_or_404(uid)
+    
+    # Ensure we use the actual doctor associated with the prescription
+    get_doctor = RegistrationModel.query.get(get_patient.doc_id) if get_patient.doc_id else None
+    if not get_doctor:
+        get_doctor = RegistrationModel.query.get_or_404(uid)
 
     download_mode = request.args.get('download', '').lower() in ('1', 'true', 'yes') or request.args.get('dl') == '1'
 

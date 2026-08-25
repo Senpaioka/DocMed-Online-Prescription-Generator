@@ -133,7 +133,16 @@
     }
 </style>
 
-<div class="container dashboard-container">
+<div class="container dashboard-container" x-data="{
+    activePaymentAppt: null,
+    activeReceiptAppt: null,
+    setPaymentAppt(appt) {
+        this.activePaymentAppt = appt;
+    },
+    setReceiptAppt(appt) {
+        this.activeReceiptAppt = appt;
+    }
+}">
     <!-- Top Greeting Bar -->
     <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom">
         <div>
@@ -141,7 +150,7 @@
                 My Consultation Appointments
             </h2>
             <p class="text-muted mb-0 small">
-                Track your appointment booking requests and scheduled practitioner visits.
+                Track your appointment booking requests, payment status, and scheduled practitioner visits.
             </p>
         </div>
         <div class="mt-2 mt-md-0">
@@ -238,6 +247,156 @@
             </div>
         </div>
     </div>
+
+    <!-- SSLCommerz Payment Initiation Modal -->
+    <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                <div class="modal-header text-white" style="background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%);">
+                    <h6 class="modal-title fw-bold">
+                        <i class="fa-solid fa-shield-halved me-2"></i> Pay Consultation Fee (SSLCommerz)
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form :action="activePaymentAppt ? '{{ url_for('dashboard.pay_appointment_fee', appointment_id=0) }}'.replace('/0', '/' + activePaymentAppt.id) : '#'" method="POST">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                    <div class="modal-body p-4">
+                        <template x-if="activePaymentAppt">
+                            <div>
+                                <!-- Doctor & Appointment Summary Card -->
+                                <div class="p-3 mb-3 rounded-3 border bg-light">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" style="width: 42px; height: 42px; background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%);">
+                                            <i class="fa-solid fa-user-doctor"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0" x-text="activePaymentAppt.doctorName"></h6>
+                                            <small class="text-teal fw-semibold" style="color: #0d9488;" x-text="activePaymentAppt.doctorSpecialty"></small>
+                                        </div>
+                                    </div>
+                                    <hr class="my-2 border-slate-200">
+                                    <div class="d-flex justify-content-between small text-muted">
+                                        <span>Scheduled Date & Time:</span>
+                                        <strong class="text-dark"><span x-text="activePaymentAppt.date"></span> at <span x-text="activePaymentAppt.time"></span></strong>
+                                    </div>
+                                </div>
+
+                                <!-- Fee Amount Input (Manual Adjustment Supported) -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold small text-dark d-flex justify-content-between">
+                                        <span>Consultation Fee Amount (BDT) <span class="text-danger">*</span></span>
+                                        <span class="text-muted fw-normal">Optional / Manually Editable</span>
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white fw-bold text-teal" style="color: #0d9488;">৳</span>
+                                        <input 
+                                            type="number" 
+                                            name="amount" 
+                                            step="0.01" 
+                                            min="10" 
+                                            max="50000" 
+                                            class="form-control form-control-lg fw-bold text-dark" 
+                                            x-model="activePaymentAppt.fee"
+                                            required
+                                        >
+                                        <span class="input-group-text bg-light text-muted small">BDT</span>
+                                    </div>
+                                    <small class="text-muted mt-1 d-block">
+                                        <i class="fa-solid fa-info-circle me-1"></i> You can adjust the fee amount before proceeding to the payment gateway.
+                                    </small>
+                                </div>
+
+                                <!-- Supported Payment Methods Badge Strip -->
+                                <div class="p-3 rounded-3 mb-3 border bg-white text-center">
+                                    <small class="text-muted d-block fw-semibold mb-2">Supported Payment Channels via SSLCommerz:</small>
+                                    <div class="d-flex flex-wrap justify-content-center gap-2 align-items-center">
+                                        <span class="badge px-2 py-1" style="background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;"><i class="fa-solid fa-mobile-screen me-1"></i> bKash</span>
+                                        <span class="badge px-2 py-1" style="background: #fff7ed; color: #ea580c; border: 1px solid #ffedd5;"><i class="fa-solid fa-bolt me-1"></i> Nagad</span>
+                                        <span class="badge px-2 py-1" style="background: #faf5ff; color: #8b5cf6; border: 1px solid #e9d5ff;"><i class="fa-solid fa-rocket me-1"></i> Rocket</span>
+                                        <span class="badge px-2 py-1" style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;"><i class="fa-brands fa-cc-visa me-1"></i> VISA</span>
+                                        <span class="badge px-2 py-1" style="background: #fff1f2; color: #be123c; border: 1px solid #fecdd3;"><i class="fa-brands fa-cc-mastercard me-1"></i> Mastercard</span>
+                                        <span class="badge px-2 py-1" style="background: #f8fafc; color: #334155; border: 1px solid #cbd5e1;"><i class="fa-solid fa-building-columns me-1"></i> Net Banking</span>
+                                    </div>
+                                </div>
+
+                                <div class="alert alert-info py-2 px-3 small rounded-3 mb-0" style="font-size: 0.82rem;">
+                                    <i class="fa-solid fa-lock me-1"></i> You will be securely redirected to SSLCommerz Sandbox Hosted Gateway to complete your transaction.
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                    <div class="modal-footer bg-light border-top">
+                        <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-teal text-white rounded-pill px-4 fw-bold shadow-sm" style="background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%); border: none;">
+                            <i class="fa-solid fa-arrow-right-to-bracket me-1"></i> Proceed to SSLCommerz
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Receipt Modal -->
+    <div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0 shadow-lg overflow-hidden">
+                <div class="modal-header bg-success text-white">
+                    <h6 class="modal-title fw-bold">
+                        <i class="fa-solid fa-receipt me-2"></i> Payment Receipt
+                    </h6>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <template x-if="activeReceiptAppt">
+                        <div>
+                            <div class="text-center mb-4">
+                                <div class="d-inline-flex p-3 rounded-circle bg-success-subtle text-success mb-2">
+                                    <i class="fa-solid fa-circle-check fs-2"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark mb-0">Payment Completed</h5>
+                                <p class="text-muted small">Doctor Consultation Fee Paid</p>
+                                <h3 class="fw-bold text-success mt-2 mb-0">৳<span x-text="activeReceiptAppt.amount"></span></h3>
+                            </div>
+
+                            <div class="list-group list-group-flush border rounded-3 overflow-hidden small">
+                                <div class="list-group-item d-flex justify-content-between py-2">
+                                    <span class="text-muted">Appointment:</span>
+                                    <strong class="text-dark">#<span x-text="activeReceiptAppt.id"></span></strong>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between py-2">
+                                    <span class="text-muted">Practitioner:</span>
+                                    <strong class="text-dark" x-text="activeReceiptAppt.doctorName"></strong>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between py-2">
+                                    <span class="text-muted">Schedule:</span>
+                                    <span class="text-dark fw-semibold" x-text="activeReceiptAppt.scheduleDate"></span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between py-2">
+                                    <span class="text-muted">Transaction ID:</span>
+                                    <code class="text-primary fw-bold" x-text="activeReceiptAppt.tranId"></code>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between py-2">
+                                    <span class="text-muted">Payment Method:</span>
+                                    <span class="badge bg-light text-dark border" x-text="activeReceiptAppt.method"></span>
+                                </div>
+                                <div class="list-group-item d-flex justify-content-between py-2">
+                                    <span class="text-muted">Payment Date:</span>
+                                    <span class="text-dark" x-text="activeReceiptAppt.date"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+                <div class="modal-footer bg-light border-top">
+                    <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="window.print()">
+                        <i class="fa-solid fa-print me-1"></i> Print Receipt
+                    </button>
+                    <button type="button" class="btn btn-sm btn-success rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>

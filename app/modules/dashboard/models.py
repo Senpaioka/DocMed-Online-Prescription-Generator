@@ -27,11 +27,14 @@ class ProfileSetupModel(db.Model):
     current_position = db.Column(db.String(100), nullable=False)
     govt_reg = db.Column(db.String(100), nullable=False)
     office = db.Column(db.String(255), nullable=True)
+    consultation_fee = db.Column(db.Float, default=1000.0, nullable=True)
      # This field stores the filename or relative path of the uploaded image.
     signature = db.Column(db.String(255), nullable=False)
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        if 'consultation_fee' not in kwargs or kwargs.get('consultation_fee') is None:
+            self.consultation_fee = 1000.0
 
     def __repr__(self):
         return self.full_name
@@ -65,6 +68,15 @@ class AppointmentModel(db.Model):
     scheduled_time = db.Column(db.String(50), nullable=True) # e.g. "10:30 AM", "05:00 PM"
     doctor_notes = db.Column(db.Text, nullable=True) # instructions, room/chamber info, or cancellation reason
 
+    # Payment details (SSLCommerz)
+    fee_amount = db.Column(db.Float, default=0.0, nullable=True)
+    payment_status = db.Column(db.String(20), default='unpaid', nullable=False) # 'unpaid', 'pending', 'paid', 'failed', 'cancelled'
+    transaction_id = db.Column(db.String(100), nullable=True)
+    bank_tran_id = db.Column(db.String(100), nullable=True)
+    payment_method = db.Column(db.String(50), nullable=True) # e.g. 'BKASH', 'VISA', 'MASTER'
+    payment_amount = db.Column(db.Float, nullable=True)
+    payment_date = db.Column(db.DateTime, nullable=True)
+
     created_at = db.Column(db.DateTime, default=datetime.now)
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
 
@@ -76,9 +88,51 @@ class AppointmentModel(db.Model):
         super().__init__(**kwargs)
         if not self.status:
             self.status = 'pending'
+        if not self.payment_status:
+            self.payment_status = 'unpaid'
 
     def __repr__(self):
-        return f"<Appointment #{self.id} Patient={self.patient_name} Doctor_ID={self.doctor_id} Status={self.status}>"
+        return f"<Appointment #{self.id} Patient={self.patient_name} Doctor_ID={self.doctor_id} Status={self.status} Payment={self.payment_status}>"
+
+
+class PaymentTransactionModel(db.Model):
+    __tablename__ = 'payment_transactions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    appointment_id = db.Column(db.Integer, db.ForeignKey('appointments.id', ondelete='CASCADE'), nullable=False)
+    patient_id = db.Column(db.Integer, db.ForeignKey('registration.uid', ondelete='CASCADE'), nullable=False)
+    doctor_id = db.Column(db.Integer, db.ForeignKey('registration.uid', ondelete='CASCADE'), nullable=False)
+
+    tran_id = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    val_id = db.Column(db.String(100), nullable=True)
+    amount = db.Column(db.Float, nullable=False, default=0.0)
+    currency = db.Column(db.String(10), default='BDT', nullable=False)
+    status = db.Column(db.String(20), default='initiated', nullable=False) # initiated, success, failed, cancelled, validated
+
+    card_type = db.Column(db.String(50), nullable=True)
+    card_no = db.Column(db.String(50), nullable=True)
+    bank_tran_id = db.Column(db.String(100), nullable=True)
+    card_issuer = db.Column(db.String(100), nullable=True)
+    card_brand = db.Column(db.String(50), nullable=True)
+    raw_response = db.Column(db.Text, nullable=True)
+
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+    # Relationships
+    appointment = db.relationship('AppointmentModel', backref=db.backref('payment_transactions', lazy='dynamic', cascade='all, delete-orphan'))
+    patient = db.relationship('RegistrationModel', foreign_keys=[patient_id], backref=db.backref('patient_payments', lazy='dynamic'))
+    doctor = db.relationship('RegistrationModel', foreign_keys=[doctor_id], backref=db.backref('doctor_received_payments', lazy='dynamic'))
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        if 'status' not in kwargs:
+            self.status = 'initiated'
+        if 'created_at' not in kwargs:
+            self.created_at = datetime.now()
+
+    def __repr__(self):
+        return f"<PaymentTransaction #{self.id} TranID={self.tran_id} Amount={self.amount} Status={self.status}>"
 
 
 class NotificationModel(db.Model):

@@ -19,6 +19,14 @@ class Config:
     MAIL_PASSWORD = config('MAIL_PASSWORD', default='')
     MAIL_DEFAULT_SENDER = config('MAIL_DEFAULT_SENDER', default=config('MAIL_USERNAME', default='noreply@docmed.com'))
 
+    # SSLCommerz Payment Gateway configuration
+    SSLCOMMERZ_STORE_NAME = config('SSLCOMMERZ_STORE_NAME', default='testpersoy1iv')
+    SSLCOMMERZ_STORE_ID = config('SSLCOMMERZ_STORE_ID')
+    SSLCOMMERZ_STORE_PASSWORD = config('SSLCOMMERZ_STORE_PASSWORD')
+    SSLCOMMERZ_IS_SANDBOX = config('SSLCOMMERZ_IS_SANDBOX', default=True, cast=bool)
+    SSLCOMMERZ_API_URL = config('SSLCOMMERZ_API_URL', default='https://sandbox.sslcommerz.com/gwprocess/v4/api.php')
+    SSLCOMMERZ_VALIDATION_URL = config('SSLCOMMERZ_VALIDATION_URL', default='https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php')
+
 
 class DevelopmentConfig(Config):
     DEBUG = config('DEBUG', default=True, cast=bool)

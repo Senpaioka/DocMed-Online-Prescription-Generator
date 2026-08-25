@@ -1,25 +1,19 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, DateField, SelectField, SubmitField, FileField
+from wtforms import StringField, DateField, SelectField, SubmitField, FileField, FloatField
 from wtforms.validators import DataRequired, Length, Optional
-from flask_wtf.file import FileField, FileAllowed, FileRequired
+from flask_wtf.file import FileAllowed, FileRequired
 from flask_admin.contrib.sqla import ModelView
-import os
-from werkzeug.utils import secure_filename
-from flask import url_for
-from flask import current_app
 
 
 class ProfileSetUpForm(FlaskForm):
-
-    full_name = StringField('full_name', validators=[DataRequired(), Length(min=5,max=120 )])
+    full_name = StringField('full_name', validators=[DataRequired(), Length(min=5, max=120)])
     birth_date = DateField('birth_date', validators=[DataRequired()])
     sex = SelectField('gender', choices=[
-    ('male', 'Male'),
-    ('female', 'Female'),
-    ('other', 'Other')
-
-], validators=[DataRequired()])
-    achievement = StringField('achieve',validators=[DataRequired()])
+        ('male', 'Male'),
+        ('female', 'Female'),
+        ('other', 'Other')
+    ], validators=[DataRequired()])
+    achievement = StringField('achieve', validators=[DataRequired()])
     phone = StringField('phone', validators=[Optional()])
     college = StringField('college', validators=[DataRequired()])
     higher_degree = StringField('higher_degree', validators=[Optional()])
@@ -28,25 +22,21 @@ class ProfileSetUpForm(FlaskForm):
     current_position = StringField('current_position', validators=[DataRequired()])
     govt_reg = StringField('reg_no', validators=[DataRequired()])
     office = StringField('address', validators=[Optional()])
+    consultation_fee = FloatField('consultation_fee', default=1000.0, validators=[Optional()])
     signature = FileField('sign', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'svg'], 'Images only!'), FileRequired()])
 
     submit = SubmitField('Submit')
 
 
-
-
-
-
 class UpdateProfileSetUpForm(FlaskForm):
-
-    full_name = StringField('full_name', validators=[DataRequired(), Length(min=5,max=120 )])
+    full_name = StringField('full_name', validators=[DataRequired(), Length(min=5, max=120)])
     birth_date = DateField('birth_date', validators=[DataRequired()])
     sex = SelectField('gender', choices=[
         ('male', 'Male'),
         ('female', 'Female'),
         ('other', 'Other')
     ])
-    achievement = StringField('achieve',validators=[DataRequired()])
+    achievement = StringField('achieve', validators=[DataRequired()])
     phone = StringField('phone', validators=[Optional()])
     college = StringField('college', validators=[DataRequired()])
     higher_degree = StringField('higher_degree', validators=[Optional()])
@@ -55,40 +45,53 @@ class UpdateProfileSetUpForm(FlaskForm):
     current_position = StringField('current_position', validators=[DataRequired()])
     govt_reg = StringField('reg_no', validators=[DataRequired()])
     office = StringField('address', validators=[Optional()])
+    consultation_fee = FloatField('consultation_fee', default=1000.0, validators=[Optional()])
     signature = FileField('sign', validators=[FileAllowed(['jpg', 'jpeg', 'png', 'svg'], 'Images only!'), Optional()])
 
     submit = SubmitField('Update Info')
 
 
-
-
-
-from markupsafe import Markup
-
-####### Admin Panel ########
+####### Admin Panel Views ########
 
 class AppointmentAdminForm(ModelView):
-    column_list = ['id', 'patient_name', 'patient_email', 'patient_phone', 'status', 'preferred_date', 'scheduled_date', 'scheduled_time', 'created_at']
+    column_list = ['id', 'patient_name', 'patient_email', 'patient_phone', 'status', 'fee_amount', 'payment_status', 'scheduled_date', 'scheduled_time', 'created_at']
     column_labels = {
         'id': 'ID',
         'patient_name': 'Patient Name',
         'patient_email': 'Patient Email',
         'patient_phone': 'Phone',
         'status': 'Status',
-        'preferred_date': 'Requested Date',
+        'fee_amount': 'Fee (BDT)',
+        'payment_status': 'Payment',
         'scheduled_date': 'Confirmed Date',
         'scheduled_time': 'Confirmed Time',
         'created_at': 'Requested At'
     }
-    column_searchable_list = ['patient_name', 'patient_email', 'patient_phone']
-    column_filters = ['status', 'scheduled_date']
+    column_searchable_list = ['patient_name', 'patient_email', 'patient_phone', 'transaction_id']
+    column_filters = ['status', 'payment_status', 'scheduled_date']
     can_create = False
 
+
+class PaymentTransactionAdminForm(ModelView):
+    column_list = ['id', 'tran_id', 'amount', 'currency', 'status', 'card_type', 'bank_tran_id', 'created_at']
+    column_labels = {
+        'id': 'ID',
+        'tran_id': 'Transaction ID',
+        'amount': 'Amount',
+        'currency': 'Currency',
+        'status': 'Status',
+        'card_type': 'Payment Method',
+        'bank_tran_id': 'Bank Tran ID',
+        'created_at': 'Initiated At'
+    }
+    column_searchable_list = ['tran_id', 'val_id', 'bank_tran_id']
+    column_filters = ['status', 'currency', 'card_type']
+    can_create = False
+    can_edit = False
+
+
 class ProfileSetUpAdminForm(ModelView):
-
     form = ProfileSetUpForm
-
-    # columns show in admin panel  
     column_list = ['full_name', 'govt_reg', 'current_position', 'college', 'sex', 'phone']
     column_labels = {
         'full_name': 'Doctor Name',
@@ -98,23 +101,6 @@ class ProfileSetUpAdminForm(ModelView):
         'sex': 'Gender',
         'phone': 'Contact Number'
     }
-    # disabling create update profile info
     can_create = False
     column_searchable_list = ['full_name', 'govt_reg', 'college']
     column_filters = ['sex']
-
-    # sign saving method from admin-panel
-    # def on_model_change(self, form, model, is_created):
-    #     """Save uploaded signature file correctly"""
-    #     if form.signature.data:
-    #         signature_image_name = secure_filename(form.signature.data.filename)
-    #         print(signature_image_name)
-
-    #         # Define the actual file system path (absolute path)
-    #         file_path = os.path.join(current_app.root_path, 'static', 'uploads', signature_image_name)
-            
-    #         # Save the file to the correct directory
-    #         form.signature.data.save(file_path)
-
-    #         # Store the relative path (so it works with `url_for`)
-    #         model.signature = f'uploads/{signature_image_name}'

@@ -306,26 +306,7 @@
 </style>
 
 <!-- Top Fixed Toast Messages (Alpine-powered) -->
-<div class="toast-banner-container" x-data="{
-  toasts: [],
-  init() {
-    {% with messages = get_flashed_messages(with_categories=True) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          this.addToast({{ message | tojson }}, {{ category | tojson }});
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-  },
-  addToast(msg, cat) {
-    const id = Date.now() + Math.random();
-    this.toasts.push({ id, message: msg, category: cat });
-    setTimeout(() => this.removeToast(id), 6000);
-  },
-  removeToast(id) {
-    this.toasts = this.toasts.filter(t => t.id !== id);
-  }
-}">
+<div class="toast-banner-container" x-data="toastBanner()">
   <template x-for="toast in toasts" :key="toast.id">
     <div class="modern-toast" :class="toast.category" x-transition:enter="animate__animated animate__fadeInDown" x-transition:leave="animate__animated animate__fadeOutRight">
       <div class="d-flex align-items-center gap-2">
@@ -545,13 +526,23 @@
                 </div>
               </div>
 
-              <div class="col-12">
+              <div class="col-12 col-md-6">
                 <div class="form-group">
                   <label class="form-label-custom" for="{{ form.office.id }}">
                     <span>Chamber / Hospital Address</span>
                     <span class="optional-tag">Optional</span>
                   </label>
                   {{ form.office(class="form-control custom-input", placeholder='e.g. Room 402, Square Hospital, Panthapath, Dhaka') }}
+                </div>
+              </div>
+
+              <div class="col-12 col-md-6">
+                <div class="form-group">
+                  <label class="form-label-custom" for="{{ form.consultation_fee.id }}">
+                    <span>Consultation Fee (BDT)</span>
+                    <span class="optional-tag">Default: ৳1000.00</span>
+                  </label>
+                  {{ form.consultation_fee(class="form-control custom-input", placeholder='1000.00', type='number', step='0.01', min='0') }}
                 </div>
               </div>
 
@@ -623,5 +614,38 @@
   {% endif %}
 
 </div>
+
+<script id="flash-messages-data" type="application/json">
+  {{ get_flashed_messages(with_categories=True) | tojson }}
+</script>
+<script>
+function toastBanner() {
+  const dataEl = document.getElementById('flash-messages-data');
+  const initialMessages = dataEl ? JSON.parse(dataEl.textContent || '[]') : [];
+  return {
+    toasts: [],
+    init() {
+      if (Array.isArray(initialMessages)) {
+        initialMessages.forEach(([category, message]) => {
+          this.addToast(message, category);
+        });
+      }
+    },
+    addToast(msg, cat) {
+      const id = Date.now() + Math.random();
+      this.toasts.push({ id: id, message: msg, category: cat });
+      const self = this;
+      setTimeout(function() {
+        self.removeToast(id);
+      }, 6000);
+    },
+    removeToast(id) {
+      this.toasts = this.toasts.filter(function(t) {
+        return t.id !== id;
+      });
+    }
+  };
+}
+</script>
 
 {% endblock %}

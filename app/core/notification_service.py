@@ -160,3 +160,29 @@ def notify_doctor_new_appointment(appointment: AppointmentModel):
         appointment_id=appointment.id,
         link_url=link_url
     )
+
+
+def notify_payment_success(appointment: AppointmentModel, amount: float, tran_id: str):
+    """Notify both patient and doctor when payment succeeds via SSLCommerz."""
+    formatted_amount = f"৳{float(amount):.2f}"
+    
+    # Notify Patient
+    create_and_push_notification(
+        user_id=appointment.patient_id,
+        title="Payment Successful! 💳",
+        message=f"Your consultation fee payment of {formatted_amount} (Txn: {tran_id}) was successfully processed.",
+        event_type="payment_success",
+        appointment_id=appointment.id,
+        link_url=url_for('dashboard.patient_appointments_page', uid=appointment.patient_id)
+    )
+
+    # Notify Doctor
+    create_and_push_notification(
+        user_id=appointment.doctor_id,
+        title="Consultation Fee Received! 💰",
+        message=f"Patient {appointment.patient_name} completed payment of {formatted_amount} (Txn: {tran_id}) for Appointment #{appointment.id}.",
+        event_type="payment_received",
+        appointment_id=appointment.id,
+        link_url=url_for('dashboard.doctor_appointments_page', uid=appointment.doctor_id)
+    )
+
