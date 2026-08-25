@@ -273,6 +273,38 @@
         margin-top: 30px;
     }
 
+    @media (max-width: 768px) {
+        .preview-page-wrapper {
+            margin: 20px auto 40px auto;
+        }
+        .action-top-bar {
+            padding: 14px 16px;
+        }
+        .doctor-title-block {
+            text-align: left;
+            margin-top: 16px;
+            padding-top: 12px;
+            border-top: 1px dashed #e2e8f0;
+        }
+        .prescription-paper-card {
+            padding: 24px 18px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .prescription-paper-card {
+            padding: 18px 14px;
+            border-radius: 12px;
+        }
+        .btn-download-pdf, .btn-view-pdf, .btn-new-rx {
+            width: 100%;
+            justify-content: center;
+        }
+        .patient-ribbon {
+            padding: 12px 14px;
+        }
+    }
+
     @media print {
         .action-top-bar, nav, footer {
             display: none !important;

@@ -5,39 +5,52 @@
 {% block content %}
 
 
-<div class="container mt-4 mb-4">
-    <div class="block">
-      <div class="row justify-content-center">
-        <h1>Search</h1>
-
-        <div class="mt-4 mb-4">
-        <h5>Search Results</h5>
-
-        {% if search_result %}
-        
-            {% for data in search_result %}
-            <div class="card mb-2">
-                <div class="card-body">
-                  <h5 class="card-title">Patient ID: #{{ data.patient_id }}</h5>
-                  <h6 class="card-subtitle mb-2 text-body-secondary">Patient Name: {{ data.patient_name }}</h6>
-                  <p class="card-text">Prescribed at: {{ data.created_at.strftime('%d-%m-%Y')}}</p>
-                  <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="card-link">Prescription</a>
-                </div>
-              </div>
-            {% endfor %}
-
+<div class="container my-5" style="max-width: 800px;">
+    <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom flex-wrap">
+            <div class="rounded-3 p-3 text-white" style="background: linear-gradient(135deg, #0d9488 0%, #092e3b 100%);">
+                <i class="fa-solid fa-magnifying-glass fs-4"></i>
+            </div>
+            <div>
+                <h3 class="fw-bold mb-1 text-dark">Patient Prescription Search</h3>
+                <p class="text-muted small mb-0">Search results for your patient lookup query</p>
+            </div>
         </div>
 
+        {% if search_result %}
+            <div class="d-flex flex-column gap-3">
+                {% for data in search_result %}
+                <div class="card border rounded-3 p-3 shadow-sm hover-shadow transition">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="badge font-monospace" style="background: #f0fdfa; color: #0d9488; border: 1px solid #99f6e4;">#{{ data.patient_id }}</span>
+                                <h6 class="fw-bold mb-0 text-dark">{{ data.patient_name }}</h6>
+                            </div>
+                            <small class="text-muted">
+                                <i class="fa-regular fa-calendar me-1"></i> Prescribed on {{ data.created_at.strftime('%d %b %Y') if data.created_at else '' }}
+                                {% if data.patient_age %} &bull; Age: {{ data.patient_age }} Yrs{% endif %}
+                                {% if data.patient_sex %} &bull; {{ data.patient_sex | capitalize }}{% endif %}
+                            </small>
+                        </div>
+                        <a href="{{ url_for('pdf_generator.pdf_prescription_preview', patient_id=data.patient_id) }}" class="btn btn-sm btn-teal text-white rounded-pill px-3 fw-bold" style="background: #0d9488;">
+                            <i class="fa-solid fa-file-prescription me-1"></i> View Prescription
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         {% else %}
-
-        <h3> No Search Result Found</h3>
-        <p>Hint: (Don't search patient id with '#')</p>
-   
+            <div class="text-center py-5 bg-light rounded-4">
+                <div class="d-inline-flex p-3 rounded-circle bg-white text-muted mb-2 shadow-sm">
+                    <i class="fa-solid fa-file-circle-xmark fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-dark mb-1">No Search Results Found</h5>
+                <p class="text-muted small mb-0">Try searching by numeric patient ID (without '#' symbol) or patient name.</p>
+            </div>
         {% endif %}
-        
-      </div>
     </div>
-  </div>
+</div>
 
 
 {% endblock %}
