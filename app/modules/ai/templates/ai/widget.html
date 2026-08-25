@@ -66,6 +66,23 @@
       </div>
     </div>
 
+    <!-- Custom Clear Confirmation Modal Overlay -->
+    <div id="docmed-ai-confirm-modal" class="ai-confirm-overlay" style="display: none;">
+      <div class="ai-confirm-card">
+        <div class="ai-confirm-icon">
+          <i class="fa-solid fa-trash-can"></i>
+        </div>
+        <h6 class="ai-confirm-title">Clear Conversation?</h6>
+        <p class="ai-confirm-desc">This will erase recent chat messages and reset the assistant session.</p>
+        <div class="ai-confirm-actions">
+          <button id="docmed-ai-confirm-cancel" type="button" class="ai-btn-cancel">Cancel</button>
+          <button id="docmed-ai-confirm-proceed" type="button" class="ai-btn-danger">
+            <i class="fa-solid fa-trash-can me-1"></i> Clear Chat
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Message Stream -->
     <div id="docmed-ai-messages" class="docmed-ai-messages">
       <!-- Default Welcome Message -->
@@ -308,6 +325,112 @@
     color: #ffffff;
   }
 
+  /* Custom Confirmation Overlay */
+  .ai-confirm-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(9, 46, 59, 0.68);
+    backdrop-filter: blur(4px);
+    z-index: 10005;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: ai-fade-in 0.2s ease-out;
+  }
+
+  @keyframes ai-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  .ai-confirm-card {
+    background: #ffffff;
+    border-radius: 16px;
+    padding: 22px 20px 18px;
+    text-align: center;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.22);
+    width: 100%;
+    max-width: 300px;
+    animation: ai-scale-up 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes ai-scale-up {
+    from { transform: scale(0.92); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .ai-confirm-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #ef4444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    margin: 0 auto 10px;
+  }
+
+  .ai-confirm-title {
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 6px;
+    font-size: 1.02rem;
+  }
+
+  .ai-confirm-desc {
+    color: #64748b;
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin-bottom: 16px;
+  }
+
+  .ai-confirm-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+  }
+
+  .ai-btn-cancel {
+    flex: 1;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    color: #475569;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .ai-btn-cancel:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+  }
+
+  .ai-btn-danger {
+    flex: 1;
+    background: #ef4444;
+    border: none;
+    color: #ffffff;
+    font-weight: 600;
+    font-size: 0.82rem;
+    padding: 8px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .ai-btn-danger:hover {
+    background: #dc2626;
+  }
+
   /* Messages Area */
   .docmed-ai-messages {
     flex: 1;
@@ -543,6 +666,9 @@ document.addEventListener('DOMContentLoaded', function() {
   const windowEl = document.getElementById('docmed-ai-window');
   const closeBtn = document.getElementById('docmed-ai-close-btn');
   const clearBtn = document.getElementById('docmed-ai-clear-btn');
+  const confirmModal = document.getElementById('docmed-ai-confirm-modal');
+  const confirmCancelBtn = document.getElementById('docmed-ai-confirm-cancel');
+  const confirmProceedBtn = document.getElementById('docmed-ai-confirm-proceed');
   const form = document.getElementById('docmed-ai-form');
   const input = document.getElementById('docmed-ai-input');
   const sendBtn = document.getElementById('docmed-ai-send-btn');
@@ -566,6 +692,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
   closeBtn.addEventListener('click', () => {
     windowEl.style.display = 'none';
+    if (confirmModal) confirmModal.style.display = 'none';
   });
 
   // Auto-resize textarea
@@ -623,9 +750,32 @@ document.addEventListener('DOMContentLoaded', function() {
     scrollToBottom();
   });
 
-  // Clear History Handler
-  clearBtn.addEventListener('click', async function() {
-    if (confirm('Clear chat conversation history?')) {
+  // Custom Clear Confirmation Handlers
+  clearBtn.addEventListener('click', function() {
+    if (confirmModal) {
+      confirmModal.style.display = 'flex';
+    }
+  });
+
+  if (confirmCancelBtn) {
+    confirmCancelBtn.addEventListener('click', function() {
+      if (confirmModal) confirmModal.style.display = 'none';
+    });
+  }
+
+  // Dismiss confirm modal when clicking background overlay
+  if (confirmModal) {
+    confirmModal.addEventListener('click', function(e) {
+      if (e.target === confirmModal) {
+        confirmModal.style.display = 'none';
+      }
+    });
+  }
+
+  // Execute Clear Chat
+  if (confirmProceedBtn) {
+    confirmProceedBtn.addEventListener('click', async function() {
+      if (confirmModal) confirmModal.style.display = 'none';
       try {
         await fetch('/ai/clear', { method: 'POST' });
         // Retain welcome message only
@@ -638,8 +788,8 @@ document.addEventListener('DOMContentLoaded', function() {
       } catch (err) {
         console.error('Clear error:', err);
       }
-    }
-  });
+    });
+  }
 
   // Load Quick Prompts
   async function loadQuickPrompts() {
