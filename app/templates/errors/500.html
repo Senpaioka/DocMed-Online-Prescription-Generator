@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ error_code | default(500) }} - {{ error_title | default("Server Error") }} | DocMed{% endblock %}
+
+{% block content %}
+<div class="error-page-wrapper py-5">
+  <div class="container py-lg-5">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-10 col-lg-8 col-xl-7 text-center">
+        
+        <!-- Error Card -->
+        <div class="card error-card border-0 shadow-lg p-4 p-sm-5">
+          <!-- Visual Circle with SVGs/Icons -->
+          <div class="error-visual-container mb-4">
+            <div class="error-icon-box mx-auto" style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(254, 226, 226, 0.5)); border-color: rgba(239, 68, 68, 0.25);">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+                <path d="M3.22 12H9.5l1.5-3 2 6 1.5-3h4.28"/>
+              </svg>
+            </div>
+            <div class="error-code-badge">
+              <span class="badge bg-danger-soft text-danger fw-bold px-3 py-2 rounded-pill">
+                <i class="fa-solid fa-server me-1"></i> HTTP 500
+              </span>
+            </div>
+          </div>
+
+          <!-- Main Text -->
+          <h1 class="display-4 fw-extrabold text-navy mb-3">
+            {{ error_title | default("Internal Server Error") }}
+          </h1>
+          <p class="lead text-muted mb-4 mx-auto error-desc">
+            {{ error_message | default("We encountered an unexpected issue while processing your medical request. Our engineers have been notified and are actively working on it.") }}
+          </p>
+
+          <!-- Safe Recovery Info Box -->
+          <div class="alert alert-danger border-0 bg-danger-subtle rounded-3 p-3 mb-4 text-start d-flex align-items-center gap-3">
+            <div class="quick-tip-icon text-danger fs-4 flex-shrink-0">
+              <i class="fa-solid fa-shield-virus"></i>
+            </div>
+            <div class="small text-danger-emphasis">
+              <strong>Your medical data is safe.</strong> Any unsaved changes during this interruption have been cleanly aborted to protect record integrity.
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex flex-column flex-sm-row justify-content-center gap-3">
+            <button onclick="window.location.reload()" class="btn btn-outline-danger btn-lg px-4 rounded-pill font-weight-600">
+              <i class="fa-solid fa-rotate-right me-2"></i> Try Again
+            </button>
+            <a href="{{ url_for('home.home_page') }}" class="btn btn-docmed btn-lg px-4 rounded-pill font-weight-600 shadow-sm">
+              <i class="fa-solid fa-house-medical me-2"></i> Return to Home
+            </a>
+            {% if current_user.is_authenticated %}
+              {% if current_user.role == 'doctor' %}
+                <a href="{{ url_for('dashboard.doctor_dashboard') }}" class="btn btn-outline-teal btn-lg px-4 rounded-pill font-weight-600">
+                  <i class="fa-solid fa-user-doctor me-2"></i> Doctor Portal
+                </a>
+              {% elif current_user.role == 'patient' %}
+                <a href="{{ url_for('dashboard.patient_dashboard') }}" class="btn btn-outline-teal btn-lg px-4 rounded-pill font-weight-600">
+                  <i class="fa-solid fa-hospital-user me-2"></i> Patient Portal
+                </a>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Footnote -->
+        <p class="text-muted small mt-4">
+          Need prompt support? Contact our technical team at <a href="mailto:support@docmed.com" class="text-docmed-primary text-decoration-none fw-semibold">support@docmed.com</a>.
+        </p>
+
+      </div>
+    </div>
+  </div>
+</main>
+
+<style>
+  :root {
+    --docmed-teal: #0d9488;
+    --docmed-teal-hover: #0f766e;
+    --docmed-teal-soft: rgba(13, 148, 136, 0.12);
+  }
+
+  .text-docmed-primary {
+    color: var(--docmed-teal) !important;
+  }
+
+  .text-navy {
+    color: #092e3b !important;
+  }
+
+  .text-teal {
+    color: #0f766e !important;
+  }
+
+  .bg-danger-soft {
+    background-color: rgba(239, 68, 68, 0.12) !important;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .btn-docmed {
+    background-color: var(--docmed-teal);
+    color: #ffffff;
+    border: 1px solid var(--docmed-teal);
+    transition: all 0.25s ease-in-out;
+  }
+
+  .btn-docmed:hover {
+    background-color: var(--docmed-teal-hover);
+    color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(13, 148, 136, 0.3) !important;
+  }
+
+  .btn-outline-teal {
+    color: var(--docmed-teal);
+    border: 1.5px solid var(--docmed-teal);
+    background: transparent;
+    transition: all 0.25s ease-in-out;
+  }
+
+  .btn-outline-teal:hover {
+    background-color: var(--docmed-teal);
+    color: #ffffff;
+    transform: translateY(-2px);
+  }
+
+  .error-page-wrapper {
+    background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.05) 0%, transparent 60%),
+                radial-gradient(circle at bottom left, rgba(9, 46, 59, 0.06) 0%, transparent 60%),
+                #f8fafc;
+    min-height: 70vh;
+  }
+
+  .error-card {
+    border-radius: 1.5rem;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: 0 20px 40px -15px rgba(9, 46, 59, 0.1) !important;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .error-visual-container {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .error-icon-box {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid;
+    position: relative;
+    z-index: 2;
+  }
+
+  .error-code-badge {
+    position: absolute;
+    bottom: -6px;
+    z-index: 3;
+  }
+
+  .error-desc {
+    max-width: 480px;
+    line-height: 1.6;
+    font-size: 1.1rem;
+  }
+</style>
+{% endblock %}

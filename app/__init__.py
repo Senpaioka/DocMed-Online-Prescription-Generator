@@ -54,6 +54,10 @@ def create_app(config_name_or_class=None):
     # Initialize Admin
     init_admin(app)
 
+    # Register Error Handlers
+    from app.core.errors import register_error_handlers
+    register_error_handlers(app)
+
     # Register Blueprints
     from app.modules.home.routes import home
     from app.modules.account.routes import accounts
