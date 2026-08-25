@@ -55,15 +55,9 @@
               <i class="fa-solid fa-house-medical me-2"></i> Return to Home
             </a>
             {% if current_user.is_authenticated %}
-              {% if current_user.role == 'doctor' %}
-                <a href="{{ url_for('dashboard.doctor_dashboard') }}" class="btn btn-outline-teal btn-lg px-4 rounded-pill font-weight-600">
-                  <i class="fa-solid fa-user-doctor me-2"></i> Doctor Portal
-                </a>
-              {% elif current_user.role == 'patient' %}
-                <a href="{{ url_for('dashboard.patient_dashboard') }}" class="btn btn-outline-teal btn-lg px-4 rounded-pill font-weight-600">
-                  <i class="fa-solid fa-hospital-user me-2"></i> Patient Portal
-                </a>
-              {% endif %}
+              <a href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" class="btn btn-outline-teal btn-lg px-4 rounded-pill font-weight-600">
+                <i class="fa-solid fa-gauge me-2"></i> Go to Dashboard
+              </a>
             {% endif %}
           </div>
         </div>
