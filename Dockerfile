@@ -30,8 +30,8 @@ RUN uv sync --frozen --no-cache
 COPY . .
 
 # Set default port
-ENV PORT=5000
-EXPOSE 5000
+ENV PORT=10000
+EXPOSE 10000
 
-# Start production server
-CMD ["uv", "run", "gunicorn", "manage:flask_app", "--bind", "0.0.0.0:5000", "--workers", "2"]
+# Start production server using dynamic PORT environment variable
+CMD ["sh", "-c", "uv run gunicorn manage:flask_app --bind 0.0.0.0:${PORT:-10000} --workers 2"]
