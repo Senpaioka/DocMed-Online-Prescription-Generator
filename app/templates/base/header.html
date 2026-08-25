@@ -96,11 +96,19 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
+      text-decoration: none !important;
     }
 
     .docmed-nav-link:hover {
       color: #ffffff !important;
       background: rgba(255, 255, 255, 0.08);
+      text-decoration: none !important;
+    }
+
+    .docmed-nav-link.active {
+      color: #5eead4 !important;
+      background: rgba(13, 148, 136, 0.2) !important;
+      box-shadow: inset 0 0 0 1px rgba(94, 234, 212, 0.35);
     }
 
     /* Notification Bell & Dropdown Styles */
@@ -414,7 +422,7 @@
       <div class="collapse navbar-collapse" id="navbarsDocMed">
         <ul class="navbar-nav ms-auto mb-2 mb-md-0 align-items-md-center gap-md-2">
           <li class="nav-item">
-            <a class="docmed-nav-link" href="{{ url_for('home.home_page') }}">
+            <a class="docmed-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('home.') else '' }}" href="{{ url_for('home.home_page') }}" {{ 'aria-current="page"' if request.endpoint and request.endpoint.startswith('home.') else '' }}>
               <i class="fa-solid fa-house fa-sm"></i> Home
             </a>
           </li>
@@ -422,13 +430,13 @@
           {% if current_user.is_authenticated %}
             {% if current_user.role == 'admin' or current_user.is_admin %}
             <li class="nav-item">
-              <a class="docmed-nav-link" href="{{ url_for('admin.index') }}">
+              <a class="docmed-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('admin.') else '' }}" href="{{ url_for('admin.index') }}" {{ 'aria-current="page"' if request.endpoint and request.endpoint.startswith('admin.') else '' }}>
                 <i class="fa-solid fa-shield-halved fa-sm"></i> Admin Panel
               </a>
             </li>
             {% else %}
             <li class="nav-item">
-              <a class="docmed-nav-link" href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}">
+              <a class="docmed-nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('dashboard.') else '' }}" href="{{ url_for('dashboard.dashboard_main_page', uid=current_user.uid) }}" {{ 'aria-current="page"' if request.endpoint and request.endpoint.startswith('dashboard.') else '' }}>
                 <i class="fa-solid fa-gauge fa-sm"></i> Dashboard
               </a>
             </li>
