@@ -2,7 +2,7 @@ from flask import redirect, url_for
 from flask_admin import AdminIndexView, expose
 from flask_admin.menu import MenuLink
 from flask_login import current_user
-from app.extensions import admin, db
+from app.extensions import db
 
 
 class AdminPanel(AdminIndexView):
@@ -81,8 +81,13 @@ class AdminPanel(AdminIndexView):
 
 
 def init_admin(app):
-    admin.init_app(
+    from flask_admin import Admin
+
+    admin = Admin(
         app,
+        name='DocMed Admin',
+        base_template='admin/master.html',
+        template_mode='bootstrap3',
         index_view=AdminPanel(
             name='Dashboard',
             template='admin/index.html',

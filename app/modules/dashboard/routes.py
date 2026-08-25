@@ -706,13 +706,10 @@ def setup_page(uid):
             # image processing
             if sign:
                 signature_image_name = secure_filename(sign.filename)
-                # unique_filename
                 timestamp = int(time.time())
                 unique_filename = f"{timestamp}_{signature_image_name}"
-                # image saving location
-                upload_folder = current_app.config['UPLOAD_FOLDER']
-                file_path = os.path.join(upload_folder, unique_filename).replace("\\", "/")
-                sign.save(file_path)
+                from app.core.storage_service import upload_file_to_storage
+                upload_file_to_storage(sign, unique_filename)
                 
 
             create_profile = ProfileSetupModel(
@@ -795,9 +792,8 @@ def update_profile_info(uid):
                 signature_image_name = secure_filename(sign.filename)
                 timestamp = int(time.time())
                 unique_filename = f"{timestamp}_{signature_image_name}"
-                upload_folder = current_app.config['UPLOAD_FOLDER']
-                file_path = os.path.join(upload_folder, unique_filename).replace("\\", "/")
-                sign.save(file_path)
+                from app.core.storage_service import upload_file_to_storage
+                upload_file_to_storage(sign, unique_filename)
                 get_info.signature = unique_filename
 
 

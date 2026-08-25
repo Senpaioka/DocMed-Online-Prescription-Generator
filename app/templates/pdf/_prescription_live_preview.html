@@ -100,7 +100,7 @@
         <div class="col-5 text-end">
             {% if current_user.profile_info.signature %}
             <div class="mb-1">
-                <img src="{{ url_for('static', filename='uploads/' + current_user.profile_info.signature) }}" alt="signature" style="max-height: 44px; object-fit: contain;">
+                <img src="{{ get_file_url(current_user.profile_info.signature) }}" alt="signature" style="max-height: 44px; object-fit: contain;">
             </div>
             {% else %}
             <div style="height: 35px;"></div>

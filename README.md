@@ -62,15 +62,15 @@ Preview: https://docmed-online-prescription-generator-v2.onrender.com
 
 - **Doctor**:
 ``` txt
-Email: gifav30453@kolsea.com
-Password: Test@Doctor?1234
+Email: gotil56330@prodbits.com
+Password: Test@doctor->123
 ``` 
 
 - **Patient**:
 
 ``` txt
 Email: lidorif133@prodbits.com
-Password: Test@Patient?1234
+Password: Test@patient->123
 ``` 
 
 ---

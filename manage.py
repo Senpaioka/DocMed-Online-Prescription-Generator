@@ -49,6 +49,10 @@ def createsuperuser(username, email, password, gender):
 
 
 if __name__ == '__main__':
-    flask_app.run()
+    import sys
+    if len(sys.argv) > 1:
+        flask_app.cli()
+    else:
+        flask_app.run()
 
 

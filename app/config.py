@@ -9,6 +9,10 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload
     UPLOAD_FOLDER = os.path.join(BASE_DIR, 'app', 'static', 'uploads')
+    SUPABASE_BUCKET = config('SUPABASE_BUCKET', default='')
+    SUPABASE_BUCKET_NAME = config('SUPABASE_BUCKET_NAME', default='DocMed-Bucket')
+    SUPABASE_BUCKET_API_KEY = config('SUPABASE_BUCKET_API_KEY', default='')
+    SUPABASE_SECRET_ACCESS_KEY = config('SUPABASE_SECRET_ACCESS_KEY', default='')
 
     # Flask-Mailman configuration
     MAIL_SERVER = config('MAIL_SERVER', default='smtp.gmail.com')

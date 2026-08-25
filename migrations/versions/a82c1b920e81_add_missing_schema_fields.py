@@ -21,7 +21,7 @@ def upgrade():
     # 1. Update registration table with role and verified_doctor
     with op.batch_alter_table('registration', schema=None) as batch_op:
         batch_op.add_column(sa.Column('role', sa.String(length=20), server_default='patient', nullable=False))
-        batch_op.add_column(sa.Column('verified_doctor', sa.Boolean(), server_default=sa.text('0'), nullable=False))
+        batch_op.add_column(sa.Column('verified_doctor', sa.Boolean(), server_default=sa.text('false'), nullable=False))
 
     # 2. Update profile_info with consultation_fee
     with op.batch_alter_table('profile_info', schema=None) as batch_op:
@@ -91,7 +91,7 @@ def upgrade():
         sa.Column('message', sa.Text(), nullable=False),
         sa.Column('event_type', sa.String(length=50), server_default='general', nullable=False),
         sa.Column('link_url', sa.String(length=255), nullable=True),
-        sa.Column('is_read', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+        sa.Column('is_read', sa.Boolean(), server_default=sa.text('false'), nullable=False),
         sa.Column('created_at', sa.DateTime(), default=datetime.now),
     )
 

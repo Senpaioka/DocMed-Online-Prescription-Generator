@@ -606,7 +606,7 @@
                         <span class="badge bg-light text-secondary border">Active on file</span>
                       </div>
                       <div class="p-2 bg-light rounded border w-100 text-center">
-                        <img src="{{ url_for('static', filename='uploads/' + data.signature) }}" class="img-fluid" style="max-height: 65px; object-fit: contain;">
+                        <img src="{{ get_file_url(data.signature) }}" class="img-fluid" style="max-height: 65px; object-fit: contain;">
                       </div>
                     </div>
                   </template>

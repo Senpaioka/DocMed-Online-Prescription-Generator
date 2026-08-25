@@ -507,7 +507,7 @@
           <div class="text-center w-100">
             {% if info.signature %}
               <div class="signature-preview-holder">
-                <img src="{{ url_for('static', filename='uploads/' + info.signature) }}" alt="Digital Signature">
+                <img src="{{ get_file_url(info.signature) }}" alt="Digital Signature">
                 <small class="text-muted mt-2 d-block font-monospace" style="font-size: 0.75rem;">Verified Digital Signature</small>
               </div>
             {% else %}

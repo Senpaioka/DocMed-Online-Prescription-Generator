@@ -58,6 +58,10 @@ def create_app(config_name_or_class=None):
     from app.core.errors import register_error_handlers
     register_error_handlers(app)
 
+    # Template storage filter / helper
+    from app.core.storage_service import get_file_url
+    app.jinja_env.globals['get_file_url'] = get_file_url
+
     # Register Blueprints
     from app.modules.home.routes import home
     from app.modules.account.routes import accounts
