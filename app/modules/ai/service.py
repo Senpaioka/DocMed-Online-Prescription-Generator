@@ -1,4 +1,6 @@
-"""Gemini AI Service integrating the Google GenAI SDK with role-based tools and history."""
+"""Gemini AI Service integrating the Google GenAI SDK with multi-model fallback,
+key rotation, role-based tools, and session history.
+"""
 
 import logging
 from typing import Dict, Any, List, Optional
@@ -14,17 +16,36 @@ from app.modules.ai.tools import get_tools_for_user
 logger = logging.getLogger(__name__)
 
 
-def get_genai_client() -> Optional[genai.Client]:
-    """Create and return a Gemini API client instance."""
-    api_key = current_app.config.get('GEMINI_API_KEY') or decouple_config('GEMINI_API_KEY', default='')
-    if not api_key:
-        logger.error("GEMINI_API_KEY is not set.")
-        return None
-    try:
-        return genai.Client(api_key=api_key)
-    except Exception as e:
-        logger.error(f"Error initializing GenAI Client: {e}", exc_info=True)
-        return None
+def get_available_api_keys() -> List[str]:
+    """Retrieve all available Gemini API keys from configuration for rotation."""
+    keys_str = current_app.config.get('GEMINI_API_KEYS') or decouple_config('GEMINI_API_KEYS', default='')
+    single_key = current_app.config.get('GEMINI_API_KEY') or decouple_config('GEMINI_API_KEY', default='')
+
+    keys = []
+    if keys_str:
+        keys.extend([k.strip() for k in keys_str.split(',') if k.strip()])
+    if single_key and single_key.strip() not in keys:
+        keys.append(single_key.strip())
+
+    return keys
+
+
+def get_candidate_models() -> List[str]:
+    """Retrieve prioritized list of Gemini models for automatic fallback."""
+    primary = current_app.config.get('GEMINI_MODEL') or decouple_config('GEMINI_MODEL', default='gemini-3.6-flash')
+    fallback_str = current_app.config.get('GEMINI_FALLBACK_MODELS') or decouple_config(
+        'GEMINI_FALLBACK_MODELS',
+        default='gemini-3.6-flash,gemini-3.7-flash,gemini-flash-latest,gemini-2.5-flash-lite'
+    )
+
+    models = [primary.strip()]
+    if fallback_str:
+        for m in fallback_str.split(','):
+            m_clean = m.strip()
+            if m_clean and m_clean not in models:
+                models.append(m_clean)
+
+    return models
 
 
 def get_user_session_history(user_id: int) -> List[Dict[str, str]]:
@@ -36,7 +57,6 @@ def get_user_session_history(user_id: int) -> List[Dict[str, str]]:
 def save_user_session_history(user_id: int, history: List[Dict[str, str]]) -> None:
     """Save serialized chat history to session for current user, limiting to latest 20 turns."""
     history_key = f"ai_chat_history_{user_id}"
-    # Keep last 20 messages to prevent session bloat
     session[history_key] = history[-20:]
     session.modified = True
 
@@ -49,7 +69,8 @@ def clear_user_session_history(user_id: int) -> None:
 
 
 def generate_ai_response(user_message: str, user=None) -> Dict[str, Any]:
-    """Process a user message and return the Gemini AI response with tools execution.
+    """Process a user message and return the Gemini AI response with automatic
+    multi-model fallback and key rotation to bypass rate limits.
     
     Args:
         user_message: The prompt/message from the user.
@@ -67,14 +88,14 @@ def generate_ai_response(user_message: str, user=None) -> Dict[str, Any]:
             "message": "Authentication required to interact with DocMed AI."
         }
 
-    client = get_genai_client()
-    if not client:
+    api_keys = get_available_api_keys()
+    if not api_keys:
         return {
             "status": "error",
-            "message": "Gemini API key is not configured or failed to initialize. Please check server settings."
+            "message": "Gemini API key is not configured. Please add GEMINI_API_KEY to .env file."
         }
 
-    model_name = current_app.config.get('GEMINI_MODEL') or decouple_config('GEMINI_MODEL', default='gemini-3.6-flash')
+    candidate_models = get_candidate_models()
     system_instruction = get_system_prompt_for_user(user)
     tools = get_tools_for_user(user)
 
@@ -85,7 +106,6 @@ def generate_ai_response(user_message: str, user=None) -> Dict[str, Any]:
         role = item.get("role", "user")
         text = item.get("text", "")
         if text:
-            # Map role
             genai_role = "model" if role in ("model", "assistant") else "user"
             genai_history.append(
                 types.Content(
@@ -94,44 +114,70 @@ def generate_ai_response(user_message: str, user=None) -> Dict[str, Any]:
                 )
             )
 
-    try:
-        config_obj = types.GenerateContentConfig(
-            system_instruction=system_instruction,
-            tools=tools if tools else None,
-            temperature=0.4
-        )
+    last_error = ""
 
-        chat = client.chats.create(
-            model=model_name,
-            history=genai_history,
-            config=config_obj
-        )
+    # Attempt execution across API keys and fallback models
+    for key in api_keys:
+        try:
+            client = genai.Client(api_key=key)
+        except Exception as client_err:
+            logger.warning(f"Failed to create client for API key ending in ...{key[-4:]}: {client_err}")
+            continue
 
-        response = chat.send_message(user_message)
-        response_text = response.text or "I processed your request, but have no additional text to display."
+        for model_name in candidate_models:
+            try:
+                config_obj = types.GenerateContentConfig(
+                    system_instruction=system_instruction,
+                    tools=tools if tools else None,
+                    temperature=0.4
+                )
 
-        # Update and persist session history
-        raw_history.append({"role": "user", "text": user_message})
-        raw_history.append({"role": "model", "text": response_text})
-        save_user_session_history(user.uid, raw_history)
+                chat = client.chats.create(
+                    model=model_name,
+                    history=genai_history,
+                    config=config_obj
+                )
 
-        return {
-            "status": "success",
-            "reply": response_text,
-            "role": getattr(user, 'role', 'patient')
-        }
+                response = chat.send_message(user_message)
+                response_text = response.text or "I processed your request, but have no additional text to display."
 
-    except Exception as e:
-        err_msg = str(e)
-        logger.error(f"Gemini API chat error: {err_msg}", exc_info=True)
-        if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg:
-            friendly = "DocMed AI is currently experiencing high demand or rate limits on the free tier. Please wait a few seconds and try again."
-        elif "API_KEY" in err_msg or "403" in err_msg:
-            friendly = "AI service authentication error. Please verify the Gemini API key configuration."
-        else:
-            friendly = f"DocMed AI encountered an unexpected issue: {err_msg}"
+                # Update and persist session history
+                raw_history.append({"role": "user", "text": user_message})
+                raw_history.append({"role": "model", "text": response_text})
+                save_user_session_history(user.uid, raw_history)
 
-        return {
-            "status": "error",
-            "message": friendly
-        }
+                return {
+                    "status": "success",
+                    "reply": response_text,
+                    "model_used": model_name,
+                    "role": getattr(user, 'role', 'patient')
+                }
+
+            except Exception as e:
+                err_msg = str(e)
+                last_error = err_msg
+                logger.warning(f"Attempt with model '{model_name}' on key ...{key[-4:]} failed: {err_msg}")
+
+                # If rate-limited or quota exceeded, seamlessly try next model/key
+                if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "quota" in err_msg.lower():
+                    logger.info(f"Rate limit hit on {model_name}. Switching to next fallback model/key...")
+                    continue
+                elif "not found" in err_msg.lower() or "404" in err_msg:
+                    # Model not available, try next model
+                    continue
+                else:
+                    # Non-quota error (e.g. fatal format or content issue)
+                    break
+
+    # If all candidate models and keys failed:
+    if "429" in last_error or "RESOURCE_EXHAUSTED" in last_error:
+        friendly = "DocMed AI is currently experiencing high demand across all free-tier models. Please wait a few moments and try again, or add secondary API keys to .env."
+    elif "API_KEY" in last_error or "403" in last_error:
+        friendly = "AI service authentication error. Please verify the Gemini API key in your .env configuration."
+    else:
+        friendly = f"DocMed AI encountered an unexpected issue: {last_error or 'Service temporarily unavailable'}"
+
+    return {
+        "status": "error",
+        "message": friendly
+    }

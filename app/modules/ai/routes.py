@@ -35,7 +35,7 @@ def chat():
 
     result = generate_ai_response(message, user=current_user)
     if result.get('status') == 'error':
-        return jsonify(result), 500
+        return jsonify(result), 200
 
     return jsonify(result)
 

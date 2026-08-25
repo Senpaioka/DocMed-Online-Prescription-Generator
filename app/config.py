@@ -29,7 +29,9 @@ class Config:
 
     # Google Gemini AI configuration
     GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+    GEMINI_API_KEYS = config('GEMINI_API_KEYS', default='')  # Optional comma-separated fallback keys
     GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-3.6-flash')
+    GEMINI_FALLBACK_MODELS = config('GEMINI_FALLBACK_MODELS', default='gemini-3.6-flash,gemini-3.7-flash,gemini-flash-latest,gemini-2.5-flash-lite')
 
 
 class DevelopmentConfig(Config):
