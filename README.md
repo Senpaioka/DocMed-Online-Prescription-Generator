@@ -8,7 +8,7 @@
 
 **DocMed** is a full-featured, AI-powered healthcare management web application built with **Flask**, **SQLAlchemy**, **WeasyPrint**, and **Google Gemini AI**. It connects doctors and patients into a seamless ecosystem for appointments, automated billing, verified digital prescriptions, and intelligent medical assistance.
 
-Preview: https://docmed-online-prescription-generator.onrender.com
+Preview: https://docmed-online-prescription-generator-v2.onrender.com
 
 ---
 

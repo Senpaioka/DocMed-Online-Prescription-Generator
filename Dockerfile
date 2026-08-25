@@ -33,5 +33,5 @@ COPY . .
 ENV PORT=10000
 EXPOSE 10000
 
-# Start production server using dynamic PORT environment variable
-CMD ["sh", "-c", "uv run gunicorn manage:flask_app --bind 0.0.0.0:${PORT:-10000} --workers 2"]
+# Run database migrations and start production server using dynamic PORT environment variable
+CMD ["sh", "-c", "uv run flask db upgrade && uv run gunicorn manage:flask_app --bind 0.0.0.0:${PORT:-10000} --workers 2"]
