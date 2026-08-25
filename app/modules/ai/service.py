@@ -157,17 +157,8 @@ def generate_ai_response(user_message: str, user=None) -> Dict[str, Any]:
                 err_msg = str(e)
                 last_error = err_msg
                 logger.warning(f"Attempt with model '{model_name}' on key ...{key[-4:]} failed: {err_msg}")
-
-                # If rate-limited or quota exceeded, seamlessly try next model/key
-                if "429" in err_msg or "RESOURCE_EXHAUSTED" in err_msg or "quota" in err_msg.lower():
-                    logger.info(f"Rate limit hit on {model_name}. Switching to next fallback model/key...")
-                    continue
-                elif "not found" in err_msg.lower() or "404" in err_msg:
-                    # Model not available, try next model
-                    continue
-                else:
-                    # Non-quota error (e.g. fatal format or content issue)
-                    break
+                # Seamlessly continue to the next model or API key
+                continue
 
     # If all candidate models and keys failed:
     if "429" in last_error or "RESOURCE_EXHAUSTED" in last_error:
