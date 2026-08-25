@@ -60,11 +60,13 @@ def create_app(config_name_or_class=None):
     from app.modules.dashboard.routes import dashboard
     from app.modules.pdf.routes import pdf_generator
     from app.modules.search.routes import user_search
+    from app.modules.ai.routes import ai_bp
 
     app.register_blueprint(home, url_prefix='/')
     app.register_blueprint(accounts, url_prefix='/account')
     app.register_blueprint(dashboard, url_prefix='/dashboard')
     app.register_blueprint(pdf_generator, url_prefix='/pdf')
     app.register_blueprint(user_search, url_prefix='/search')
+    app.register_blueprint(ai_bp, url_prefix='/ai')
 
     return app

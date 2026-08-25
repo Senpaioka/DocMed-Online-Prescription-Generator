@@ -55,5 +55,9 @@
 		<script src="{{ url_for('static', filename='js/tiny-slider.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/custom.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/notifications.js') }}"></script>
+
+		{% if current_user.is_authenticated %}
+			{% include 'ai/widget.html' %}
+		{% endif %}
 	</body>
 </html>

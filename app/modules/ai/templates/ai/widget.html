@@ -1,0 +1,769 @@
+{% if current_user.is_authenticated %}
+<!-- ==========================================
+     DOCMED AI CHATBOT WIDGET
+     ========================================== -->
+<div id="docmed-ai-widget-container">
+  <!-- Floating Launcher Button -->
+  <button id="docmed-ai-toggle-btn" class="docmed-ai-launcher-btn" aria-label="Open DocMed AI Assistant" title="Open DocMed AI Assistant">
+    <div class="ai-launcher-icon-wrapper">
+      <i class="fa-solid fa-wand-magic-sparkles ai-spark-icon"></i>
+      <span class="ai-online-pulse"></span>
+    </div>
+    <span class="ai-launcher-label d-none d-md-inline-block">
+      {% if current_user.is_admin or current_user.role == 'admin' %}
+        Admin AI
+      {% elif current_user.is_doctor or current_user.role == 'doctor' %}
+        Clinical AI
+      {% else %}
+        DocMed AI
+      {% endif %}
+    </span>
+  </button>
+
+  <!-- Chat Drawer / Modal Window -->
+  <div id="docmed-ai-window" class="docmed-ai-window" style="display: none;">
+    <!-- Header -->
+    <div class="docmed-ai-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="docmed-ai-avatar">
+          <i class="fa-solid fa-robot text-white"></i>
+          <span class="ai-avatar-badge-dot"></span>
+        </div>
+        <div>
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0 fw-bold text-white fs-6">DocMed AI</h6>
+            <span class="ai-role-chip 
+              {% if current_user.is_admin or current_user.role == 'admin' %}ai-role-admin
+              {% elif current_user.is_doctor or current_user.role == 'doctor' %}ai-role-doctor
+              {% else %}ai-role-patient{% endif %}">
+              {% if current_user.is_admin or current_user.role == 'admin' %}
+                <i class="fa-solid fa-shield-halved"></i> Admin
+              {% elif current_user.is_doctor or current_user.role == 'doctor' %}
+                <i class="fa-solid fa-user-doctor"></i> Clinical
+              {% else %}
+                <i class="fa-solid fa-user"></i> Patient
+              {% endif %}
+            </span>
+          </div>
+          <small class="ai-header-subtitle">
+            {% if current_user.is_doctor or current_user.role == 'doctor' %}
+              Clinical Intelligence Assistant
+            {% elif current_user.is_admin or current_user.role == 'admin' %}
+              Administrative Assistant
+            {% else %}
+              DocMed Patient Guide
+            {% endif %}
+          </small>
+        </div>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <button id="docmed-ai-clear-btn" class="ai-header-action-btn" title="Clear Conversation" aria-label="Clear chat">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+        <button id="docmed-ai-close-btn" class="ai-header-action-btn" title="Minimize / Close" aria-label="Close chat">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Message Stream -->
+    <div id="docmed-ai-messages" class="docmed-ai-messages">
+      <!-- Default Welcome Message -->
+      <div class="ai-msg-row ai-msg-bot">
+        <div class="ai-msg-avatar">
+          <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="ai-msg-bubble">
+          <p class="mb-1">
+            Hello <strong>{{ current_user.username }}</strong>! 👋
+          </p>
+          {% if current_user.is_doctor or current_user.role == 'doctor' %}
+            <p class="mb-0">
+              I am your <strong>Clinical Assistant</strong>. I can search past prescriptions, summarize patient histories, provide drug pharmacology details, and assist your workflow.
+            </p>
+          {% elif current_user.is_admin or current_user.role == 'admin' %}
+            <p class="mb-0">
+              I am your <strong>Admin Assistant</strong>. I can provide aggregate system statistics, doctor verification overviews, and administrative shortcuts.
+            </p>
+          {% else %}
+            <p class="mb-0">
+              I am your <strong>DocMed Assistant</strong>. I can help you find verified doctors, check your appointments, review prescriptions, and guide you through the app.
+            </p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick Suggestion Chips Container -->
+      <div id="docmed-ai-chips-container" class="docmed-ai-chips-wrapper">
+        <div class="ai-chips-title">Suggested actions:</div>
+        <div id="docmed-ai-chips" class="d-flex flex-wrap gap-1">
+          <!-- Dynamic Chips populated via JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Typing Indicator (Hidden by default) -->
+    <div id="docmed-ai-typing" class="ai-typing-indicator" style="display: none;">
+      <div class="ai-typing-dot"></div>
+      <div class="ai-typing-dot"></div>
+      <div class="ai-typing-dot"></div>
+      <span class="ai-typing-text">Thinking...</span>
+    </div>
+
+    <!-- Input Footer -->
+    <div class="docmed-ai-footer">
+      <form id="docmed-ai-form" class="d-flex align-items-center gap-2 m-0 p-0">
+        <textarea 
+          id="docmed-ai-input" 
+          rows="1" 
+          placeholder="Ask a question or type a command..." 
+          aria-label="Message DocMed AI" 
+          autocomplete="off"></textarea>
+        <button type="submit" id="docmed-ai-send-btn" class="ai-send-btn" aria-label="Send message">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+      <div class="ai-disclaimer">
+        <i class="fa-solid fa-circle-info"></i> AI assisted. Always verify clinical data.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==========================================
+     AI CHATBOT STYLES
+     ========================================== -->
+<style>
+  #docmed-ai-widget-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Launcher Button */
+  .docmed-ai-launcher-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    border: none;
+    padding: 12px 18px;
+    border-radius: 9999px;
+    box-shadow: 0 8px 24px rgba(13, 148, 136, 0.4), 0 2px 6px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+
+  .docmed-ai-launcher-btn:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(13, 148, 136, 0.5), 0 4px 10px rgba(0, 0, 0, 0.2);
+    background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+  }
+
+  .ai-launcher-icon-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-spark-icon {
+    font-size: 1.15rem;
+    animation: ai-pulse 2.5s infinite;
+  }
+
+  .ai-online-pulse {
+    position: absolute;
+    top: -2px;
+    right: -3px;
+    width: 8px;
+    height: 8px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    border: 2px solid #ffffff;
+  }
+
+  @keyframes ai-pulse {
+    0%, 100% { transform: scale(1); filter: drop-shadow(0 0 2px rgba(255,255,255,0.6)); }
+    50% { transform: scale(1.15); filter: drop-shadow(0 0 6px rgba(255,255,255,0.9)); }
+  }
+
+  /* Chat Window */
+  .docmed-ai-window {
+    position: fixed;
+    bottom: 86px;
+    right: 24px;
+    width: 400px;
+    max-width: calc(100vw - 32px);
+    height: 580px;
+    max-height: calc(100vh - 120px);
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 20px 45px rgba(9, 46, 59, 0.28), 0 0 0 1px rgba(13, 148, 136, 0.15);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10000;
+    animation: ai-slide-in 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes ai-slide-in {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Header */
+  .docmed-ai-header {
+    background: linear-gradient(135deg, #092e3b 0%, #0f4c5c 100%);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .docmed-ai-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    position: relative;
+    backdrop-filter: blur(4px);
+  }
+
+  .ai-avatar-badge-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 9px;
+    height: 9px;
+    background-color: #10b981;
+    border-radius: 50%;
+    border: 2px solid #092e3b;
+  }
+
+  .ai-header-subtitle {
+    color: #99f6e4;
+    font-size: 0.72rem;
+    display: block;
+    font-weight: 500;
+  }
+
+  .ai-role-chip {
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .ai-role-patient {
+    background: rgba(45, 212, 191, 0.2);
+    color: #5eead4;
+    border: 1px solid rgba(94, 234, 212, 0.3);
+  }
+
+  .ai-role-doctor {
+    background: rgba(14, 165, 233, 0.25);
+    color: #7dd3fc;
+    border: 1px solid rgba(125, 211, 252, 0.35);
+  }
+
+  .ai-role-admin {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fcd34d;
+    border: 1px solid rgba(252, 211, 77, 0.35);
+  }
+
+  .ai-header-action-btn {
+    background: rgba(255, 255, 255, 0.12);
+    color: #e2e8f0;
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .ai-header-action-btn:hover {
+    background: rgba(255, 255, 255, 0.24);
+    color: #ffffff;
+  }
+
+  /* Messages Area */
+  .docmed-ai-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    scroll-behavior: smooth;
+  }
+
+  .ai-msg-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .ai-msg-row.ai-msg-user {
+    justify-content: flex-end;
+  }
+
+  .ai-msg-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #0d9488;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    flex-shrink: 0;
+  }
+
+  .ai-msg-bubble {
+    max-width: 82%;
+    padding: 11px 14px;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+
+  .ai-msg-bot .ai-msg-bubble {
+    background: #ffffff;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    border-top-left-radius: 4px;
+  }
+
+  .ai-msg-user .ai-msg-bubble {
+    background: linear-gradient(135deg, #0d9488 0%, #0f766e 100%);
+    color: #ffffff;
+    border-top-right-radius: 4px;
+    box-shadow: 0 2px 8px rgba(13, 148, 136, 0.25);
+  }
+
+  .ai-msg-bubble p:last-child {
+    margin-bottom: 0;
+  }
+
+  .ai-msg-bubble a {
+    color: #0d9488;
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  .ai-msg-user .ai-msg-bubble a {
+    color: #99f6e4;
+  }
+
+  .ai-msg-bubble code {
+    background: #f1f5f9;
+    color: #0f766e;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 0.82rem;
+  }
+
+  .ai-msg-bubble ul, .ai-msg-bubble ol {
+    margin: 6px 0;
+    padding-left: 20px;
+  }
+
+  /* Quick Suggestion Chips */
+  .docmed-ai-chips-wrapper {
+    background: #ffffff;
+    border: 1px dashed #cbd5e1;
+    border-radius: 12px;
+    padding: 10px;
+    margin-top: 4px;
+  }
+
+  .ai-chips-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 6px;
+  }
+
+  .ai-chip-btn {
+    background: #f1f5f9;
+    color: #0f766e;
+    border: 1px solid #e2e8f0;
+    padding: 5px 10px;
+    border-radius: 9999px;
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+  }
+
+  .ai-chip-btn:hover {
+    background: #ccfbf1;
+    border-color: #0d9488;
+    color: #0f766e;
+    transform: translateY(-1px);
+  }
+
+  /* Typing Indicator */
+  .ai-typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #f8fafc;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .ai-typing-dot {
+    width: 6px;
+    height: 6px;
+    background: #0d9488;
+    border-radius: 50%;
+    animation: ai-dot-bounce 1.4s infinite ease-in-out both;
+  }
+
+  .ai-typing-dot:nth-child(1) { animation-delay: -0.32s; }
+  .ai-typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+  @keyframes ai-dot-bounce {
+    0%, 80%, 100% { transform: scale(0); }
+    40% { transform: scale(1); }
+  }
+
+  .ai-typing-text {
+    font-size: 0.76rem;
+    color: #64748b;
+    font-style: italic;
+    margin-left: 4px;
+  }
+
+  /* Footer & Input */
+  .docmed-ai-footer {
+    padding: 12px 14px 10px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  #docmed-ai-input {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 0.88rem;
+    outline: none;
+    resize: none;
+    max-height: 90px;
+    transition: border-color 0.2s ease;
+    font-family: inherit;
+  }
+
+  #docmed-ai-input:focus {
+    border-color: #0d9488;
+    box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.12);
+  }
+
+  .ai-send-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #0d9488;
+    color: #ffffff;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+  }
+
+  .ai-send-btn:hover:not(:disabled) {
+    background: #0f766e;
+    transform: scale(1.05);
+  }
+
+  .ai-send-btn:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+
+  .ai-disclaimer {
+    font-size: 0.68rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  /* Responsive styling */
+  @media (max-width: 576px) {
+    .docmed-ai-window {
+      right: 12px;
+      bottom: 74px;
+      width: calc(100vw - 24px);
+      height: 75vh;
+    }
+  }
+</style>
+
+<!-- ==========================================
+     AI CHATBOT JAVASCRIPT
+     ========================================== -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const toggleBtn = document.getElementById('docmed-ai-toggle-btn');
+  const windowEl = document.getElementById('docmed-ai-window');
+  const closeBtn = document.getElementById('docmed-ai-close-btn');
+  const clearBtn = document.getElementById('docmed-ai-clear-btn');
+  const form = document.getElementById('docmed-ai-form');
+  const input = document.getElementById('docmed-ai-input');
+  const sendBtn = document.getElementById('docmed-ai-send-btn');
+  const messagesBox = document.getElementById('docmed-ai-messages');
+  const typingIndicator = document.getElementById('docmed-ai-typing');
+  const chipsContainer = document.getElementById('docmed-ai-chips');
+
+  if (!toggleBtn || !windowEl) return;
+
+  // Toggle Window
+  toggleBtn.addEventListener('click', () => {
+    const isVisible = windowEl.style.display !== 'none';
+    windowEl.style.display = isVisible ? 'none' : 'flex';
+    if (!isVisible) {
+      input.focus();
+      scrollToBottom();
+      loadQuickPrompts();
+      loadHistory();
+    }
+  });
+
+  closeBtn.addEventListener('click', () => {
+    windowEl.style.display = 'none';
+  });
+
+  // Auto-resize textarea
+  input.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.min(this.scrollHeight, 90) + 'px';
+  });
+
+  // Enter to send (Shift+Enter for newline)
+  input.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      form.dispatchEvent(new Event('submit'));
+    }
+  });
+
+  // Submit Handler
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+
+    // Append User Message
+    appendMessage(text, 'user');
+    input.value = '';
+    input.style.height = 'auto';
+    sendBtn.disabled = true;
+    typingIndicator.style.display = 'flex';
+    scrollToBottom();
+
+    try {
+      const response = await fetch('/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ message: text })
+      });
+
+      const data = await response.json();
+      typingIndicator.style.display = 'none';
+      sendBtn.disabled = false;
+
+      if (response.ok && data.status === 'success') {
+        appendMessage(data.reply, 'bot');
+      } else {
+        appendMessage(data.message || 'Sorry, an error occurred while generating a response.', 'bot', true);
+      }
+    } catch (err) {
+      console.error('Chat error:', err);
+      typingIndicator.style.display = 'none';
+      sendBtn.disabled = false;
+      appendMessage('Unable to reach AI service. Please check your connection.', 'bot', true);
+    }
+    scrollToBottom();
+  });
+
+  // Clear History Handler
+  clearBtn.addEventListener('click', async function() {
+    if (confirm('Clear chat conversation history?')) {
+      try {
+        await fetch('/ai/clear', { method: 'POST' });
+        // Retain welcome message only
+        const welcome = messagesBox.firstElementChild;
+        const chips = document.getElementById('docmed-ai-chips-container');
+        messagesBox.innerHTML = '';
+        if (welcome) messagesBox.appendChild(welcome);
+        if (chips) messagesBox.appendChild(chips);
+        loadQuickPrompts();
+      } catch (err) {
+        console.error('Clear error:', err);
+      }
+    }
+  });
+
+  // Load Quick Prompts
+  async function loadQuickPrompts() {
+    if (!chipsContainer) return;
+    try {
+      const res = await fetch('/ai/quick-prompts');
+      const data = await res.json();
+      if (data.status === 'success' && Array.isArray(data.prompts)) {
+        chipsContainer.innerHTML = '';
+        data.prompts.forEach(p => {
+          const btn = document.createElement('button');
+          btn.className = 'ai-chip-btn';
+          btn.type = 'button';
+          btn.innerText = p.label;
+          btn.addEventListener('click', () => {
+            input.value = p.prompt;
+            form.dispatchEvent(new Event('submit'));
+          });
+          chipsContainer.appendChild(btn);
+        });
+      }
+    } catch (err) {
+      console.warn('Could not load prompts:', err);
+    }
+  }
+
+  // Load History
+  let historyLoaded = false;
+  async function loadHistory() {
+    if (historyLoaded) return;
+    try {
+      const res = await fetch('/ai/history');
+      const data = await res.json();
+      if (data.status === 'success' && Array.isArray(data.history) && data.history.length > 0) {
+        data.history.forEach(item => {
+          const role = item.role === 'model' ? 'bot' : 'user';
+          appendMessage(item.text, role);
+        });
+        historyLoaded = true;
+        scrollToBottom();
+      }
+    } catch (err) {
+      console.warn('Could not load history:', err);
+    }
+  }
+
+  // Helper to format basic markdown to safe HTML
+  function formatMarkdown(text) {
+    if (!text) return '';
+    let escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // Bold **text**
+    escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Italic *text*
+    escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    // Inline code `code`
+    escaped = escaped.replace(/`([^`]+)`/g, '<code>$1</code>');
+    // Links [title](url)
+    escaped = escaped.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');
+
+    // Lists and linebreaks
+    const lines = escaped.split('\n');
+    let html = '';
+    let inList = false;
+
+    lines.forEach(line => {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        html += `<li>${trimmed.substring(2)}</li>`;
+      } else {
+        if (inList) {
+          html += '</ul>';
+          inList = false;
+        }
+        if (trimmed) {
+          html += `<p class="mb-1">${trimmed}</p>`;
+        }
+      }
+    });
+
+    if (inList) {
+      html += '</ul>';
+    }
+
+    return html || `<p class="mb-0">${escaped}</p>`;
+  }
+
+  // Append Message
+  function appendMessage(text, sender, isError = false) {
+    const row = document.createElement('div');
+    row.className = `ai-msg-row ai-msg-${sender}`;
+
+    if (sender === 'bot') {
+      const avatar = document.createElement('div');
+      avatar.className = 'ai-msg-avatar';
+      avatar.innerHTML = '<i class="fa-solid fa-robot"></i>';
+      row.appendChild(avatar);
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = 'ai-msg-bubble';
+    if (isError) {
+      bubble.style.borderColor = '#ef4444';
+      bubble.style.color = '#b91c1c';
+      bubble.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i> ${text}`;
+    } else {
+      bubble.innerHTML = formatMarkdown(text);
+    }
+
+    row.appendChild(bubble);
+    messagesBox.appendChild(row);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    messagesBox.scrollTop = messagesBox.scrollHeight;
+  }
+});
+</script>
+{% endif %}

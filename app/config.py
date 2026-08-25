@@ -27,6 +27,10 @@ class Config:
     SSLCOMMERZ_API_URL = config('SSLCOMMERZ_API_URL', default='https://sandbox.sslcommerz.com/gwprocess/v4/api.php')
     SSLCOMMERZ_VALIDATION_URL = config('SSLCOMMERZ_VALIDATION_URL', default='https://sandbox.sslcommerz.com/validator/api/validationserverAPI.php')
 
+    # Google Gemini AI configuration
+    GEMINI_API_KEY = config('GEMINI_API_KEY', default='')
+    GEMINI_MODEL = config('GEMINI_MODEL', default='gemini-3.6-flash')
+
 
 class DevelopmentConfig(Config):
     DEBUG = config('DEBUG', default=True, cast=bool)
