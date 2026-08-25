@@ -606,15 +606,42 @@ def history_page(uid):
         flash("User not found.", "error")
         return redirect(url_for('home.home_page'))
 
-    # If doctor/admin, filter by doc_id. If patient, filter by patient_name or patient prescriptions
+    # If doctor/admin, filter by doc_id. If patient, filter by appointments, patient email, and patient names
     is_doctor_user = getattr(user, 'role', 'patient') == 'doctor' or user.is_admin
     if is_doctor_user:
         paged_history = PrescriptionModel.query.filter_by(doc_id=uid).order_by(PrescriptionModel.created_at.desc()).paginate(page=get_page, per_page=per_page, error_out=False)
-        is_history = user.prescription
+        is_history = paged_history.items
     else:
-        # Patient sees prescriptions addressed to their username/name
+        from sqlalchemy import or_
+        from app.modules.dashboard.models import AppointmentModel
+
+        # Query all appointment records belonging to this patient
+        patient_appointments = AppointmentModel.query.filter(
+            or_(
+                AppointmentModel.patient_id == user.uid,
+                AppointmentModel.patient_email == user.email
+            )
+        ).all()
+
+        appt_ids = [a.id for a in patient_appointments]
+        appt_names = [a.patient_name for a in patient_appointments if a.patient_name]
+
+        # Name matching conditions
+        name_conditions = [PrescriptionModel.patient_name.ilike(f"%{user.username}%")]
+        if user.profile_info and getattr(user.profile_info, 'full_name', None):
+            name_conditions.append(PrescriptionModel.patient_name.ilike(f"%{user.profile_info.full_name}%"))
+
+        for name in set(appt_names):
+            if name and name.strip():
+                name_conditions.append(PrescriptionModel.patient_name.ilike(f"%{name.strip()}%"))
+
+        query_conditions = []
+        if appt_ids:
+            query_conditions.append(PrescriptionModel.appointment_id.in_(appt_ids))
+        query_conditions.extend(name_conditions)
+
         paged_history = PrescriptionModel.query.filter(
-            PrescriptionModel.patient_name.ilike(f"%{user.username}%")
+            or_(*query_conditions)
         ).order_by(PrescriptionModel.created_at.desc()).paginate(page=get_page, per_page=per_page, error_out=False)
         is_history = paged_history.items
     

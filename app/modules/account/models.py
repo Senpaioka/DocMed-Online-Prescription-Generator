@@ -64,6 +64,39 @@ class RegistrationModel(UserMixin, db.Model):
     def is_admin_role(self):
         return self.role == 'admin' or self.is_admin
 
+    @property
+    def patient_prescriptions(self):
+        from app.modules.pdf.models import PrescriptionModel
+        from app.modules.dashboard.models import AppointmentModel
+        from sqlalchemy import or_
+
+        patient_appointments = AppointmentModel.query.filter(
+            or_(
+                AppointmentModel.patient_id == self.uid,
+                AppointmentModel.patient_email == self.email
+            )
+        ).all()
+
+        appt_ids = [a.id for a in patient_appointments]
+        appt_names = [a.patient_name for a in patient_appointments if a.patient_name]
+
+        name_conditions = [PrescriptionModel.patient_name.ilike(f"%{self.username}%")]
+        if self.profile_info and getattr(self.profile_info, 'full_name', None):
+            name_conditions.append(PrescriptionModel.patient_name.ilike(f"%{self.profile_info.full_name}%"))
+
+        for name in set(appt_names):
+            if name and name.strip():
+                name_conditions.append(PrescriptionModel.patient_name.ilike(f"%{name.strip()}%"))
+
+        query_conditions = []
+        if appt_ids:
+            query_conditions.append(PrescriptionModel.appointment_id.in_(appt_ids))
+        query_conditions.extend(name_conditions)
+
+        return PrescriptionModel.query.filter(
+            or_(*query_conditions)
+        ).order_by(PrescriptionModel.created_at.desc()).all()
+
     def get_reset_password_token(self, expires_sec=1800):
         from itsdangerous import URLSafeTimedSerializer
         from flask import current_app

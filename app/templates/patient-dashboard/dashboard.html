@@ -252,7 +252,7 @@
                 <div class="col-sm-4">
                     <div class="dash-stat-box">
                         <h6>Prescriptions</h6>
-                        <p class="stat-val">{{ current_user.prescription | length if current_user.prescription else 0 }}</p>
+                        <p class="stat-val">{{ current_user.patient_prescriptions | length if current_user.patient_prescriptions else 0 }}</p>
                     </div>
                 </div>
                 <div class="col-sm-4">

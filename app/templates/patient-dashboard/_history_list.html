@@ -33,6 +33,9 @@
                             <i class="fa-regular fa-calendar me-1"></i> Prescribed on {{ data.created_at.strftime('%d %b, %Y') }}
                             {% if data.patient_age %} • {{ data.patient_age }} yrs{% endif %}
                             {% if data.patient_sex %} • {{ data.patient_sex | capitalize }}{% endif %}
+                            {% if data.prescription %}
+                                • By <strong class="text-dark">Dr. {{ data.prescription.profile_info.full_name if data.prescription.profile_info and data.prescription.profile_info.full_name else data.prescription.username }}</strong>
+                            {% endif %}
                         </small>
                     </div>
                 </div>
@@ -52,9 +55,9 @@
 
     <div class="d-flex justify-content-center align-items-center gap-2 mt-4">
         {% if info.has_prev %}
-            <a href="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.prev_num) }}"
+            <a href="{{ url_for('dashboard.history_page', uid=user.uid, page=info.prev_num) }}"
                class="btn btn-sm btn-outline-secondary px-3"
-               hx-get="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.prev_num) }}"
+               hx-get="{{ url_for('dashboard.history_page', uid=user.uid, page=info.prev_num) }}"
                hx-target="#history-container"
                hx-swap="innerHTML"
                hx-push-url="true">
@@ -65,9 +68,9 @@
         <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">Page {{ info.page }} of {{ info.pages }}</span>
     
         {% if info.has_next %}
-            <a href="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.next_num) }}"
+            <a href="{{ url_for('dashboard.history_page', uid=user.uid, page=info.next_num) }}"
                class="btn btn-sm btn-outline-secondary px-3"
-               hx-get="{{ url_for('dashboard.history_page', uid=current_user.uid, page=info.next_num) }}"
+               hx-get="{{ url_for('dashboard.history_page', uid=user.uid, page=info.next_num) }}"
                hx-target="#history-container"
                hx-swap="innerHTML"
                hx-push-url="true">
