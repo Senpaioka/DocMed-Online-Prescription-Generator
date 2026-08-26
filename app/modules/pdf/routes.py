@@ -200,10 +200,16 @@ def document_page():
 
             try:
                 db.session.commit()
-            except IntegrityError:
+            except IntegrityError as ie:
                 db.session.rollback()
-                flash("Something Went Wrong", "error")
-                return redirect(url_for('pdf_generator.document_page')) 
+                current_app.logger.error(f"IntegrityError saving prescription: {ie}", exc_info=True)
+                flash(f"Database constraint error saving prescription. Please check if patient ID or fields are valid.", "error")
+                return redirect(url_for('pdf_generator.document_page', appointment_id=appointment.id if appointment else None)) 
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f"Unexpected error saving prescription: {e}", exc_info=True)
+                flash(f"Error saving prescription: {str(e)}", "error")
+                return redirect(url_for('pdf_generator.document_page', appointment_id=appointment.id if appointment else None)) 
             
             if appointment:
                 # Dispatch real-time SSE & DB notification to patient
@@ -216,6 +222,11 @@ def document_page():
                 flash(f"Prescription generated and appointment with {appointment.patient_name} marked as completed!", "success")
             
             return redirect(url_for('pdf_generator.pdf_prescription_preview', patient_id=unique_id))
+        else:
+            current_app.logger.warning(f"Prescription form validation failed: {form.errors}")
+            for field, errors in form.errors.items():
+                for err in errors:
+                    flash(f"Validation error in {field}: {err}", "error")
         
 
     context = {

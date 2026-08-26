@@ -409,7 +409,7 @@
 
 				<!-- Main Prescription Form -->
 				<form id="prescription-form"
-					  action="{{ url_for('pdf_generator.document_page') }}"
+					  action="{{ url_for('pdf_generator.document_page', appointment_id=appointment.id) if appointment else url_for('pdf_generator.document_page') }}"
 					  method="POST"
 					  hx-post="{{ url_for('pdf_generator.preview_live') }}"
 					  hx-trigger="load, input delay:200ms, change"
@@ -565,7 +565,7 @@
 
 					<!-- Form Actions -->
 					<div class="pt-2">
-						<button type="submit" class="btn btn-generate-rx" onclick="document.getElementById('prescription-form').removeAttribute('hx-post');">
+						<button type="submit" id="btn-save-rx" class="btn btn-generate-rx" onclick="const f = document.getElementById('prescription-form'); f.removeAttribute('hx-post'); f.removeAttribute('hx-trigger'); f.removeAttribute('hx-target'); f.removeAttribute('hx-swap');">
 							<i class="fa-solid fa-file-arrow-down"></i> Save & Generate Final Prescription PDF
 						</button>
 					</div>

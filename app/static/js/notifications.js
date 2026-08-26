@@ -6,6 +6,11 @@
 (function() {
     'use strict';
 
+    if (window._docMedSSEInitialized) {
+        return;
+    }
+    window._docMedSSEInitialized = true;
+
     // Check if user is authenticated (data attribute on body or window)
     const userMeta = document.querySelector('meta[name="user-id"]');
     if (!userMeta || !userMeta.content) {
@@ -244,11 +249,31 @@
             'new_appointment_request'
         ];
 
+        const processedEventIds = new Set();
+
         appointmentEvents.forEach(eventType => {
             eventSource.addEventListener(eventType, function(e) {
                 try {
                     const item = JSON.parse(e.data);
                     console.log(`[DocMed SSE] Received ${eventType}:`, item);
+
+                    // De-duplicate if the same notification ID or event was already processed
+                    const eventKey = item.id ? `id_${item.id}` : `${eventType}_${item.created_at || ''}_${item.message || ''}`;
+                    if (processedEventIds.has(eventKey)) {
+                        console.debug(`[DocMed SSE] Ignoring duplicate event: ${eventKey}`);
+                        return;
+                    }
+                    processedEventIds.add(eventKey);
+                    // Keep set compact
+                    if (processedEventIds.size > 200) {
+                        const firstEntry = processedEventIds.values().next().value;
+                        processedEventIds.delete(firstEntry);
+                    }
+
+                    // Check if already in notifications list by ID
+                    if (item.id && notifications.some(n => n.id === item.id)) {
+                        return;
+                    }
 
                     // Prepend to notification list
                     notifications.unshift(item);
